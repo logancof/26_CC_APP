@@ -124,56 +124,40 @@ h1 {
     background: #fff
 }
 
-.camp-status.combined-status {
-    width: 100%;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 12px;
-    border-radius: 20px;
-    padding: 13px 14px;
+.camp-timeline-card {
+    background: rgba(21, 22, 29, .78);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 18px;
+    padding: 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .25);
+    position: relative;
+    z-index: 2;
 }
 
-.combined-status .status-content {
-    display: grid;
-    gap: 6px;
-    width: 100%;
-}
-
-.combined-status .now-line,
-.combined-status .next-line {
+.camp-timeline-card span {
     display: block;
-}
-
-.combined-status .now-line strong,
-.combined-status .next-line strong {
-    display: block;
-    font-size: 12px;
+    color: var(--muted);
+    font-size: 11px;
     font-weight: 950;
     text-transform: uppercase;
     letter-spacing: .8px;
-    line-height: 1.1;
+    margin-bottom: 3px;
 }
 
-.combined-status .now-line small,
-.combined-status .next-line small {
+.camp-timeline-card strong {
     display: block;
-    color: rgba(255, 255, 255, .78);
-    font-size: 11px;
-    font-weight: 800;
-    margin-top: 2px;
+    font-size: 16px;
+    font-weight: 950;
+    color: #fff;
 }
 
-.combined-status .next-line {
-    padding-top: 7px;
-    border-top: 1px solid rgba(255, 255, 255, .14);
-}
-
-.combined-status .next-line strong {
-    color: rgba(255, 255, 255, .72);
-}
-
-.combined-status .next-line small {
+.camp-timeline-card small {
+    display: block;
     color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 3px;
 }
 
 .camp-status {
