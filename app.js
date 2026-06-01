@@ -1,4 +1,4 @@
-var API_URL = "https://script.google.com/macros/s/AKfycbyCeT35L-8gAoQwDgMrII53WCR8LPx0zPUM1x0Q5HpoyW0tvC7DAEZ0DktRE2mfnek_RQ/exec"; // Paste your Google Apps Script Web App URL here.
+var API_URL = "https://script.google.com/macros/s/AKfycbyCeT35L-8gAoQwDgMrII53WCR8LPx0zPUM1x0Q5HpoyW0tvC7DAEZ0DktRE2mfnek_RQ/exec";
 var TEST_PASSWORD = "Cc2026";
 var REFRESH_MS = 30000;
 
@@ -122,8 +122,65 @@ function formatTime(time) {
   return hour + ":" + minute + " " + suffix;
 }
 
+function apiRequest(payload) {
+  return fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  }).then(function(response) {
+    return response.json();
+  });
+}
+
+function saveCampCache(data) {
+  try {
+    localStorage.setItem("campCache", JSON.stringify(data));
+  } catch (e) {}
+}
+
+function getCampCache() {
+  try {
+    return JSON.parse(localStorage.getItem("campCache") || "null");
+  } catch (e) {
+    return null;
+  }
+}
+
+function renderCampData(data) {
+  updateStatus(data.SCHEDULE || []);
+  renderScores(data.SCORES || [], data.TEAMS || []);
+  renderGames(data.GAMES || [], data.TEAMS || []);
+  renderTeams(data.TEAMS || [], data.SCORES || []);
+  renderMedia(data.CONTENT || []);
+  renderImpactStories(data.IMPACTS || []);
+  renderContacts(data.LEADER_CONTACTS || []);
+  renderResourceLinks(data.LEADER_RESOURCES || []);
+  applyTeamNameSettings(
+    data.TEAM_NAME_SETTINGS || [],
+    data.TEAM_NAME_ASSIGNMENTS || [],
+    data.TEAM_NAMES || []
+  );
+}
+
+function calculateGameStatus(game) {
+  if (!game.start_time || !game.end_time) {
+    return game.status || "scheduled";
+  }
+
+  var today = new Date().toISOString().split("T")[0];
+  var now = new Date();
+  var start = parseDateTime(today, game.start_time);
+  var end = parseDateTime(today, game.end_time);
+
+  if (end <= start) end.setDate(end.getDate() + 1);
+
+  if (now >= start && now <= end) return "live";
+  if (now < start) return "next";
+  return "final";
+}
+
 function activatePage(pageId) {
   if (!pageId) return;
+
   var targetTab = qs('[data-page="' + pageId + '"]');
   var targetPage = document.getElementById(pageId);
   if (!targetPage) return;
@@ -137,6 +194,7 @@ function activatePage(pageId) {
   qsa(".tab").forEach(function(tab) {
     tab.classList.remove("active");
   });
+
   qsa(".page").forEach(function(page) {
     page.classList.remove("active");
   });
@@ -149,6 +207,7 @@ function activatePage(pageId) {
 function openCampMenu() {
   var panel = qs("#menuPanel");
   if (!panel) return;
+
   panel.classList.add("open");
   document.body.classList.add("menu-open");
   document.body.style.overflow = "hidden";
@@ -157,6 +216,7 @@ function openCampMenu() {
 function closeCampMenu() {
   var panel = qs("#menuPanel");
   if (!panel) return;
+
   panel.classList.remove("open");
   document.body.classList.remove("menu-open");
   document.body.style.overflow = "";
@@ -164,6 +224,7 @@ function closeCampMenu() {
 
 function openAuth(mode) {
   authMode = mode || "login";
+
   var modal = qs("#authModal");
   if (!modal) return;
 
@@ -221,9 +282,11 @@ function updateVisibleMenuItems() {
 
 function setTestRole(role) {
   currentUser = { username: role === "public" ? "public" : "test_" + role, role: role };
+
   try {
     localStorage.setItem("campUser", JSON.stringify(currentUser));
   } catch (e) {}
+
   updateVisibleMenuItems();
 }
 
@@ -231,12 +294,14 @@ function unlockTestGate() {
   var input = qs("#testGatePassword");
   var error = qs("#testGateError");
   var gate = qs("#testGate");
+
   if (!input || !gate) return;
 
   if (input.value === TEST_PASSWORD) {
     try {
       sessionStorage.setItem("campPreviewUnlocked", "true");
     } catch (e) {}
+
     gate.classList.add("hidden");
   } else if (error) {
     error.textContent = "Incorrect password.";
@@ -255,37 +320,44 @@ function submitAuth() {
 
   if (!API_URL) {
     var demoRole = authMode === "create" ? "guest" : "leader";
+
     currentUser = { username: username, role: demoRole };
+
     try {
       localStorage.setItem("campUser", JSON.stringify(currentUser));
     } catch (e) {}
+
     if (status) status.textContent = "Demo sign-in: " + username + " • " + demoRole;
+
     setTimeout(function() {
       location.reload();
     }, 400);
+
     return;
   }
 
   if (status) status.textContent = authMode === "login" ? "Logging in..." : "Creating account...";
 
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: authMode, username: username, password: password })
+  apiRequest({
+    action: authMode,
+    username: username,
+    password: password
   })
-    .then(function(response) {
-      return response.json();
-    })
     .then(function(result) {
       if (!result.ok) throw new Error(result.message || "Something went wrong.");
+
       currentUser = {
         username: result.username,
         role: result.role || "guest",
         token: result.token || ""
       };
+
       try {
         localStorage.setItem("campUser", JSON.stringify(currentUser));
       } catch (e) {}
+
       if (status) status.textContent = "Signed in as " + result.username + " • role: " + currentUser.role;
+
       setTimeout(function() {
         location.reload();
       }, 500);
@@ -297,6 +369,7 @@ function submitAuth() {
 
 function normalizeTeamNameForCheck(name) {
   var value = String(name || "").toLowerCase();
+
   value = value.split("0").join("o");
   value = value.split("1").join("i");
   value = value.split("3").join("e");
@@ -305,6 +378,7 @@ function normalizeTeamNameForCheck(name) {
   value = value.split("7").join("t");
   value = value.replace(new RegExp("[^a-z0-9 ]", "g"), " ");
   value = value.replace(new RegExp("\\s+", "g"), " ").trim();
+
   return value;
 }
 
@@ -319,6 +393,7 @@ function validateTeamName(name) {
   for (var i = 0; i < blockedTeamNameWords.length; i++) {
     var word = blockedTeamNameWords[i];
     var wordPattern = new RegExp("(^|\\s)" + word + "($|\\s)", "i");
+
     if (wordPattern.test(cleanName) || compactName.indexOf(word) !== -1) {
       return "Choose a different team name.";
     }
@@ -326,6 +401,7 @@ function validateTeamName(name) {
 
   for (var j = 0; j < blockedTeamNamePatterns.length; j++) {
     var pattern = new RegExp(blockedTeamNamePatterns[j], "i");
+
     if (pattern.test(String(name || ""))) {
       return "Choose a different team name.";
     }
@@ -336,6 +412,7 @@ function validateTeamName(name) {
 
 function updateTeamNameVisibility() {
   var savedName = "";
+
   try {
     savedName = localStorage.getItem("lockedTeamName") || "";
   } catch (e) {}
@@ -350,9 +427,11 @@ function updateTeamNameVisibility() {
 
   var assignmentText = qs("#teamNameAssignmentText");
   var title = qs("#teamNameCardTitle");
+
   if (assignmentText && teamNameAssignment) {
     assignmentText.textContent = "You are naming Team " + teamNameAssignment.team_number + " • " + teamNameAssignment.age_group + ".";
   }
+
   if (title && teamNameAssignment) {
     title.textContent = "Choose Team " + teamNameAssignment.team_number + " Name";
   }
@@ -362,9 +441,11 @@ function lockTeamName() {
   var input = qs("#teamNameInput");
   var feedback = qs("#teamNameFeedback");
   var button = qs("#lockTeamNameButton");
+
   if (!input || !feedback || !button) return;
 
   var error = validateTeamName(input.value);
+
   if (error) {
     feedback.textContent = error;
     feedback.style.color = "var(--red)";
@@ -372,6 +453,7 @@ function lockTeamName() {
   }
 
   var name = input.value.trim();
+
   try {
     localStorage.setItem("lockedTeamName", name);
   } catch (e) {}
@@ -381,18 +463,16 @@ function lockTeamName() {
   button.textContent = "Team Name Locked";
   feedback.textContent = "Locked in: " + name;
   feedback.style.color = "var(--green)";
+
   updateTeamNameVisibility();
 
   if (API_URL && teamNameAssignment) {
-    fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "lock_team_name",
-        username: currentUser.username,
-        team_id: teamNameAssignment.team_id,
-        team_number: teamNameAssignment.team_number,
-        team_name: name
-      })
+    apiRequest({
+      action: "lock_team_name",
+      username: currentUser.username,
+      team_id: teamNameAssignment.team_id,
+      team_number: teamNameAssignment.team_number,
+      team_name: name
     }).catch(function(error) {
       console.log("Team name save failed:", error);
     });
@@ -401,18 +481,25 @@ function lockTeamName() {
 
 function getScheduleItems(scheduleRows) {
   var normalized = [];
+
   scheduleRows.forEach(function(row) {
     if (!row.date || !row.start_time || !row.end_time) return;
+
     var start = parseDateTime(row.date, row.start_time);
     var end = parseDateTime(row.date, row.end_time);
+
     if (end <= start) end.setDate(end.getDate() + 1);
+
     row.startDateTime = start;
     row.endDateTime = end;
+
     normalized.push(row);
   });
+
   normalized.sort(function(a, b) {
     return a.startDateTime - b.startDateTime;
   });
+
   return normalized;
 }
 
@@ -439,6 +526,7 @@ function getActiveSchedule(scheduleRows) {
 
 function getNextSchedule(scheduleRows, activeItem) {
   var normalized = getScheduleItems(scheduleRows);
+
   if (!normalized.length) return null;
 
   for (var i = 0; i < normalized.length; i++) {
@@ -447,14 +535,22 @@ function getNextSchedule(scheduleRows, activeItem) {
     }
   }
 
+  for (var j = 0; j < normalized.length; j++) {
+    if (normalized[j].startDateTime > new Date()) {
+      return normalized[j];
+    }
+  }
+
   return null;
 }
 
 function modeClass(mode) {
-  mode = String(mode || "");
+  mode = String(mode || "").toLowerCase();
+
   if (mode.indexOf("service") !== -1) return "status-service";
   if (mode.indexOf("meal") !== -1) return "status-meal";
   if (mode.indexOf("lights") !== -1) return "status-lights";
+
   return "status-games";
 }
 
@@ -473,8 +569,10 @@ function updateStatus(scheduleRows) {
     campStatusButton.className = "camp-status status-service";
     statusTitle.textContent = "Now: Schedule coming soon";
     statusSub.textContent = "Check back for camp updates";
+
     if (nextTitle) nextTitle.textContent = "No next item yet";
     if (nextSub) nextSub.textContent = "";
+
     return;
   }
 
@@ -490,22 +588,27 @@ function updateStatus(scheduleRows) {
 
 function buildTeamLookup(teams) {
   var lookup = {};
+
   teams.forEach(function(team) {
     lookup[team.team_id] = team;
   });
+
   return lookup;
 }
 
 function renderScores(scores, teams) {
   var selector = qs("#scoreAgeSelector");
   var boards = qs("#scoreBoards");
+
   if (!selector || !boards) return;
 
   var teamLookup = buildTeamLookup(teams);
   var groups = [];
 
   scores.forEach(function(score) {
-    if (score.age_group && groups.indexOf(score.age_group) === -1) groups.push(score.age_group);
+    if (score.age_group && groups.indexOf(score.age_group) === -1) {
+      groups.push(score.age_group);
+    }
   });
 
   selector.innerHTML = groups.map(function(group, index) {
@@ -547,10 +650,13 @@ function renderScores(scores, teams) {
       qsa(".age-pill").forEach(function(item) {
         item.classList.remove("active");
       });
+
       qsa(".score-board").forEach(function(board) {
         board.classList.add("hidden");
       });
+
       pill.classList.add("active");
+
       var board = document.getElementById(pill.getAttribute("data-age"));
       if (board) board.classList.remove("hidden");
     });
@@ -559,13 +665,15 @@ function renderScores(scores, teams) {
 
 function renderGames(games, teams) {
   var page = qs("#gamesList");
+
   if (!page) return;
+
   var teamLookup = buildTeamLookup(teams);
 
   page.innerHTML = games.map(function(game) {
     var team1 = teamLookup[game.team_1_id] ? teamLookup[game.team_1_id].team_name : game.team_1_id;
     var team2 = teamLookup[game.team_2_id] ? teamLookup[game.team_2_id].team_name : game.team_2_id;
-    var status = game.status || "scheduled";
+    var status = calculateGameStatus(game);
     var statusClass = status === "live" ? "status-live" : status === "final" ? "status-final" : "status-next";
     var scoreText = status === "final" || status === "live"
       ? team1 + " " + (game.team_1_score || 0) + ' <span class="vs">VS</span> ' + team2 + " " + (game.team_2_score || 0)
@@ -581,7 +689,9 @@ function renderGames(games, teams) {
 
 function renderTeams(teams, scores) {
   var page = qs("#teamCards");
+
   if (!page) return;
+
   var scoresByTeam = {};
 
   scores.forEach(function(score) {
@@ -590,6 +700,7 @@ function renderTeams(teams, scores) {
 
   page.innerHTML = teams.map(function(team) {
     var search = String(team.team_number + " " + team.team_name + " " + team.age_group + " " + team.leaders + " " + team.students).toLowerCase();
+
     return '<div class="parent-team-card" data-search="' + search + '">' +
       '<div class="team-banner" style="background:' + (team.color || "#69a4c4") + '"></div>' +
       '<div class="team-card-body">' +
@@ -608,10 +719,12 @@ function renderTeams(teams, scores) {
 function bindTeamSearch() {
   var teamSearch = qs("#teamSearch");
   var cards = qsa(".parent-team-card");
+
   if (!teamSearch) return;
 
   teamSearch.addEventListener("input", function() {
     var query = teamSearch.value.toLowerCase().trim();
+
     cards.forEach(function(card) {
       card.style.display = card.getAttribute("data-search").indexOf(query) !== -1 ? "block" : "none";
     });
@@ -620,7 +733,9 @@ function bindTeamSearch() {
 
 function renderMedia(content) {
   var page = qs("#mediaList");
+
   if (!page) return;
+
   var now = new Date();
 
   var visible = content.filter(function(item) {
@@ -630,6 +745,7 @@ function renderMedia(content) {
   page.innerHTML = visible.map(function(item) {
     var image = item.image || item.thumbnail || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=900&q=80";
     var link = item.link || "#";
+
     return '<a class="media-card-button" href="' + link + '" target="_blank">' +
       '<div class="media-image" style="background-image:linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.72)), url(' + image + ')">' +
         '<span class="pill">' + (item.type || "update") + '</span><h3>' + (item.title || "") + '</h3>' +
@@ -643,12 +759,17 @@ function renderImpactStories(impacts) {
   var approved = impacts.filter(function(item) {
     return isTrue(item.approved) && isTrue(item.visible);
   });
+
   var card = qs("#home .impact-story p");
-  if (card && approved.length) card.textContent = "“" + approved[approved.length - 1].story + "”";
+
+  if (card && approved.length) {
+    card.textContent = "“" + approved[approved.length - 1].story + "”";
+  }
 }
 
 function renderPlacements() {
   var placementEntry = qs("#placementEntry");
+
   if (!placementEntry) return;
 
   var places = [
@@ -675,10 +796,12 @@ function renderPlacements() {
 
 function renderContacts(contacts) {
   var list = qs("#helpList");
+
   if (!list) return;
 
   list.innerHTML = contacts.map(function(contact) {
     var phone = String(contact.phone || "").replace(/[^0-9+]/g, "");
+
     return '<div class="help-contact">' +
       '<div><strong>' + (contact.name || "") + '</strong><span>' + (contact.role || "") + '</span></div>' +
       '<a href="tel:' + phone + '">' + (contact.phone || "") + '</a>' +
@@ -688,6 +811,7 @@ function renderContacts(contacts) {
 
 function renderResourceLinks(resources) {
   resourceLinks = {};
+
   (resources || []).forEach(function(resource) {
     resourceLinks[resource.resource_key] = resource.url;
   });
@@ -704,8 +828,8 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
   if (setting.end_datetime) endsOk = now <= new Date(setting.end_datetime);
 
   teamNameWindowOpen = openValue && startsOk && endsOk;
-
   teamNameAssignment = null;
+
   (assignments || []).forEach(function(row) {
     var assignedUsername = String(row.username || "").toLowerCase().trim();
     var currentUsername = String(currentUser.username || "").toLowerCase().trim();
@@ -733,15 +857,20 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
 
 function openMap() {
   var modal = qs("#mapModal");
+
   if (!modal) return;
+
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
+
   setMapZoom(1);
 }
 
 function closeMap() {
   var modal = qs("#mapModal");
+
   if (!modal) return;
+
   modal.classList.remove("open");
   document.body.style.overflow = "";
 }
@@ -753,12 +882,15 @@ function setMapZoom(value) {
 
 function updateMapTransform() {
   var image = qs("#campMapImage");
+
   if (!image) return;
+
   image.style.transform = "translate(" + currentX + "px, " + currentY + "px) scale(" + mapZoom + ")";
 }
 
 function enableMapGestures() {
   var viewer = qs("#mapViewer");
+
   if (!viewer) return;
 
   var pointers = [];
@@ -805,6 +937,7 @@ function enableMapGestures() {
         pointers[0].clientX - pointers[1].clientX,
         pointers[0].clientY - pointers[1].clientY
       );
+
       setMapZoom(startZoom * (distance / startDistance));
     }
   });
@@ -813,6 +946,7 @@ function enableMapGestures() {
     pointers = pointers.filter(function(pointer) {
       return pointer.pointerId !== pointerId;
     });
+
     if (pointers.length < 2) startDistance = 0;
     if (pointers.length === 0) dragging = false;
   }
@@ -828,17 +962,29 @@ function enableMapGestures() {
 
 function fetchCampData() {
   if (!API_URL) {
-    updateStatus([]);
-    renderScores(demoScores, demoTeams);
-    renderGames(demoGames, demoTeams);
-    renderTeams(demoTeams, demoScores);
-    renderMedia(demoContent);
-    renderContacts(demoContacts);
-    renderResourceLinks([]);
-    applyTeamNameSettings([], [
-      { username: "test_leader", team_number: "1", team_id: "team_1", age_group: "6-7th Grade", can_choose: "TRUE" }
-    ], []);
+    renderCampData({
+      SCHEDULE: [],
+      SCORES: demoScores,
+      TEAMS: demoTeams,
+      GAMES: demoGames,
+      CONTENT: demoContent,
+      IMPACTS: [],
+      LEADER_CONTACTS: demoContacts,
+      LEADER_RESOURCES: [],
+      TEAM_NAME_SETTINGS: [],
+      TEAM_NAME_ASSIGNMENTS: [
+        { username: "test_leader", team_number: "1", team_id: "team_1", age_group: "6-7th Grade", can_choose: "TRUE" }
+      ],
+      TEAM_NAMES: []
+    });
+
     return;
+  }
+
+  var cached = getCampCache();
+
+  if (cached) {
+    renderCampData(cached);
   }
 
   fetch(API_URL)
@@ -846,19 +992,8 @@ function fetchCampData() {
       return response.json();
     })
     .then(function(data) {
-      updateStatus(data.SCHEDULE || []);
-      renderScores(data.SCORES || [], data.TEAMS || []);
-      renderGames(data.GAMES || [], data.TEAMS || []);
-      renderTeams(data.TEAMS || [], data.SCORES || []);
-      renderMedia(data.CONTENT || []);
-      renderImpactStories(data.IMPACTS || []);
-      renderContacts(data.LEADER_CONTACTS || []);
-      renderResourceLinks(data.LEADER_RESOURCES || []);
-      applyTeamNameSettings(
-        data.TEAM_NAME_SETTINGS || [],
-        data.TEAM_NAME_ASSIGNMENTS || [],
-        data.TEAM_NAMES || []
-      );
+      saveCampCache(data);
+      renderCampData(data);
     })
     .catch(function(error) {
       console.log("Could not load camp data:", error);
@@ -902,8 +1037,10 @@ function initApp() {
     button.addEventListener("click", function() {
       var page = button.getAttribute("data-role-view");
       var needed = button.getAttribute("data-min-role");
+
       if (needed && !canAccess(needed)) openAuth("login");
       else activatePage(page);
+
       closeCampMenu();
     });
   });
@@ -915,9 +1052,11 @@ function initApp() {
   if (menuBack) menuBack.addEventListener("click", closeCampMenu);
 
   var loginButton = qs("[data-open-login]");
-  if (loginButton) loginButton.addEventListener("click", function() {
-    openAuth("login");
-  });
+  if (loginButton) {
+    loginButton.addEventListener("click", function() {
+      openAuth("login");
+    });
+  }
 
   var authClose = qs("#authClose");
   if (authClose) authClose.addEventListener("click", closeAuth);
@@ -947,6 +1086,7 @@ function initApp() {
     logoutButton.addEventListener("click", function() {
       localStorage.removeItem("campUser");
       localStorage.removeItem("lockedTeamName");
+      localStorage.removeItem("campCache");
       location.reload();
     });
   }
@@ -955,6 +1095,7 @@ function initApp() {
   if (lockTeamNameButton) lockTeamNameButton.addEventListener("click", lockTeamName);
 
   var saved = "";
+
   try {
     saved = localStorage.getItem("lockedTeamName") || "";
   } catch (e) {}
@@ -984,9 +1125,14 @@ function initApp() {
     helpToggle.addEventListener("click", function() {
       var list = qs("#helpList");
       var arrow = qs("#helpArrow");
+
       if (!list) return;
+
       list.classList.toggle("hidden");
-      if (arrow) arrow.textContent = list.classList.contains("hidden") ? "+" : "–";
+
+      if (arrow) {
+        arrow.textContent = list.classList.contains("hidden") ? "+" : "–";
+      }
     });
   }
 
@@ -994,6 +1140,7 @@ function initApp() {
     button.addEventListener("click", function() {
       var key = button.getAttribute("data-resource-key");
       var link = resourceLinks[key];
+
       if (link) window.open(link, "_blank");
       else alert("Resource link coming soon.");
     });
