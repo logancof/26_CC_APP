@@ -124,6 +124,58 @@ h1 {
     background: #fff
 }
 
+.camp-status.combined-status {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    border-radius: 20px;
+    padding: 13px 14px;
+}
+
+.combined-status .status-content {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+}
+
+.combined-status .now-line,
+.combined-status .next-line {
+    display: block;
+}
+
+.combined-status .now-line strong,
+.combined-status .next-line strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    line-height: 1.1;
+}
+
+.combined-status .now-line small,
+.combined-status .next-line small {
+    display: block;
+    color: rgba(255, 255, 255, .78);
+    font-size: 11px;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.combined-status .next-line {
+    padding-top: 7px;
+    border-top: 1px solid rgba(255, 255, 255, .14);
+}
+
+.combined-status .next-line strong {
+    color: rgba(255, 255, 255, .72);
+}
+
+.combined-status .next-line small {
+    color: var(--muted);
+}
+
 .camp-status {
     display: inline-flex;
     align-items: center;
