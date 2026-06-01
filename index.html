@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>COF Community Camp Hub</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="test-gate" id="testGate">
+    <div class="test-gate-box">
+      <h1>Camp Preview</h1>
+      <p>This page is currently in testing.</p>
+      <input id="testGatePassword" type="password" placeholder="Enter password" />
+      <button id="testGateButton">Unlock</button>
+      <div class="test-gate-error" id="testGateError"></div>
+    </div>
+  </div>
+
+  <main class="phone">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="account-menu">
+          <button class="menu-button" id="menuButton" aria-label="Open menu">
+            <span></span><span></span><span></span>
+          </button>
+
+          <div class="menu-panel" id="menuPanel">
+            <div class="menu-header simple">
+              <h2>Camp Account</h2>
+              <button class="menu-close" id="menuBack">Close</button>
+            </div>
+
+            <div class="menu-user-card">
+              <p id="menuUserLabel">Not logged in</p>
+              <button class="menu-login-main" data-open-login>Login</button>
+            </div>
+
+            <div class="menu-user-card test-role-card">
+              <p>Testing Role Preview</p>
+              <select id="testRoleSelect">
+                <option value="public">Public</option>
+                <option value="guest">Guest</option>
+                <option value="leader">Leader</option>
+                <option value="referee">Referee</option>
+                <option value="head_referee">Head Referee</option>
+                <option value="camp_admin">Camp Admin</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button class="menu-login-main" id="applyTestRole">Preview Role</button>
+            </div>
+
+            <div class="menu-section-title">Available Tools</div>
+            <button class="role-menu-item" data-min-role="referee" data-role-view="scorekeeper">
+              <div><strong>Input Scores</strong><small>For referees and scorekeepers</small></div>
+            </button>
+            <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
+              <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
+            </button>
+            <button class="role-menu-item" data-min-role="camp_admin" data-role-view="storyadmin">
+              <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
+            </button>
+            <button class="role-menu-item" data-min-role="camp_admin" data-role-view="teamnameadmin">
+              <div><strong>Team Name Admin</strong><small>Fix team names and control the naming window</small></div>
+            </button>
+
+            <button class="menu-logout" id="logoutButton">Logout</button>
+          </div>
+        </div>
+
+        <button class="camp-status status-games" id="campStatusButton">
+          <span class="status-dot"></span>
+          <span>
+            <strong id="statusTitle">Now: Schedule coming soon</strong>
+            <small id="statusSub">Check back for camp updates</small>
+          </span>
+        </button>
+
+        <h1>Community<br />Camp</h1>
+
+        <div class="next-status" id="nextStatusCard">
+          <span>Next</span>
+          <strong id="nextStatusTitle">No next item yet</strong>
+          <small id="nextStatusSub"></small>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button class="tab active" data-page="home">Home</button>
+      <button class="tab" data-page="scores">Scores</button>
+      <button class="tab" data-page="games">Games</button>
+      <button class="tab" data-page="media">Media</button>
+      <button class="tab" data-page="teams">Teams</button>
+      <button class="tab leaders-tab" data-min-role="leader" data-page="leaders">Leaders</button>
+    </nav>
+
+    <section class="content">
+      <div id="home" class="page active">
+        <div class="card entry-card team-name-open-only" id="teamNameAlert">
+          <span class="pill">Team Name Time</span>
+          <div class="spacer"></div>
+          <h3>Choose Your Team Name</h3>
+          <p>Team leaders can lock in their team name now.</p>
+          <button class="submit-btn" data-page-link="leaders">Choose Team Name</button>
+        </div>
+
+        <h2 class="section-title">Today at Camp</h2>
+        <div class="grid">
+          <div class="feature-card">
+            <div>
+              <h2>Standings Shakeup</h2>
+              <p>Blue Team jumped 2 spots after winning the morning challenge.</p>
+            </div>
+            <span class="pill">Live</span>
+          </div>
+
+          <div class="card">
+            <span class="pill">Impact Story</span>
+            <div class="impact-story">
+              <p>“One student opened up in small group for the first time and asked great questions about following Jesus.”</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scores" class="page">
+        <h2 class="section-title">Live Standings</h2>
+        <div class="updated">Ranking calculated automatically from points.</div>
+        <div class="age-selector" id="scoreAgeSelector"></div>
+        <div id="scoreBoards"></div>
+      </div>
+
+      <div id="games" class="page">
+        <h2 class="section-title">Game Schedule</h2>
+        <div class="grid" id="gamesList"></div>
+      </div>
+
+      <div id="media" class="page">
+        <h2 class="section-title">Camp Media</h2>
+        <div class="grid" id="mediaList"></div>
+      </div>
+
+      <div id="teams" class="page">
+        <h2 class="section-title">Find Your Team</h2>
+        <div class="updated">Parents can see team leaders and know who to root for during camp.</div>
+        <div class="team-search-card">
+          <label>Search student or team</label>
+          <input id="teamSearch" type="text" placeholder="Example: Team 7, Blue Team, Parker" />
+        </div>
+        <div class="grid" id="teamCards"></div>
+      </div>
+
+      <div id="leaders" class="page">
+        <h2 class="section-title">Leader Hub</h2>
+
+        <div class="card help-card">
+          <button class="help-toggle" id="helpToggle">
+            <span>
+              <strong>Need Help?</strong>
+              <small>Camp contacts and emergency info</small>
+            </span>
+            <b id="helpArrow">+</b>
+          </button>
+          <div class="help-list hidden" id="helpList"></div>
+        </div>
+
+        <div class="grid leader-grid">
+          <div class="card entry-card team-name-open-only" id="teamNameCard">
+            <span class="pill">Team Name Window</span>
+            <div class="spacer"></div>
+            <h3 id="teamNameCardTitle">Choose Your Team Name</h3>
+            <p id="teamNameAssignmentText">This will unlock for assigned team leaders during the naming window.</p>
+            <input id="teamNameInput" type="text" maxlength="28" placeholder="Enter team name" />
+            <div class="updated" id="teamNameFeedback">Choose carefully. Once submitted, your team name locks in.</div>
+            <button class="submit-btn" id="lockTeamNameButton">Lock Team Name</button>
+          </div>
+
+          <div class="resource-grid">
+            <button class="resource-card map-resource" id="openMapButton">
+              Camp Map<span>Cabins, fields, cafeteria</span>
+            </button>
+            <button class="resource-card" data-resource-key="daily_schedule">
+              Daily Schedule<span>Leader schedule + rotations</span>
+            </button>
+            <button class="resource-card" data-resource-key="games_guide">
+              Games Guide<span>Rules and game instructions</span>
+            </button>
+            <button class="resource-card" data-resource-key="setup_teardown">
+              Setup / Teardown<span>Team responsibilities and lists</span>
+            </button>
+            <button class="resource-card" data-resource-key="scoring_sheet">
+              Scoring Sheet<span>Points and scoring rules</span>
+            </button>
+            <button class="resource-card" data-resource-key="guide_set_1">
+              Guide Set 1<span>PDF placeholder</span>
+            </button>
+            <button class="resource-card" data-resource-key="guide_set_2">
+              Guide Set 2<span>PDF placeholder</span>
+            </button>
+            <button class="resource-card" data-resource-key="guide_set_3">
+              Guide Set 3<span>PDF placeholder</span>
+            </button>
+            <button class="resource-card" data-resource-key="guide_set_4">
+              Guide Set 4<span>PDF placeholder</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="scorekeeper" class="page">
+        <h2 class="section-title">Scorekeeper</h2>
+        <div class="updated">Referees can enter placements. Points are calculated automatically.</div>
+
+        <div class="card entry-card">
+          <span class="pill">Game Result</span>
+          <div class="spacer"></div>
+
+          <label>Age Group</label>
+          <select id="scoreEntryAgeGroup">
+            <option>6-7th Grade</option>
+            <option>8-9th Grade</option>
+            <option>10-12th Grade</option>
+          </select>
+
+          <label>Game</label>
+          <select id="scoreGame">
+            <option value="g001" data-multiplier="1">Centipede & Spider Web</option>
+            <option value="g002" data-multiplier="1">Pipeline Panic</option>
+            <option value="g003" data-multiplier="1.5">Campwide Chaos - All Play</option>
+            <option value="g004" data-multiplier="1">Slip and Slide Kickball</option>
+            <option value="g005" data-multiplier="1">Puzzle Pour</option>
+            <option value="g006" data-multiplier="1">Tug Boat</option>
+            <option value="g007" data-multiplier="1.5">Beach Ball Bash - All Play</option>
+            <option value="g008" data-multiplier="1">Tug of War</option>
+            <option value="g009" data-multiplier="1">Ultimate Frisbee</option>
+            <option value="g010" data-multiplier="1">Capture the Splash</option>
+            <option value="g011" data-multiplier="1.5">Dodgeball - All Play</option>
+          </select>
+
+          <label>Placements</label>
+          <div id="placementEntry"></div>
+          <button class="submit-btn">Submit Result</button>
+        </div>
+      </div>
+
+      <div id="scorefix" class="page">
+        <h2 class="section-title">Score Fix</h2>
+        <div class="updated">Head referees can fix scores and add bonus duck points.</div>
+
+        <div class="card entry-card">
+          <span class="pill">Bonus Ducks</span>
+          <div class="spacer"></div>
+          <label>Age Group</label>
+          <select><option>6-7th Grade</option><option>8-9th Grade</option><option>10-12th Grade</option></select>
+          <label>Team</label>
+          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
+          <input type="number" placeholder="Mini ducks found x 20 pts" />
+          <input type="number" placeholder="Golden ducks found x 2000 pts" />
+          <button class="submit-btn">Add Bonus Points</button>
+        </div>
+
+        <div class="card entry-card correction-card">
+          <span class="pill">Score Correction</span>
+          <div class="spacer"></div>
+          <label>Team</label>
+          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
+          <input type="number" placeholder="Adjustment amount, example: 500 or -500" />
+          <textarea placeholder="Reason for correction"></textarea>
+          <button class="submit-btn">Submit Correction</button>
+        </div>
+      </div>
+
+      <div id="storyadmin" class="page">
+        <h2 class="section-title">Story Review</h2>
+        <div class="updated">Camp admins can approve and edit leader-submitted stories here.</div>
+        <div class="card">
+          <span class="pill">Pending Story</span>
+          <div class="spacer"></div>
+          <p>One of our students opened up in small group for the first time.</p>
+          <button class="submit-btn">Approve Story</button>
+        </div>
+      </div>
+
+      <div id="teamnameadmin" class="page">
+        <h2 class="section-title">Team Name Admin</h2>
+        <div class="updated">Camp admins control the naming window and can correct misspellings.</div>
+
+        <div class="card entry-card">
+          <span class="pill">Naming Window</span>
+          <div class="spacer"></div>
+          <label>Open naming window</label>
+          <select><option>TRUE</option><option>FALSE</option></select>
+          <label>Start datetime</label>
+          <input type="datetime-local" />
+          <label>End datetime</label>
+          <input type="datetime-local" />
+          <button class="submit-btn">Save Window Settings</button>
+        </div>
+
+        <div class="card entry-card correction-card">
+          <span class="pill">Correct Team Name</span>
+          <div class="spacer"></div>
+          <label>Internal Team</label>
+          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
+          <input type="text" maxlength="28" placeholder="Corrected team name" />
+          <textarea placeholder="Reason for change"></textarea>
+          <button class="submit-btn">Save Name Change</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="map-modal" id="mapModal">
+      <button class="map-close-floating" id="closeMapButton">Close</button>
+      <div class="map-viewer" id="mapViewer">
+        <img
+          id="campMapImage"
+          src="https://storage1.snappages.site/RFKCGH/assets/images/24369092_1009x1559_2500.png"
+          alt="Camp map"
+        />
+      </div>
+    </div>
+
+    <div class="auth-modal" id="authModal">
+      <div class="auth-box">
+        <button class="auth-close" id="authClose">×</button>
+        <h2 id="authTitle">Login</h2>
+        <p id="authHelp">Enter your username and password.</p>
+        <input id="authUsername" type="text" placeholder="Username" />
+        <input id="authPassword" type="password" placeholder="Password" />
+        <button class="submit-btn" id="authSubmit">Login</button>
+        <button class="auth-secondary" id="authSwitch">I don’t have an account. Create one.</button>
+        <div class="updated" id="authStatus">Current role: public</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
