@@ -71,20 +71,30 @@
           </div>
         </div>
 
-        <button class="camp-status status-games" id="campStatusButton">
-          <span class="status-dot"></span>
-          <span>
-            <strong id="statusTitle">Now: Schedule coming soon</strong>
-            <small id="statusSub">Check back for camp updates</small>
-          </span>
-        </button>
-
         <h1>Community<br />Camp</h1>
 
-        <div class="next-status" id="nextStatusCard">
-          <span>Next</span>
-          <strong id="nextStatusTitle">No next item yet</strong>
-          <small id="nextStatusSub"></small>
+        <div class="camp-timeline-card" id="campTimelineCard">
+
+          <div class="timeline-section current">
+            <div class="timeline-label">
+              <span class="status-dot"></span>
+              NOW
+            </div>
+
+            <h3 id="statusTitle">Schedule coming soon</h3>
+            <p id="statusSub">Check back for camp updates</p>
+          </div>
+
+          <div class="timeline-divider"></div>
+
+          <div class="timeline-section upcoming">
+            <div class="timeline-label">
+              NEXT
+            </div>
+
+            <h4 id="nextStatusTitle">No next item yet</h4>
+            <p id="nextStatusSub"></p>
+          </div>
         </div>
       </div>
     </section>
