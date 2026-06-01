@@ -557,33 +557,50 @@ function modeClass(mode) {
 function updateStatus(scheduleRows) {
   var active = getActiveSchedule(scheduleRows);
   var next = getNextSchedule(scheduleRows, active);
+
   var campStatusButton = qs("#campStatusButton");
   var statusTitle = qs("#statusTitle");
   var statusSub = qs("#statusSub");
-  var nextTitle = qs("#nextStatusTitle");
-  var nextSub = qs("#nextStatusSub");
 
   if (!campStatusButton || !statusTitle || !statusSub) return;
 
   if (!active) {
     campStatusButton.className = "camp-status status-service";
-    statusTitle.textContent = "Now: Schedule coming soon";
+    statusTitle.textContent = "Schedule coming soon";
     statusSub.textContent = "Check back for camp updates";
-
-    if (nextTitle) nextTitle.textContent = "No next item yet";
-    if (nextSub) nextSub.textContent = "";
-
     return;
   }
 
   campStatusButton.className = "camp-status " + modeClass(active.mode);
-  statusTitle.textContent = (active.active ? "Now: " : "Up next: ") + active.title;
-  statusSub.textContent = formatTime(active.start_time) + " - " + formatTime(active.end_time) + " • " + (active.location || "");
 
-  if (next && nextTitle && nextSub) {
-    nextTitle.textContent = next.title;
-    nextSub.textContent = formatTime(next.start_time) + " - " + formatTime(next.end_time) + " • " + (next.location || "");
+  if (active.active) {
+    statusTitle.textContent = "Now: " + active.title;
+  } else {
+    statusTitle.textContent = "Up next: " + active.title;
   }
+
+  var activeText =
+    formatTime(active.start_time) +
+    " - " +
+    formatTime(active.end_time) +
+    (active.location ? " • " + active.location : "");
+
+  var nextText = "";
+
+  if (next) {
+    nextText =
+      "Next: " +
+      next.title +
+      " • " +
+      formatTime(next.start_time) +
+      " - " +
+      formatTime(next.end_time) +
+      (next.location ? " • " + next.location : "");
+  }
+
+  statusSub.textContent = nextText
+    ? activeText + "  |  " + nextText
+    : activeText;
 }
 
 function buildTeamLookup(teams) {
