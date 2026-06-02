@@ -1345,3 +1345,23 @@ textarea:focus {
     flex: 0 0 auto;
     vertical-align: middle;
 }
+
+/* Remove tab button highlight, keep only bottom slider */
+.tab,
+.tab.active,
+.tab:active,
+.tab:focus,
+.tab:hover {
+    background: transparent !important;
+    transform: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.tab.active {
+    color: #fff !important;
+}
+
+.tab.active::after {
+    background: var(--cof-blue);
+}
