@@ -216,7 +216,6 @@ function activatePage(pageId) {
 
   if (targetTab) targetTab.classList.add("active");
   targetPage.classList.add("active");
-  window.scrollTo(0, 0);
 }
 
 function openCampMenu() {
