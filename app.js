@@ -554,53 +554,78 @@ function modeClass(mode) {
   return "status-games";
 }
 
+function getTimeRemainingText(endDateTime) {
+  var now = new Date();
+  var diffMs = endDateTime - now;
+
+  if (diffMs <= 0) return "Ending now";
+
+  var totalMinutes = Math.ceil(diffMs / 60000);
+  var hours = Math.floor(totalMinutes / 60);
+  var minutes = totalMinutes % 60;
+
+  if (hours > 0 && minutes > 0) {
+    return hours + " hr " + minutes + " min remaining";
+  }
+
+  if (hours > 0) {
+    return hours + " hr remaining";
+  }
+
+  return minutes + " min remaining";
+}
+
+function buildScheduleSubText(item) {
+  if (!item) return "";
+
+  var text = formatTime(item.start_time) + " - " + formatTime(item.end_time);
+
+  if (item.location) {
+    text += " • " + item.location;
+  }
+
+  return text;
+}
+
 function updateStatus(scheduleRows) {
   var active = getActiveSchedule(scheduleRows);
   var next = getNextSchedule(scheduleRows, active);
 
-  var campStatusButton = qs("#campStatusButton");
+  var card = qs("#campTimelineCard");
   var statusTitle = qs("#statusTitle");
   var statusSub = qs("#statusSub");
+  var nextStatusTitle = qs("#nextStatusTitle");
+  var nextStatusSub = qs("#nextStatusSub");
 
-  if (!campStatusButton || !statusTitle || !statusSub) return;
+  if (!card || !statusTitle || !statusSub || !nextStatusTitle || !nextStatusSub) return;
+
+  card.className = "camp-timeline-card status-service";
 
   if (!active) {
-    campStatusButton.className = "camp-status status-service";
     statusTitle.textContent = "Schedule coming soon";
     statusSub.textContent = "Check back for camp updates";
+    nextStatusTitle.textContent = "No next item yet";
+    nextStatusSub.textContent = "";
     return;
   }
 
-  campStatusButton.className = "camp-status " + modeClass(active.mode);
+  card.className = "camp-timeline-card " + modeClass(active.mode);
 
   if (active.active) {
-    statusTitle.textContent = "Now: " + active.title;
+    statusTitle.textContent = active.title || "Current Event";
+    statusSub.textContent = buildScheduleSubText(active) + " • " + getTimeRemainingText(active.endDateTime);
   } else {
-    statusTitle.textContent = "Up next: " + active.title;
+    statusTitle.textContent = "Waiting for camp to start";
+    statusSub.textContent = buildScheduleSubText(active);
   }
-
-  var activeText =
-    formatTime(active.start_time) +
-    " - " +
-    formatTime(active.end_time) +
-    (active.location ? " • " + active.location : "");
-
-  var nextText = "";
 
   if (next) {
-    nextText =
-      "Next: " +
-      next.title +
-      " • " +
-      formatTime(next.start_time) +
-      " - " +
-      formatTime(next.end_time) +
-      (next.location ? " • " + next.location : "");
+    nextStatusTitle.textContent = next.title || "Next Event";
+    nextStatusSub.textContent = buildScheduleSubText(next);
+  } else {
+    nextStatusTitle.textContent = "No next item yet";
+    nextStatusSub.textContent = "";
   }
-
-  statusSub.textContent = nextText
-    ? activeText + "  |  " + nextText
-    : activeText;
 }
 
 function buildTeamLookup(teams) {

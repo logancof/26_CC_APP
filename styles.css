@@ -1266,3 +1266,81 @@ textarea:focus {
 .timeline-next .timeline-time {
     color: rgba(255, 255, 255, .62);
 }
+
+/* ================================
+   Fixed Home Status Card
+================================ */
+
+.camp-timeline-card {
+    width: 100%;
+    display: grid;
+    gap: 12px;
+    border-radius: 24px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, .34);
+    backdrop-filter: blur(10px);
+}
+
+.timeline-section {
+    display: grid;
+    gap: 4px;
+}
+
+.timeline-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    opacity: .9;
+}
+
+.timeline-section h3 {
+    font-size: 22px;
+    line-height: 1.05;
+    font-weight: 950;
+    color: #fff;
+    letter-spacing: -.4px;
+}
+
+.timeline-section h4 {
+    font-size: 16px;
+    line-height: 1.1;
+    font-weight: 950;
+    color: rgba(255, 255, 255, .92);
+}
+
+.timeline-section p {
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 800;
+    color: rgba(255, 255, 255, .72);
+}
+
+.timeline-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, .16);
+}
+
+.camp-timeline-card.status-games {
+    background: linear-gradient(135deg, rgba(68, 208, 123, .28), rgba(21, 22, 29, .82));
+    border-color: rgba(68, 208, 123, .42);
+}
+
+.camp-timeline-card.status-service {
+    background: linear-gradient(135deg, rgba(105, 164, 196, .32), rgba(21, 22, 29, .82));
+    border-color: rgba(105, 164, 196, .48);
+}
+
+.camp-timeline-card.status-meal {
+    background: linear-gradient(135deg, rgba(245, 196, 81, .30), rgba(21, 22, 29, .82));
+    border-color: rgba(245, 196, 81, .48);
+}
+
+.camp-timeline-card.status-lights {
+    background: linear-gradient(135deg, rgba(143, 128, 255, .30), rgba(21, 22, 29, .82));
+    border-color: rgba(143, 128, 255, .48);
+}
