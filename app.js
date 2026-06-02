@@ -109,7 +109,22 @@ function getAgeGroupFromTeamNumber(teamNumber) {
 }
 
 function parseDateTime(date, time) {
-  return new Date(String(date) + "T" + String(time) + ":00");
+  var dateParts = String(date).split("-");
+  var timeParts = String(time).split(":");
+
+  var year = Number(dateParts[0]);
+  var month = Number(dateParts[1]) - 1;
+  var day = Number(dateParts[2]);
+
+  var hour = Number(timeParts[0]);
+  var minute = Number(timeParts[1] || 0);
+
+  if (hour === 24) {
+    hour = 0;
+    day += 1;
+  }
+
+  return new Date(year, month, day, hour, minute, 0);
 }
 
 function formatTime(time) {
