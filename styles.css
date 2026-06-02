@@ -1344,3 +1344,12 @@ textarea:focus {
     background: linear-gradient(135deg, rgba(143, 128, 255, .30), rgba(21, 22, 29, .82));
     border-color: rgba(143, 128, 255, .48);
 }
+
+.timeline-label .status-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin: 0;
+    flex: 0 0 auto;
+    vertical-align: middle;
+}
