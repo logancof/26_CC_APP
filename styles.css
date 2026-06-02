@@ -1081,7 +1081,6 @@ body.menu-open .hero::after {
 .resource-card:active,
 .submit-btn:active,
 .age-pill:active,
-.tab:active,
 .menu-login-main:active,
 .role-menu-item:active,
 .menu-logout:active,
@@ -1108,16 +1107,9 @@ textarea:focus {
     font-variant-numeric: tabular-nums;
 }
 
-/* Slightly cleaner tabs while keeping original look */
 .tab {
     transition:
-        color .16s ease,
-        background .16s ease,
-        transform .16s ease;
-}
-
-.tab.active {
-    background: rgba(105, 164, 196, .06);
+        color .16s ease;
 }
 
 /* Keep submit button original but make it feel clickable */
