@@ -1464,3 +1464,24 @@ textarea:focus {
     border-color: rgba(105, 164, 196, .45);
     background: linear-gradient(135deg, rgba(105, 164, 196, .22), rgba(21, 22, 29, .95));
 }
+
+/* True full-screen internal page mode */
+body.full-page-open .hero,
+body.full-page-open .tabs {
+    display: none;
+}
+
+body.full-page-open .content {
+    padding: 0;
+    min-height: 100dvh;
+}
+
+body.full-page-open .phone {
+    min-height: 100dvh;
+}
+
+body.full-page-open .full-screen-page {
+    min-height: 100dvh;
+    margin: 0;
+    padding: calc(env(safe-area-inset-top) + 28px) 20px 44px;
+}
