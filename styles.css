@@ -292,7 +292,7 @@ h1 {
     height: 72px;
     background: #040405;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     align-items: end;
     border-bottom: 2px solid #282a34
 }
