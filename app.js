@@ -216,6 +216,12 @@ function activatePage(pageId) {
 
   if (targetTab) targetTab.classList.add("active");
   targetPage.classList.add("active");
+
+  if (targetPage.classList.contains("full-screen-page")) {
+    document.body.classList.add("full-page-open");
+  } else {
+    document.body.classList.remove("full-page-open");
+  }
 }
 
 function openCampMenu() {
