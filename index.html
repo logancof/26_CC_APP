@@ -169,8 +169,15 @@
         <div class="grid" id="teamCards"></div>
       </div>
 
-      <div id="leaders" class="page">
-        <h2 class="section-title">Leader Hub</h2>
+      <div id="leaders" class="page full-screen-page leader-hub-page">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="home">← Home</button>
+          <div>
+            <span class="pill">Leader Access</span>
+            <h2>Leader Hub</h2>
+            <p>Training, resources, assignments, care, safety, and camp logistics.</p>
+          </div>
+        </div>
 
         <div class="card help-card">
           <button class="help-toggle" id="helpToggle">
@@ -183,44 +190,132 @@
           <div class="help-list hidden" id="helpList"></div>
         </div>
 
-        <div class="grid leader-grid">
-          <div class="card entry-card team-name-open-only" id="teamNameCard">
-            <span class="pill">Team Name Window</span>
-            <div class="spacer"></div>
-            <h3 id="teamNameCardTitle">Choose Your Team Name</h3>
-            <p id="teamNameAssignmentText">This will unlock for assigned team leaders during the naming window.</p>
-            <input id="teamNameInput" type="text" maxlength="28" placeholder="Enter team name" />
-            <div class="updated" id="teamNameFeedback">Choose carefully. Once submitted, your team name locks in.</div>
-            <button class="submit-btn" id="lockTeamNameButton">Lock Team Name</button>
-          </div>
-
+        <div class="leader-section">
+          <h3>Featured</h3>
           <div class="resource-grid">
             <button class="resource-card map-resource" id="openMapButton">
               Camp Map<span>Cabins, fields, cafeteria</span>
             </button>
-            <button class="resource-card" data-resource-key="daily_schedule">
-              Daily Schedule<span>Leader schedule + rotations</span>
+
+            <button class="resource-card" data-resource-key="community_camp_schedule">
+              Community Camp Schedule<span>Full camp schedule</span>
             </button>
-            <button class="resource-card" data-resource-key="games_guide">
-              Games Guide<span>Rules and game instructions</span>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>General</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="leader_role_description">
+              Community Camp Leader Role Description<span>Expectations and responsibilities</span>
             </button>
-            <button class="resource-card" data-resource-key="setup_teardown">
-              Setup / Teardown<span>Team responsibilities and lists</span>
+            <button class="leader-resource" data-resource-key="leadership_structure">
+              Leadership Structure<span>Who reports to who</span>
             </button>
-            <button class="resource-card" data-resource-key="scoring_sheet">
-              Scoring Sheet<span>Points and scoring rules</span>
+            <button class="leader-resource" data-resource-key="code_of_conduct">
+              Code of Conduct<span>Behavior expectations for leaders and students</span>
             </button>
-            <button class="resource-card" data-resource-key="guide_set_1">
-              Guide Set 1<span>PDF placeholder</span>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Student Care & Safety</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="student_care_safety_training">
+              Student Care & Safety Training<span>How we protect and care for students</span>
             </button>
-            <button class="resource-card" data-resource-key="guide_set_2">
-              Guide Set 2<span>PDF placeholder</span>
+            <button class="leader-resource" data-resource-key="tiers_of_communication">
+              Tiers of Communication<span>What to do when student needs come up</span>
             </button>
-            <button class="resource-card" data-resource-key="guide_set_3">
-              Guide Set 3<span>PDF placeholder</span>
+            <button class="leader-resource" data-resource-key="boundaries_redirecting_students">
+              Boundaries + Redirecting Students<span>Clear expectations for healthy leadership</span>
             </button>
-            <button class="resource-card" data-resource-key="guide_set_4">
-              Guide Set 4<span>PDF placeholder</span>
+            <button class="leader-resource" data-resource-key="deescalation">
+              Deescalation<span>Helping tense situations calm down</span>
+            </button>
+            <button class="leader-resource" data-resource-key="mandatory_reporting">
+              Mandatory Reporting<span>What must be reported and how</span>
+            </button>
+            <button class="leader-resource" data-resource-key="emergency_protocols">
+              Emergency Protocols<span>What to do in urgent situations</span>
+            </button>
+            <button class="leader-resource" data-resource-key="medical_procedures_video">
+              Medical Procedures Video<span>Medical response process</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Spiritual Leadership</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="leading_students_spiritually">
+              Leading Students Spiritually<span>Helping students follow Jesus</span>
+            </button>
+            <button class="leader-resource" data-resource-key="leading_breakout_session">
+              Leading a Breakout Session<span>How to guide discussion well</span>
+            </button>
+            <button class="leader-resource" data-resource-key="morning_reflection_time">
+              Morning Reflection Time<span>Guiding students through reflection</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Baptism & Testimony</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="baptism_testimony_service_details">
+              Baptism & Testimony Service Details<span>Night-of flow and leader expectations</span>
+            </button>
+            <button class="leader-resource" data-resource-key="baptisms">
+              Baptisms<span>How baptism will work at camp</span>
+            </button>
+            <button class="leader-resource" data-resource-key="spontaneous_baptisms">
+              Spontaneous Baptisms<span>How to handle unplanned baptism requests</span>
+            </button>
+            <button class="leader-resource" data-resource-key="testimonies">
+              Testimonies<span>Helping students share their story</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Logistics</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="departure_arrival_details">
+              Departure & Arrival Details<span>Check-in, travel, and pickup details</span>
+            </button>
+            <button class="leader-resource" data-resource-key="visitor_policy">
+              Visitor Policy<span>Who can visit and when</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Assignments</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="small_group_assignments">
+              Small Group Assignments<span>Leader and student small groups</span>
+            </button>
+            <button class="leader-resource" data-resource-key="team_assignments">
+              Team Assignments<span>Camp team rosters</span>
+            </button>
+            <button class="leader-resource" data-resource-key="dorm_assignments">
+              Dorm Assignments<span>Cabin and dorm placements</span>
+            </button>
+            <button class="leader-resource" data-resource-key="bus_assignments">
+              Bus Assignments<span>Travel groups and bus lists</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="leader-section">
+          <h3>Attendance</h3>
+          <div class="resource-list">
+            <button class="leader-resource" data-resource-key="attendance_checkpoints">
+              Attendance Checkpoints<span>When leaders need to check students</span>
+            </button>
+            <button class="leader-resource action-resource" data-role-view="attendance">
+              Track Attendance<span>Coming next: attendance through the app</span>
             </button>
           </div>
         </div>
