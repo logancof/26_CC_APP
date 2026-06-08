@@ -1419,6 +1419,14 @@ textarea:focus {
     margin-top: 22px;
 }
 
+.leader-featured-section {
+    margin-top: 18px;
+}
+
+.leader-section-heading {
+    margin-bottom: 12px;
+}
+
 .leader-section h3 {
     font-size: 18px;
     line-height: 1;
@@ -1426,6 +1434,45 @@ textarea:focus {
     font-weight: 950;
     letter-spacing: -.4px;
     margin-bottom: 12px;
+}
+
+.leader-category-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.leader-category-card {
+    width: 100%;
+    min-height: 92px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background:
+        linear-gradient(135deg, rgba(105, 164, 196, .13), rgba(21, 22, 29, .98)),
+        var(--panel);
+    color: #fff;
+    text-align: left;
+    border-radius: 18px;
+    padding: 18px 16px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 950;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .18);
+}
+
+.leader-category-card span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.35;
+    margin-top: 7px;
+}
+
+.leader-category-card:active {
+    transform: scale(.98);
+}
+
+.leader-category-page .resource-list {
+    padding-bottom: 16px;
 }
 
 .resource-list {

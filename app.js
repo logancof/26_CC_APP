@@ -201,6 +201,7 @@ function activatePage(pageId) {
   if (!targetPage) return;
 
   var needed = targetTab ? targetTab.getAttribute("data-min-role") : "";
+  if (!needed) needed = targetPage.getAttribute("data-min-role") || "";
   if (needed && !canAccess(needed)) {
     openAuth("login");
     return;
