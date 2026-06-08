@@ -119,6 +119,15 @@ function slug(text) {
   return String(text || "").toLowerCase().split(" ").join("-");
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getAgeGroupFromTeamNumber(teamNumber) {
   var number = Number(teamNumber);
   if (number >= 1 && number <= 10) return "6-7th Grade";
@@ -827,14 +836,95 @@ function renderMedia(content) {
   page.innerHTML = visible.map(function(item) {
     var image = item.image || item.thumbnail || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=900&q=80";
     var link = item.link || "#";
+    var type = item.type || "update";
+    var title = item.title || "";
+    var description = item.description || "";
+    var inApp = canOpenMediaInApp(link, type);
 
-    return '<a class="media-card-button" href="' + link + '" target="_blank">' +
-      '<div class="media-image" style="background-image:linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.72)), url(' + image + ')">' +
-        '<span class="pill">' + (item.type || "update") + '</span><h3>' + (item.title || "") + '</h3>' +
+    return '<button class="media-card-button" type="button" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
+      '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
+        '<span class="pill">' + escapeHtml(type) + '</span><h3>' + escapeHtml(title) + '</h3>' +
       '</div>' +
-      '<div class="media-card-copy"><p>' + (item.description || "") + '</p><span class="media-open">Open</span></div>' +
-    '</a>';
+      '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Watch" : "Open") + '</span></div>' +
+    '</button>';
   }).join("") || "<p>No media is live yet.</p>";
+
+  bindMediaCards();
+}
+
+function canOpenMediaInApp(link, type) {
+  var value = String(link || "").toLowerCase();
+  var mediaType = String(type || "").toLowerCase();
+
+  return mediaType === "video" ||
+    mediaType === "message" ||
+    value.indexOf("youtube.com") !== -1 ||
+    value.indexOf("youtu.be") !== -1 ||
+    value.indexOf("vimeo.com") !== -1 ||
+    /\.(mp4|webm|mov)($|[?#])/i.test(value);
+}
+
+function getEmbeddedMediaLink(link) {
+  var value = String(link || "");
+  var youtubeMatch = value.match(/[?&]v=([^&]+)/);
+  var shortMatch = value.match(/youtu\.be\/([^?&]+)/);
+  var embedMatch = value.match(/youtube\.com\/embed\/([^?&/]+)/);
+  var vimeoMatch = value.match(/vimeo\.com\/(\d+)/);
+
+  if (embedMatch) return "https://www.youtube.com/embed/" + embedMatch[1];
+  if (youtubeMatch) return "https://www.youtube.com/embed/" + youtubeMatch[1];
+  if (shortMatch) return "https://www.youtube.com/embed/" + shortMatch[1];
+  if (vimeoMatch) return "https://player.vimeo.com/video/" + vimeoMatch[1];
+
+  return value;
+}
+
+function bindMediaCards() {
+  qsa(".media-card-button").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var link = button.getAttribute("data-media-link") || "";
+      var title = button.getAttribute("data-media-title") || "Camp Media";
+      var type = button.getAttribute("data-media-type") || "Media";
+      var inApp = button.getAttribute("data-media-in-app") === "true";
+
+      if (!link || link === "#") {
+        alert("Media coming soon.");
+      } else if (inApp) {
+        openMediaViewer(link, title, type);
+      } else {
+        window.open(link, "_blank");
+      }
+    });
+  });
+}
+
+function openMediaViewer(link, title, type) {
+  var modal = qs("#mediaModal");
+  var frame = qs("#mediaFrame");
+  var heading = qs("#mediaModalTitle");
+  var label = qs("#mediaModalType");
+
+  if (!modal || !frame) return;
+
+  if (heading) heading.textContent = title || "Camp Media";
+  if (label) label.textContent = type || "Camp Media";
+
+  frame.setAttribute("src", getEmbeddedMediaLink(link));
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeMediaViewer() {
+  var modal = qs("#mediaModal");
+  var frame = qs("#mediaFrame");
+
+  if (!modal) return;
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  if (frame) frame.setAttribute("src", "");
+  document.body.style.overflow = "";
 }
 
 function renderImpactStories(impacts) {
@@ -1368,6 +1458,9 @@ function initApp() {
 
   var closePdfButton = qs("#closePdfButton");
   if (closePdfButton) closePdfButton.addEventListener("click", closePdf);
+
+  var closeMediaButton = qs("#closeMediaButton");
+  if (closeMediaButton) closeMediaButton.addEventListener("click", closeMediaViewer);
 
   enableMapGestures();
 

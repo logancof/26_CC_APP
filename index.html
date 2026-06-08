@@ -525,6 +525,24 @@
       <div class="pdf-viewer" id="pdfViewer"></div>
     </div>
 
+    <div class="media-modal" id="mediaModal" aria-hidden="true">
+      <div class="media-modal-header">
+        <button id="closeMediaButton">Close</button>
+        <div>
+          <strong id="mediaModalTitle">Media</strong>
+          <span id="mediaModalType">Camp Media</span>
+        </div>
+      </div>
+      <div class="media-player-wrap">
+        <iframe
+          id="mediaFrame"
+          title="Camp media viewer"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+
     <div class="auth-modal" id="authModal">
       <div class="auth-box">
         <button class="auth-close" id="authClose">×</button>

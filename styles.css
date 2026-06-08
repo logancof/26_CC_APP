@@ -714,6 +714,71 @@ textarea:focus {
     margin-top: 8px
 }
 
+.media-card-button {
+    width: 100%;
+    display: grid;
+    overflow: hidden;
+    border: 0;
+    background: var(--panel);
+    color: var(--cof-orange);
+    border-radius: 28px;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.media-image {
+    min-height: 148px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 26px;
+    background-size: cover;
+    background-position: center;
+    padding: 14px;
+}
+
+.media-image h3 {
+    max-width: 100%;
+    color: var(--cream);
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: .95;
+    font-weight: 950;
+    -webkit-text-stroke: 1px var(--cof-orange);
+    paint-order: stroke fill;
+    text-shadow:
+        1px 0 0 var(--cof-orange),
+        -1px 0 0 var(--cof-orange),
+        0 1px 0 var(--cof-orange),
+        0 -1px 0 var(--cof-orange);
+}
+
+.media-card-copy {
+    display: grid;
+    gap: 10px;
+    padding: 14px 16px 16px;
+}
+
+.media-card-copy p {
+    color: rgba(214, 97, 40, .78);
+    font-size: 15px;
+    line-height: 1.25;
+    font-weight: 900;
+}
+
+.media-open {
+    justify-self: start;
+    border: 1px solid rgba(214, 97, 40, .42);
+    color: var(--cof-orange);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
 .map-resource {
     background: linear-gradient(rgba(0, 0, 0, .18), rgba(0, 0, 0, .72)), url("https://storage1.snappages.site/RFKCGH/assets/images/24369092_1009x1559_2500.png");
     background-size: cover;
@@ -1142,6 +1207,83 @@ body.menu-open .hero::after {
     cursor: pointer;
 }
 
+.media-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1960;
+    width: 100vw;
+    height: 100dvh;
+    background: var(--cof-blue);
+    display: none;
+    flex-direction: column;
+}
+
+.media-modal.open {
+    display: flex;
+}
+
+.media-modal-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top) + 12px) 14px 12px;
+    background: var(--cream);
+    border-bottom: 1px dotted rgba(214, 97, 40, .34);
+}
+
+.media-modal-header div {
+    min-width: 0;
+}
+
+.media-modal-header strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--cof-orange);
+    font-size: 16px;
+    font-weight: 950;
+}
+
+.media-modal-header span {
+    display: block;
+    color: rgba(214, 97, 40, .72);
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 2px;
+    text-transform: uppercase;
+}
+
+.media-modal-header button {
+    border: 1px solid rgba(214, 97, 40, .34);
+    background: var(--cream);
+    color: var(--cof-orange);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 950;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.media-player-wrap {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    align-content: start;
+    padding: 18px;
+    background: var(--cof-blue);
+}
+
+#mediaFrame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 24px;
+    background: #17130f;
+}
+
 #authModal.auth-modal {
     position: fixed !important;
     inset: 0 !important;
@@ -1230,7 +1372,8 @@ body.menu-open .hero::after {
 .game-card,
 .parent-team-card,
 .team-search-card,
-.resource-card {
+.resource-card,
+.media-card-button {
     transition:
         transform .16s ease,
         border-color .16s ease,
@@ -1244,6 +1387,7 @@ body.menu-open .hero::after {
 .parent-team-card:active,
 .team-search-card:active,
 .resource-card:active,
+.media-card-button:active,
 .submit-btn:active,
 .age-pill:active,
 .menu-login-main:active,
@@ -1804,6 +1948,7 @@ h4,
 .team-search-card,
 .parent-team-card,
 .resource-card,
+.media-card-button,
 .menu-user-card,
 .role-menu-item,
 .leader-category-card,
@@ -1829,6 +1974,7 @@ h4,
 .leader-category-card,
 .leader-resource,
 .resource-card,
+.media-card-button,
 .menu-header.simple h2 {
     color: var(--cof-orange);
 }
@@ -1839,6 +1985,7 @@ h4,
 .resource-card span,
 .leader-category-card span,
 .leader-resource span,
+.media-card-copy p,
 .role-menu-item small,
 .menu-user-card p,
 .parent-team-card p,
@@ -1952,7 +2099,8 @@ textarea:focus {
 
 .menu-panel,
 .map-modal,
-.pdf-modal {
+.pdf-modal,
+.media-modal {
     background: var(--cof-blue);
     color: var(--cof-orange);
 }
@@ -1968,6 +2116,7 @@ body.menu-open .hero::after {
 .menu-close,
 .back-button,
 .pdf-header button,
+.media-modal-header button,
 .map-header button,
 .auth-close {
     background: var(--cream);
@@ -1981,7 +2130,8 @@ body.menu-open .hero::after {
 
 .leader-category-card,
 .leader-resource,
-.resource-card {
+.resource-card,
+.media-card-button {
     border-radius: 24px !important;
 }
 
@@ -1994,7 +2144,8 @@ body.menu-open .hero::after {
 }
 
 .leader-resource,
-.resource-card {
+.resource-card,
+.media-card-button {
     border-bottom: 1px dotted rgba(214, 97, 40, .34) !important;
 }
 
@@ -2004,21 +2155,25 @@ body.menu-open .hero::after {
 }
 
 .pdf-header,
+.media-modal-header,
 .map-header {
     background: var(--cream);
     border-bottom: 1px dotted rgba(214, 97, 40, .34);
 }
 
+.media-player-wrap,
 .pdf-viewer {
     background: var(--cof-blue);
 }
 
 .pdf-loading,
-.pdf-header span {
+.pdf-header span,
+.media-modal-header span {
     color: rgba(214, 97, 40, .72);
 }
 
 .pdf-loading strong,
-.pdf-header strong {
+.pdf-header strong,
+.media-modal-header strong {
     color: var(--cof-orange);
 }
