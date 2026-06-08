@@ -194,6 +194,7 @@ function renderCampData(data) {
   renderGames(data.GAMES || [], data.TEAMS || []);
   renderTeams(data.TEAMS || [], data.SCORES || []);
   renderMedia(data.CONTENT || []);
+  renderHomeMedia(data.CONTENT || []);
   renderImpactStories(data.IMPACTS || []);
   renderContacts(data.LEADER_CONTACTS || []);
   renderResourceLinks(data.LEADER_RESOURCES || []);
@@ -297,6 +298,12 @@ function closeAuth() {
 
 function updateVisibleMenuItems() {
   qsa(".role-menu-item").forEach(function(item) {
+    var needed = item.getAttribute("data-min-role");
+    if (canAccess(needed)) item.classList.remove("hidden");
+    else item.classList.add("hidden");
+  });
+
+  qsa(".role-protected").forEach(function(item) {
     var needed = item.getAttribute("data-min-role");
     if (canAccess(needed)) item.classList.remove("hidden");
     else item.classList.add("hidden");
@@ -833,23 +840,50 @@ function renderMedia(content) {
     return isTrue(item.visible) && (!item.publish_datetime || new Date(item.publish_datetime) <= now);
   });
 
-  page.innerHTML = visible.map(function(item) {
-    var image = item.image || item.thumbnail || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=900&q=80";
-    var link = item.link || "#";
-    var type = item.type || "update";
-    var title = item.title || "";
-    var description = item.description || "";
-    var inApp = canOpenMediaInApp(link, type);
-
-    return '<button class="media-card-button" type="button" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
-      '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
-        '<span class="pill">' + escapeHtml(type) + '</span><h3>' + escapeHtml(title) + '</h3>' +
-      '</div>' +
-      '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Watch" : "Open") + '</span></div>' +
-    '</button>';
-  }).join("") || "<p>No media is live yet.</p>";
+  page.innerHTML = visible.map(renderMediaCard).join("") || "<p>No media is live yet.</p>";
 
   bindMediaCards();
+}
+
+function renderHomeMedia(content) {
+  var page = qs("#homeMediaList");
+
+  if (!page) return;
+
+  var now = new Date();
+  var visible = content.filter(function(item) {
+    return isTrue(item.visible) && (!item.publish_datetime || new Date(item.publish_datetime) <= now);
+  });
+
+  visible.sort(function(a, b) {
+    var aTime = a.publish_datetime ? new Date(a.publish_datetime).getTime() : 0;
+    var bTime = b.publish_datetime ? new Date(b.publish_datetime).getTime() : 0;
+    return bTime - aTime;
+  });
+
+  if (!visible.length) {
+    page.innerHTML = "";
+    return;
+  }
+
+  page.innerHTML = '<div class="home-media-block"><span class="pill">Latest Media</span>' + renderMediaCard(visible[0]) + '</div>';
+  bindMediaCards();
+}
+
+function renderMediaCard(item) {
+  var image = item.image || item.thumbnail || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=900&q=80";
+  var link = item.link || "#";
+  var type = item.type || "update";
+  var title = item.title || "";
+  var description = item.description || "";
+  var inApp = canOpenMediaInApp(link, type);
+
+  return '<button class="media-card-button" type="button" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
+    '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
+      '<span class="pill">' + escapeHtml(type) + '</span><h3>' + escapeHtml(title) + '</h3>' +
+    '</div>' +
+    '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Watch" : "Open") + '</span></div>' +
+  '</button>';
 }
 
 function canOpenMediaInApp(link, type) {
@@ -881,6 +915,9 @@ function getEmbeddedMediaLink(link) {
 
 function bindMediaCards() {
   qsa(".media-card-button").forEach(function(button) {
+    if (button._mediaBound) return;
+    button._mediaBound = true;
+
     button.addEventListener("click", function() {
       var link = button.getAttribute("data-media-link") || "";
       var title = button.getAttribute("data-media-title") || "Camp Media";

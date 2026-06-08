@@ -110,7 +110,7 @@
       <button class="tab" data-page="scores">Scores</button>
       <button class="tab" data-page="media">Media</button>
       <button class="tab" data-page="teams">Teams</button>
-      <button class="tab" data-page="documents">Documents</button>
+      <button class="tab" data-page="documents">Docs</button>
     </nav>
 
     <section class="content">
@@ -125,13 +125,17 @@
 
         <h2 class="section-title">Today at Camp</h2>
         <div class="grid">
-          <div class="feature-card">
-            <div>
-              <h2>Standings Shakeup</h2>
-              <p>Blue Team jumped 2 spots after winning the morning challenge.</p>
-            </div>
-            <span class="pill">Live</span>
+          <div class="resource-grid">
+            <button class="resource-card map-resource" id="openMapButton">
+              Camp Map<span>Cabins, fields, cafeteria</span>
+            </button>
+
+            <button class="resource-card" data-resource-key="community_camp_schedule">
+              Camp Schedule<span>Full camp schedule</span>
+            </button>
           </div>
+
+          <div id="homeMediaList"></div>
 
           <div class="card">
             <span class="pill">Leader Storys</span>
@@ -173,8 +177,11 @@
         <h2 class="section-title">Documents</h2>
         <div class="updated">Quick access to camp documents and leader resources.</div>
         <div class="grid">
-          <button class="leader-resource" data-role-view="leaders" data-min-role="leader">
+          <button class="leader-resource role-protected" data-role-view="leaders" data-min-role="leader">
             Leader Documents<span>Training, safety, assignments, attendance, and camp logistics</span>
+          </button>
+          <button class="leader-resource" data-resource-key="parent_documents">
+            Parent Documents<span>Forms, packing info, and parent resources</span>
           </button>
           <button class="leader-resource" data-resource-key="community_camp_schedule">
             Community Camp Schedule<span>Full camp schedule document</span>
@@ -189,32 +196,6 @@
             <span class="pill">Leader Access</span>
             <h2>Leader Hub</h2>
             <p>Training, resources, assignments, care, safety, and camp logistics.</p>
-          </div>
-        </div>
-
-        <div class="card help-card">
-          <button class="help-toggle" id="helpToggle">
-            <span>
-              <strong>Need Help?</strong>
-              <small>Camp contacts and emergency info</small>
-            </span>
-            <b id="helpArrow">+</b>
-          </button>
-          <div class="help-list hidden" id="helpList"></div>
-        </div>
-
-        <div class="leader-section leader-featured-section">
-          <div class="leader-section-heading">
-            <span class="pill">Featured</span>
-          </div>
-          <div class="resource-grid">
-            <button class="resource-card map-resource" id="openMapButton">
-              Camp Map<span>Cabins, fields, cafeteria</span>
-            </button>
-
-            <button class="resource-card" data-resource-key="community_camp_schedule">
-              Community Camp Schedule<span>Full camp schedule</span>
-            </button>
           </div>
         </div>
 

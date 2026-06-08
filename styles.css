@@ -795,6 +795,11 @@ textarea:focus {
     text-transform: uppercase;
 }
 
+.home-media-block {
+    display: grid;
+    gap: 10px;
+}
+
 .map-resource {
     background: linear-gradient(rgba(0, 0, 0, .18), rgba(0, 0, 0, .72)), url("https://storage1.snappages.site/RFKCGH/assets/images/24369092_1009x1559_2500.png");
     background-size: cover;
@@ -1345,6 +1350,7 @@ body.menu-open .hero::after {
 .hidden,
 .team-name-closed,
 .role-menu-item.hidden,
+.role-protected.hidden,
 .menu-logout.hidden,
 .tab.hidden {
     display: none !important
