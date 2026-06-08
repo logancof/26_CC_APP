@@ -1697,3 +1697,301 @@ body.full-page-open .full-screen-page {
     margin: 0;
     padding: calc(env(safe-area-inset-top) + 28px) 20px 44px;
 }
+
+/* ================================
+   Creative Team Booklet Theme
+================================ */
+
+:root {
+    --bg: var(--cof-blue);
+    --panel: var(--cream);
+    --panel-2: #fffaf0;
+    --line: rgba(214, 97, 40, .34);
+    --muted: rgba(214, 97, 40, .72);
+    --text: var(--cof-orange);
+    --title-outline: 1.1px var(--cof-orange);
+}
+
+body,
+.phone,
+.content,
+.full-screen-page {
+    background: var(--cof-blue);
+    color: var(--cof-orange);
+}
+
+.phone {
+    max-width: 430px;
+}
+
+.hero {
+    min-height: 245px;
+    background: var(--cof-blue);
+    padding: 62px 24px 24px;
+}
+
+.hero::after {
+    display: none;
+}
+
+h1,
+.section-title,
+.full-page-header h2,
+.test-gate-box h1 {
+    color: var(--cream);
+    -webkit-text-stroke: var(--title-outline);
+    text-shadow:
+        1px 0 0 var(--cof-orange),
+        -1px 0 0 var(--cof-orange),
+        0 1px 0 var(--cof-orange),
+        0 -1px 0 var(--cof-orange);
+}
+
+h1 {
+    font-size: 42px;
+    line-height: 1;
+}
+
+.section-title {
+    font-size: 31px;
+    text-align: center;
+}
+
+.tabs {
+    background: rgba(245, 244, 235, .9);
+    border-bottom: 1px dashed var(--cof-orange);
+    box-shadow: none;
+}
+
+.tab {
+    color: rgba(214, 97, 40, .62);
+}
+
+.tab.active,
+.tab.active:active,
+.tab.active:focus,
+.tab.active:hover {
+    color: var(--cof-orange) !important;
+}
+
+.tab.active::after {
+    background: var(--cof-orange);
+}
+
+.feature-card,
+.card,
+.game-card,
+.team-search-card,
+.parent-team-card,
+.resource-card,
+.menu-user-card,
+.role-menu-item,
+.leader-category-card,
+.leader-resource,
+.test-gate-box,
+#authModal .auth-box {
+    background: var(--cream) !important;
+    border: 0 !important;
+    border-radius: 28px !important;
+    color: var(--cof-orange) !important;
+    box-shadow: none !important;
+}
+
+.feature-card {
+    background: var(--cream) !important;
+}
+
+.feature-card h2,
+.card h2,
+.card h3,
+.game-card h3,
+.parent-team-card h3,
+.leader-category-card,
+.leader-resource,
+.resource-card,
+.menu-header.simple h2 {
+    color: var(--cof-orange);
+}
+
+.feature-card p,
+.card p,
+.updated,
+.resource-card span,
+.leader-category-card span,
+.leader-resource span,
+.role-menu-item small,
+.menu-user-card p,
+.parent-team-card p,
+.full-page-header p,
+.team-search-card label,
+.entry-card label,
+.table-header,
+.vs,
+.same {
+    color: rgba(214, 97, 40, .72);
+}
+
+.pill,
+.age-pill {
+    background: transparent;
+    border: 1px solid rgba(214, 97, 40, .42);
+    color: var(--cof-orange);
+}
+
+.age-pill.active,
+.submit-btn,
+.menu-login-main,
+.test-gate-box button,
+.pdf-loading button {
+    background: var(--cof-orange);
+    border-color: var(--cof-orange);
+    color: var(--cream);
+}
+
+.camp-timeline-card,
+.camp-timeline-card.status-games,
+.camp-timeline-card.status-service,
+.camp-timeline-card.status-meal,
+.camp-timeline-card.status-lights {
+    background: var(--cream);
+    border: 0;
+    color: var(--cof-orange);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.camp-timeline-card span,
+.camp-timeline-card small,
+.timeline-section p,
+.timeline-next .timeline-label,
+.timeline-next .timeline-time {
+    color: rgba(214, 97, 40, .72);
+}
+
+.camp-timeline-card strong,
+.timeline-section h3,
+.timeline-section h4,
+.timeline-next .timeline-title {
+    color: var(--cof-orange);
+}
+
+.timeline-divider,
+.timeline-next,
+.table-header,
+.team-row,
+.placement-row {
+    border-color: rgba(214, 97, 40, .3);
+    border-style: dotted;
+}
+
+.status-dot,
+.timeline-dot {
+    background: var(--cof-orange);
+}
+
+.team-row.top {
+    background: rgba(245, 244, 235, .48);
+    border-left: 0;
+}
+
+.score,
+.pos,
+.team-name,
+.matchup,
+.placement-row strong,
+.status-live,
+.status-next,
+.up,
+.down {
+    color: var(--cof-orange);
+}
+
+select,
+input,
+textarea {
+    background: rgba(245, 244, 235, .92);
+    border: 1px solid rgba(214, 97, 40, .34);
+    color: var(--cof-orange);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(214, 97, 40, .48);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--cof-orange);
+    box-shadow: 0 0 0 3px rgba(214, 97, 40, .14);
+}
+
+.menu-button span {
+    background: var(--cof-orange);
+}
+
+.menu-panel,
+body.menu-open .hero,
+.map-modal,
+.pdf-modal {
+    background: var(--cof-blue);
+    color: var(--cof-orange);
+}
+
+.menu-close,
+.back-button,
+.pdf-header button,
+.map-header button,
+.auth-close {
+    background: var(--cream);
+    border: 1px solid rgba(214, 97, 40, .34);
+    color: var(--cof-orange);
+}
+
+.full-screen-page {
+    background: var(--cof-blue);
+}
+
+.leader-category-card,
+.leader-resource,
+.resource-card {
+    border-radius: 24px !important;
+}
+
+.leader-category-card {
+    min-height: 96px;
+}
+
+.resource-list {
+    gap: 12px;
+}
+
+.leader-resource,
+.resource-card {
+    border-bottom: 1px dotted rgba(214, 97, 40, .34) !important;
+}
+
+.impact-story {
+    border-left: 0;
+    padding-left: 0;
+}
+
+.pdf-header,
+.map-header {
+    background: var(--cream);
+    border-bottom: 1px dotted rgba(214, 97, 40, .34);
+}
+
+.pdf-viewer {
+    background: var(--cof-blue);
+}
+
+.pdf-loading,
+.pdf-header span {
+    color: rgba(214, 97, 40, .72);
+}
+
+.pdf-loading strong,
+.pdf-header strong {
+    color: var(--cof-orange);
+}
