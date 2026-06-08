@@ -977,6 +977,60 @@ body.menu-open .hero::after {
     -webkit-user-drag: none
 }
 
+.pdf-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1950;
+    width: 100vw;
+    height: 100dvh;
+    background: #050507;
+    display: none;
+    flex-direction: column;
+}
+
+.pdf-modal.open {
+    display: flex;
+}
+
+.pdf-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: calc(env(safe-area-inset-top) + 12px) 14px 12px;
+    background: #0b1014;
+    border-bottom: 1px solid var(--line);
+}
+
+.pdf-header strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 16px;
+    font-weight: 950;
+}
+
+.pdf-header button {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 950;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+#pdfFrame {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+    background: #fff;
+}
+
 #authModal.auth-modal {
     position: fixed !important;
     inset: 0 !important;

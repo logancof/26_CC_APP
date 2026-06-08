@@ -956,6 +956,37 @@ function closeMap() {
   document.body.style.overflow = "";
 }
 
+function isPdfLink(link) {
+  return /\.pdf($|[?#])/i.test(String(link || ""));
+}
+
+function openPdf(link, title) {
+  var modal = qs("#pdfModal");
+  var frame = qs("#pdfFrame");
+  var heading = qs("#pdfTitle");
+
+  if (!modal || !frame) return;
+
+  if (heading) heading.textContent = title || "Resource";
+
+  frame.setAttribute("src", link + "#toolbar=0&navpanes=0&view=FitH");
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closePdf() {
+  var modal = qs("#pdfModal");
+  var frame = qs("#pdfFrame");
+
+  if (!modal) return;
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  if (frame) frame.setAttribute("src", "");
+  document.body.style.overflow = "";
+}
+
 function setMapZoom(value) {
   mapZoom = Math.max(1, Math.min(5, value));
   updateMapTransform();
@@ -1221,8 +1252,10 @@ function initApp() {
     button.addEventListener("click", function() {
       var key = button.getAttribute("data-resource-key");
       var link = resourceLinks[key];
+      var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
 
-      if (link) window.open(link, "_blank");
+      if (link && isPdfLink(link)) openPdf(link, title);
+      else if (link) window.open(link, "_blank");
       else alert("Resource link coming soon.");
     });
   });
@@ -1232,6 +1265,9 @@ function initApp() {
 
   var closeMapButton = qs("#closeMapButton");
   if (closeMapButton) closeMapButton.addEventListener("click", closeMap);
+
+  var closePdfButton = qs("#closePdfButton");
+  if (closePdfButton) closePdfButton.addEventListener("click", closePdf);
 
   enableMapGestures();
 
