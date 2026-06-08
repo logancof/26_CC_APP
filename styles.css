@@ -24,6 +24,22 @@ textarea {
     font-size: 16px
 }
 
+@font-face {
+    font-family: "Camp Bauhaus";
+    src: url("assets/fonts/ITC%20Bauhaus%20Bold.otf") format("opentype");
+    font-weight: 700 950;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Camp Cooper";
+    src: url("assets/fonts/cooper-bold-bt.ttf") format("truetype");
+    font-weight: 700 950;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     --cof-blue: #b5d1d0;
     --cof-orange: #d66128;
@@ -37,8 +53,8 @@ textarea {
     --green: var(--cof-blue);
     --red: var(--cof-orange);
     --gold: var(--cream);
-    --font-display: "ITC Bauhaus Bold", "ITC Bauhaus", "Bauhaus 93", Arial Rounded MT Bold, Arial, sans-serif;
-    --font-ui: "Cooper BT Bold", "Cooper BT", "Cooper Black", Georgia, serif;
+    --font-display: "Camp Bauhaus", "ITC Bauhaus Bold", "ITC Bauhaus", "Bauhaus 93", Arial Rounded MT Bold, Arial, sans-serif;
+    --font-ui: "Camp Cooper", "Cooper BT Bold", "Cooper BT", "Cooper Black", Georgia, serif;
     --title-outline: 1.2px var(--cof-orange)
 }
 
