@@ -74,6 +74,24 @@ var demoContent = [
   }
 ];
 
+var defaultResourceLinks = {
+  leader_role_description: "assets/pdfs/Community%20Camp%20Leader%20Role%20Description.pdf",
+  leadership_structure: "assets/pdfs/Leadership%20Structure.pdf",
+  code_of_conduct: "assets/pdfs/CC%20Code%20of%20Conduct.pdf",
+  tiers_of_communication: "assets/pdfs/Tiers%20of%20Communication.pdf",
+  boundaries_redirecting_students: "assets/pdfs/Boundaries%20%2B%20Redirecting%20Students.pdf",
+  deescalation: "assets/pdfs/De-Escalation.pdf",
+  mandatory_reporting: "assets/pdfs/Mandatory%20Reporting.pdf",
+  emergency_protocols: "assets/pdfs/CC%20Emergency%20Protocols.pdf",
+  leading_breakout_session: "assets/pdfs/Leading%20a%20Breakout%20Session.pdf",
+  morning_reflection_time: "assets/pdfs/Morning%20Reflections%20-%20Guiding%20Students.pdf",
+  baptism_testimony_service_details: "assets/pdfs/Baptism%20%26%20Testimony%20Service%20Details.pdf",
+  baptisms: "assets/pdfs/Baptisms.pdf",
+  spontaneous_baptisms: "assets/pdfs/Spontaneous%20Baptisms.pdf",
+  testimonies: "assets/pdfs/Testimonies.pdf",
+  visitor_policy: "assets/pdfs/CC%20Visitor%20Policy.pdf"
+};
+
 try {
   currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\"}");
 } catch (e) {
@@ -873,7 +891,7 @@ function renderContacts(contacts) {
 }
 
 function renderResourceLinks(resources) {
-  resourceLinks = {};
+  resourceLinks = Object.assign({}, defaultResourceLinks);
 
   (resources || []).forEach(function(resource) {
     resourceLinks[resource.resource_key] = resource.url;
