@@ -723,22 +723,16 @@ function renderScores(scores, teams) {
     var teamRows = rows.map(function(score, i) {
       var team = teamLookup[score.team_id] || {};
       var currentRank = i + 1;
-      var previousRank = Number(score.previous_rank || score.starting_rank || currentRank);
-      var showMovement = previousRank && previousRank !== currentRank;
-      var diff = previousRank - currentRank;
-      var trendClass = !showMovement ? "same" : diff > 0 ? "up" : "down";
-      var trendText = !showMovement ? "—" : diff > 0 ? "▲ +" + diff : "▼ " + Math.abs(diff);
 
       return '<div class="team-row ' + (i === 0 ? "top" : "") + '">' +
         '<div class="pos">' + currentRank + '</div>' +
         '<div class="team-name">' + (team.team_name || score.team_id) + '</div>' +
         '<div class="score">' + (score.points || 0) + '</div>' +
-        '<div class="trend ' + trendClass + '">' + trendText + '</div>' +
       '</div>';
     }).join("");
 
     return '<div id="' + slug(group) + '" class="score-board ' + (index === 0 ? "active" : "hidden") + '">' +
-      '<div class="table-header"><div>Pos.</div><div>Team</div><div style="text-align:right">Pts.</div><div style="text-align:right">Move</div></div>' +
+      '<div class="table-header"><div>Pos.</div><div>Team</div><div style="text-align:right">Pts.</div></div>' +
       teamRows +
     '</div>';
   }).join("");

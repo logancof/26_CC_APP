@@ -486,7 +486,7 @@ h1,
 .table-header,
 .team-row {
     display: grid;
-    grid-template-columns: 46px 1fr 58px 46px;
+    grid-template-columns: 46px 1fr 64px;
     align-items: center
 }
 
