@@ -20,6 +20,7 @@ var resourceLinks = {};
 var mapZoom = 1;
 var currentX = 0;
 var currentY = 0;
+var pdfRenderToken = 0;
 
 var blockedTeamNameWords = [
   "ass", "arse", "bastard", "bitch", "boob", "crap", "damn", "dick", "drug", "drugs",
@@ -962,29 +963,128 @@ function isPdfLink(link) {
 
 function openPdf(link, title) {
   var modal = qs("#pdfModal");
-  var frame = qs("#pdfFrame");
+  var viewer = qs("#pdfViewer");
   var heading = qs("#pdfTitle");
+  var status = qs("#pdfStatus");
+  var token = pdfRenderToken + 1;
 
-  if (!modal || !frame) return;
+  pdfRenderToken = token;
+
+  if (!modal || !viewer) return;
 
   if (heading) heading.textContent = title || "Resource";
+  if (status) status.textContent = "Loading";
 
-  frame.setAttribute("src", link + "#toolbar=0&navpanes=0&view=FitH");
+  viewer.innerHTML = '<div class="pdf-loading">Loading resource...</div>';
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+
+  if (!window.pdfjsLib) {
+    showPdfError(link);
+    return;
+  }
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  pdfjsLib.getDocument(link).promise
+    .then(function(pdf) {
+      var pageNumber = 1;
+
+      if (token !== pdfRenderToken) return;
+
+      viewer.innerHTML = "";
+      if (status) status.textContent = pdf.numPages + " pages";
+
+      function renderNextPage() {
+        if (token !== pdfRenderToken || pageNumber > pdf.numPages) {
+          if (status && token === pdfRenderToken) status.textContent = pdf.numPages + " pages";
+          return Promise.resolve();
+        }
+
+        var currentPage = pageNumber;
+        pageNumber += 1;
+
+        if (status) status.textContent = "Loading page " + currentPage + " of " + pdf.numPages;
+
+        return pdf.getPage(currentPage)
+          .then(function(page) {
+            if (token !== pdfRenderToken) return;
+
+            var baseViewport = page.getViewport({ scale: 1 });
+            var availableWidth = Math.max(280, viewer.clientWidth - 28);
+            var scale = Math.min(2.4, availableWidth / baseViewport.width);
+            var viewport = page.getViewport({ scale: scale });
+            var pixelRatio = window.devicePixelRatio || 1;
+            var pageShell = document.createElement("div");
+            var canvas = document.createElement("canvas");
+            var label = document.createElement("span");
+            var context = canvas.getContext("2d");
+
+            pageShell.className = "pdf-page";
+            label.className = "pdf-page-label";
+            label.textContent = currentPage + " / " + pdf.numPages;
+
+            canvas.width = Math.floor(viewport.width * pixelRatio);
+            canvas.height = Math.floor(viewport.height * pixelRatio);
+            canvas.style.width = viewport.width + "px";
+            canvas.style.height = viewport.height + "px";
+
+            context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+            pageShell.appendChild(canvas);
+            pageShell.appendChild(label);
+            viewer.appendChild(pageShell);
+
+            return page.render({
+              canvasContext: context,
+              viewport: viewport
+            }).promise;
+          })
+          .then(renderNextPage);
+      }
+
+      return renderNextPage();
+    })
+    .catch(function() {
+      if (token === pdfRenderToken) showPdfError(link);
+    });
 }
 
 function closePdf() {
   var modal = qs("#pdfModal");
-  var frame = qs("#pdfFrame");
+  var viewer = qs("#pdfViewer");
+  var status = qs("#pdfStatus");
 
   if (!modal) return;
 
+  pdfRenderToken += 1;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
-  if (frame) frame.setAttribute("src", "");
+  if (viewer) viewer.innerHTML = "";
+  if (status) status.textContent = "";
   document.body.style.overflow = "";
+}
+
+function showPdfError(link) {
+  var viewer = qs("#pdfViewer");
+  var status = qs("#pdfStatus");
+
+  if (status) status.textContent = "Could not load";
+  if (!viewer) return;
+
+  viewer.innerHTML = '<div class="pdf-loading">' +
+    '<strong>Could not open this PDF in the app.</strong>' +
+    '<span>This can happen if the PDF renderer does not load or the file blocks in-app viewing.</span>' +
+    '<button id="pdfFallbackOpen">Open PDF</button>' +
+  '</div>';
+
+  var button = qs("#pdfFallbackOpen");
+  if (button) {
+    button.addEventListener("click", function() {
+      window.open(link, "_blank");
+    });
+  }
 }
 
 function setMapZoom(value) {

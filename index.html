@@ -517,9 +517,12 @@
     <div class="pdf-modal" id="pdfModal" aria-hidden="true">
       <div class="pdf-header">
         <button id="closePdfButton">Close</button>
-        <strong id="pdfTitle">Resource</strong>
+        <div>
+          <strong id="pdfTitle">Resource</strong>
+          <span id="pdfStatus">Loading</span>
+        </div>
       </div>
-      <iframe id="pdfFrame" title="Leader resource PDF"></iframe>
+      <div class="pdf-viewer" id="pdfViewer"></div>
     </div>
 
     <div class="auth-modal" id="authModal">
@@ -536,6 +539,7 @@
     </div>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
