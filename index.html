@@ -108,9 +108,9 @@
     <nav class="tabs">
       <button class="tab active" data-page="home">Home</button>
       <button class="tab" data-page="scores">Scores</button>
-      <button class="tab" data-page="games">Games</button>
       <button class="tab" data-page="media">Media</button>
       <button class="tab" data-page="teams">Teams</button>
+      <button class="tab" data-page="documents">Documents</button>
     </nav>
 
     <section class="content">
@@ -167,6 +167,19 @@
           <input id="teamSearch" type="text" placeholder="Example: Team 7, Blue Team, Parker" />
         </div>
         <div class="grid" id="teamCards"></div>
+      </div>
+
+      <div id="documents" class="page">
+        <h2 class="section-title">Documents</h2>
+        <div class="updated">Quick access to camp documents and leader resources.</div>
+        <div class="grid">
+          <button class="leader-resource" data-role-view="leaders" data-min-role="leader">
+            Leader Documents<span>Training, safety, assignments, attendance, and camp logistics</span>
+          </button>
+          <button class="leader-resource" data-resource-key="community_camp_schedule">
+            Community Camp Schedule<span>Full camp schedule document</span>
+          </button>
+        </div>
       </div>
 
       <div id="leaders" class="page full-screen-page leader-hub-page" data-min-role="leader">
