@@ -37,8 +37,8 @@ textarea {
     --green: var(--cof-blue);
     --red: var(--cof-orange);
     --gold: var(--cream);
-    --font-display: "Cooper BT Bold", "Cooper BT", "Cooper Black", Georgia, serif;
-    --font-ui: "ITC Bauhaus Bold", "ITC Bauhaus", "Bauhaus 93", Arial Rounded MT Bold, Arial, sans-serif;
+    --font-display: "ITC Bauhaus Bold", "ITC Bauhaus", "Bauhaus 93", Arial Rounded MT Bold, Arial, sans-serif;
+    --font-ui: "Cooper BT Bold", "Cooper BT", "Cooper Black", Georgia, serif;
     --title-outline: 1.2px var(--cof-orange)
 }
 
@@ -1726,12 +1726,18 @@ body,
 
 .hero {
     min-height: 245px;
-    background: var(--cof-blue);
+    background:
+        linear-gradient(180deg, rgba(181, 209, 208, .12), rgba(181, 209, 208, .72) 62%, var(--cof-blue) 100%),
+        linear-gradient(135deg, rgba(214, 97, 40, .34), rgba(245, 244, 235, .08)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80");
+    background-size: cover;
+    background-position: center;
     padding: 62px 24px 24px;
 }
 
 .hero::after {
-    display: none;
+    display: block;
+    background: linear-gradient(to bottom, rgba(23, 19, 15, .1), rgba(181, 209, 208, .84));
 }
 
 h1,
@@ -1748,8 +1754,22 @@ h1,
 }
 
 h1 {
+    font-family: var(--font-display);
     font-size: 42px;
     line-height: 1;
+}
+
+h2,
+h3,
+h4,
+.feature-card h2,
+.card h2,
+.card h3,
+.section-title,
+.full-page-header h2,
+.timeline-section h3,
+.timeline-section h4 {
+    font-family: var(--font-display);
 }
 
 .section-title {
@@ -1931,11 +1951,18 @@ textarea:focus {
 }
 
 .menu-panel,
-body.menu-open .hero,
 .map-modal,
 .pdf-modal {
     background: var(--cof-blue);
     color: var(--cof-orange);
+}
+
+body.menu-open .hero {
+    background: var(--cof-blue);
+}
+
+body.menu-open .hero::after {
+    display: none;
 }
 
 .menu-close,
