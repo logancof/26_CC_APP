@@ -60,22 +60,22 @@ var demoContacts = [
 ];
 
 var demoTeams = [
-  { team_id: "team_1", team_number: "1", team_name: "Team 1", age_group: "6-7th Grade", color: "#69a4c4", leaders: "Logan", students: "Student list coming soon" },
-  { team_id: "team_2", team_number: "2", team_name: "Team 2", age_group: "6-7th Grade", color: "#f5c451", leaders: "Leader 2", students: "Student list coming soon" },
-  { team_id: "team_11", team_number: "11", team_name: "Team 11", age_group: "8-9th Grade", color: "#ff5f6d", leaders: "Leader 11", students: "Student list coming soon" },
-  { team_id: "team_21", team_number: "21", team_name: "Team 21", age_group: "10-12th Grade", color: "#44d07b", leaders: "Leader 21", students: "Student list coming soon" }
+  { team_id: "team_1", team_number: "1", team_name: "Team 1", age_group: "6-7th", color: "#69a4c4", leaders: "Logan", students: "Student list coming soon" },
+  { team_id: "team_2", team_number: "2", team_name: "Team 2", age_group: "6-7th", color: "#f5c451", leaders: "Leader 2", students: "Student list coming soon" },
+  { team_id: "team_11", team_number: "11", team_name: "Team 11", age_group: "8-9th", color: "#ff5f6d", leaders: "Leader 11", students: "Student list coming soon" },
+  { team_id: "team_21", team_number: "21", team_name: "Team 21", age_group: "10-12th", color: "#44d07b", leaders: "Leader 21", students: "Student list coming soon" }
 ];
 
 var demoScores = [
-  { team_id: "team_1", age_group: "6-7th Grade", points: 180, previous_rank: 3, last_updated: "demo" },
-  { team_id: "team_2", age_group: "6-7th Grade", points: 172, previous_rank: 2, last_updated: "demo" },
-  { team_id: "team_11", age_group: "8-9th Grade", points: 165, previous_rank: 1, last_updated: "demo" },
-  { team_id: "team_21", age_group: "10-12th Grade", points: 150, previous_rank: 5, last_updated: "demo" }
+  { team_id: "team_1", age_group: "6-7th", points: 180, previous_rank: 3, last_updated: "demo" },
+  { team_id: "team_2", age_group: "6-7th", points: 172, previous_rank: 2, last_updated: "demo" },
+  { team_id: "team_11", age_group: "8-9th", points: 165, previous_rank: 1, last_updated: "demo" },
+  { team_id: "team_21", age_group: "10-12th", points: 150, previous_rank: 5, last_updated: "demo" }
 ];
 
 var demoGames = [
-  { status: "live", location: "Field 1", age_group: "6-7th Grade", team_1_id: "team_1", team_2_id: "team_2", team_1_score: 12, team_2_score: 10, start_time: "13:30", end_time: "14:00" },
-  { status: "next", location: "Field 2", age_group: "8-9th Grade", team_1_id: "team_11", team_2_id: "team_21", start_time: "14:10", end_time: "14:40" }
+  { status: "live", location: "Field 1", age_group: "6-7th", team_1_id: "team_1", team_2_id: "team_2", team_1_score: 12, team_2_score: 10, start_time: "13:30", end_time: "14:00" },
+  { status: "next", location: "Field 2", age_group: "8-9th", team_1_id: "team_11", team_2_id: "team_21", start_time: "14:10", end_time: "14:40" }
 ];
 
 var demoContent = [
@@ -207,10 +207,20 @@ function escapeHtml(value) {
 
 function getAgeGroupFromTeamNumber(teamNumber) {
   var number = Number(teamNumber);
-  if (number >= 1 && number <= 10) return "6-7th Grade";
-  if (number >= 11 && number <= 20) return "8-9th Grade";
-  if (number >= 21 && number <= 30) return "10-12th Grade";
+  if (number >= 1 && number <= 10) return "6-7th";
+  if (number >= 11 && number <= 20) return "8-9th";
+  if (number >= 21 && number <= 30) return "10-12th";
   return "";
+}
+
+function getCanonicalAgeGroup(value) {
+  var normalized = normalizeAgeGroup(value);
+
+  if (normalized.indexOf("6-7") !== -1 || normalized === "67") return "6-7th";
+  if (normalized.indexOf("8-9") !== -1 || normalized === "89") return "8-9th";
+  if (normalized.indexOf("10-12") !== -1 || normalized === "1012") return "10-12th";
+
+  return String(value || "");
 }
 
 function parseDateTime(date, time) {
@@ -810,9 +820,6 @@ function getTeamId(team) {
 }
 
 function getScoreTotals(scores, teams, entries) {
-  if (scores && scores.length) return scores;
-  if (!entries || !entries.length) return [];
-
   var teamLookup = buildTeamLookup(teams || []);
   var totals = {};
 
@@ -822,9 +829,38 @@ function getScoreTotals(scores, teams, entries) {
 
     totals[teamId] = {
       team_id: teamId,
-      age_group: team.age_group || getAgeGroupFromTeamNumber(team.team_number),
+      age_group: getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number)),
       points: 0
     };
+  });
+
+  (scores || []).forEach(function(score) {
+    var teamId = score.team_id || "";
+    if (!teamId) return;
+
+    if (!totals[teamId]) {
+      totals[teamId] = {
+        team_id: teamId,
+        age_group: getCanonicalAgeGroup(score.age_group || (teamLookup[teamId] || {}).age_group || ""),
+        points: 0
+      };
+    }
+
+    totals[teamId].points = Number(score.points || 0);
+
+    if (score.age_group) {
+      totals[teamId].age_group = getCanonicalAgeGroup(score.age_group);
+    }
+  });
+
+  if (scores && scores.length) {
+    return Object.keys(totals).map(function(teamId) {
+      return totals[teamId];
+    });
+  }
+
+  if (!entries || !entries.length) return Object.keys(totals).map(function(teamId) {
+    return totals[teamId];
   });
 
   getScoreAwardsFromEntries(entries).forEach(function(award) {
@@ -833,7 +869,7 @@ function getScoreTotals(scores, teams, entries) {
     if (!totals[award.team_id]) {
       totals[award.team_id] = {
         team_id: award.team_id,
-        age_group: award.age_group || (teamLookup[award.team_id] || {}).age_group || "",
+        age_group: getCanonicalAgeGroup(award.age_group || (teamLookup[award.team_id] || {}).age_group || ""),
         points: 0
       };
     }
@@ -841,7 +877,7 @@ function getScoreTotals(scores, teams, entries) {
     totals[award.team_id].points += Number(award.points || 0);
 
     if (!totals[award.team_id].age_group && award.age_group) {
-      totals[award.team_id].age_group = award.age_group;
+      totals[award.team_id].age_group = getCanonicalAgeGroup(award.age_group);
     }
   });
 
@@ -1869,7 +1905,7 @@ function fetchCampData() {
       LEADER_RESOURCES: [],
       TEAM_NAME_SETTINGS: [],
       TEAM_NAME_ASSIGNMENTS: [
-        { username: "test_leader", team_number: "1", team_id: "team_1", age_group: "6-7th Grade", can_choose: "TRUE" }
+        { username: "test_leader", team_number: "1", team_id: "team_1", age_group: "6-7th", can_choose: "TRUE" }
       ],
       TEAM_NAMES: []
     });
