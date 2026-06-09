@@ -91,7 +91,10 @@ var defaultResourceLinks = {
   testimonies: "assets/pdfs/Testimonies.pdf",
   visitor_policy: "assets/pdfs/CC%20Visitor%20Policy.pdf",
   parent_general_information: "assets/pdfs/CC%20Parent%20Meeting%20Handout%20-%202026.pdf",
-  packing_list: "assets/pdfs/CC%20Packing%20List.pdf"
+  packing_list: "assets/pdfs/CC%20Packing%20List.pdf",
+  community_camp_games_guide: "assets/pdfs/Community%20Camp%20Games%20Guide.pdf",
+  community_camp_scoring_sheet: "assets/pdfs/Community%20Camp%20Scoring%20Sheet.pdf",
+  community_camp_setup_teardown: "assets/pdfs/Community%20Camp%20SetupTeardown%20List.pdf"
 };
 
 try {
@@ -1117,9 +1120,14 @@ function renderImpactStories(impacts) {
 
 function renderPlacements() {
   var placementEntry = qs("#placementEntry");
+  var scoreGame = qs("#scoreGame");
+  var scoreModeNote = qs("#scoreModeNote");
 
   if (!placementEntry) return;
 
+  var selectedOption = scoreGame && scoreGame.options.length ? scoreGame.options[scoreGame.selectedIndex] : null;
+  var mode = selectedOption ? selectedOption.getAttribute("data-score-mode") || "ranked" : "ranked";
+  var multiplier = selectedOption ? Number(selectedOption.getAttribute("data-multiplier") || 1) : 1;
   var places = [
     { label: "1st", points: 3000 },
     { label: "2nd", points: 2500 },
@@ -1131,13 +1139,35 @@ function renderPlacements() {
 
   var teams = ["Team 1", "Team 2", "Team 3", "Team 4", "Team 5", "Team 6"];
 
+  if (scoreModeNote) {
+    if (mode === "head-to-head") {
+      scoreModeNote.textContent = "Head-to-head game: enter both teams and the final game score.";
+    } else if (mode === "all-play") {
+      scoreModeNote.textContent = "All-play game: enter placements. Points show the all-play multiplier.";
+    } else {
+      scoreModeNote.textContent = "Placement game: enter finish order for this age group.";
+    }
+  }
+
+  if (mode === "head-to-head") {
+    placementEntry.innerHTML = '<div class="match-result-grid">' +
+      '<label>Team 1<select><option>Team 1</option><option>Team 2</option><option>Team 3</option><option>Team 4</option><option>Team 5</option><option>Team 6</option></select></label>' +
+      '<label>Score<input type="number" min="0" inputmode="numeric" placeholder="0" /></label>' +
+      '<label>Team 2<select><option>Team 1</option><option selected>Team 2</option><option>Team 3</option><option>Team 4</option><option>Team 5</option><option>Team 6</option></select></label>' +
+      '<label>Score<input type="number" min="0" inputmode="numeric" placeholder="0" /></label>' +
+    '</div>';
+    return;
+  }
+
   placementEntry.innerHTML = places.map(function(place, index) {
+    var points = Math.round(place.points * multiplier);
+
     return '<div class="placement-row">' +
       '<span>' + place.label + '</span>' +
       '<select>' + teams.map(function(team, i) {
         return '<option ' + (i === index ? "selected" : "") + '>' + team + '</option>';
       }).join("") + '</select>' +
-      '<strong>' + place.points + '</strong>' +
+      '<strong>' + points + '</strong>' +
     '</div>';
   }).join("");
 }
@@ -1540,6 +1570,9 @@ function initApp() {
 
   var authSubmit = qs("#authSubmit");
   if (authSubmit) authSubmit.addEventListener("click", submitAuth);
+
+  var scoreGame = qs("#scoreGame");
+  if (scoreGame) scoreGame.addEventListener("change", renderPlacements);
 
   var previewModeToggle = qs("#previewModeToggle");
   if (previewModeToggle) {

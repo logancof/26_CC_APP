@@ -186,6 +186,9 @@
           <button class="leader-resource" data-page-link="parent-documents">
             Parents Documents<span>Forms, packing info, and parent resources</span>
           </button>
+          <button class="leader-resource" data-page-link="games-documents">
+            Games Documents<span>Rules, scoring, and setup resources</span>
+          </button>
           <button class="leader-resource" data-resource-key="community_camp_schedule">
             Community Camp Schedule<span>Full camp schedule document</span>
           </button>
@@ -215,6 +218,27 @@
           </button>
           <button class="leader-resource" data-resource-key="packing_list">
             Packing List<span>What to bring to camp</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="games-documents" class="page full-screen-page">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="documents">← Docs</button>
+          <div>
+            <h2>Games Documents</h2>
+            <p>Game rules, scoring references, and setup details.</p>
+          </div>
+        </div>
+        <div class="resource-list">
+          <button class="leader-resource" data-resource-key="community_camp_games_guide">
+            Community Camp Games Guide<span>Rules and instructions for camp games</span>
+          </button>
+          <button class="leader-resource" data-resource-key="community_camp_scoring_sheet">
+            Community Camp Scoring Sheet<span>Scorekeeping reference for games</span>
+          </button>
+          <button class="leader-resource" data-resource-key="community_camp_setup_teardown">
+            Community Camp Setup/Teardown List<span>Equipment and setup details</span>
           </button>
         </div>
       </div>
@@ -393,14 +417,16 @@
         </div>
       </div>
 
-      <div id="scorekeeper" class="page" data-permission="scorekeeper">
-        <h2 class="section-title">Scorekeeper</h2>
-        <div class="updated">Referees can enter placements. Points are calculated automatically.</div>
+      <div id="scorekeeper" class="page full-screen-page scorekeeper-page" data-permission="scorekeeper">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="home">← Home</button>
+          <div>
+            <h2>Scorekeeper</h2>
+            <p>Choose the age group and game, then enter the result format for that game.</p>
+          </div>
+        </div>
 
-        <div class="card entry-card">
-          <span class="pill">Game Result</span>
-          <div class="spacer"></div>
-
+        <div class="card entry-card scorekeeper-card">
           <label>Age Group</label>
           <select id="scoreEntryAgeGroup">
             <option>6-7th Grade</option>
@@ -410,22 +436,22 @@
 
           <label>Game</label>
           <select id="scoreGame">
-            <option value="g001" data-multiplier="1">Centipede & Spider Web</option>
-            <option value="g002" data-multiplier="1">Pipeline Panic</option>
-            <option value="g003" data-multiplier="1.5">Campwide Chaos - All Play</option>
-            <option value="g004" data-multiplier="1">Slip and Slide Kickball</option>
-            <option value="g005" data-multiplier="1">Puzzle Pour</option>
-            <option value="g006" data-multiplier="1">Tug Boat</option>
-            <option value="g007" data-multiplier="1.5">Beach Ball Bash - All Play</option>
-            <option value="g008" data-multiplier="1">Tug of War</option>
-            <option value="g009" data-multiplier="1">Ultimate Frisbee</option>
-            <option value="g010" data-multiplier="1">Capture the Splash</option>
-            <option value="g011" data-multiplier="1.5">Dodgeball - All Play</option>
+            <option value="g001" data-score-mode="ranked" data-multiplier="1">Centipede & Spider Web</option>
+            <option value="g002" data-score-mode="ranked" data-multiplier="1">Pipeline Panic</option>
+            <option value="g003" data-score-mode="all-play" data-multiplier="1.5">Campwide Chaos - All Play</option>
+            <option value="g004" data-score-mode="ranked" data-multiplier="1">Slip and Slide Kickball</option>
+            <option value="g005" data-score-mode="ranked" data-multiplier="1">Puzzle Pour</option>
+            <option value="g006" data-score-mode="ranked" data-multiplier="1">Tug Boat</option>
+            <option value="g007" data-score-mode="all-play" data-multiplier="1.5">Beach Ball Bash - All Play</option>
+            <option value="g008" data-score-mode="head-to-head" data-multiplier="1">Tug of War</option>
+            <option value="g009" data-score-mode="head-to-head" data-multiplier="1">Ultimate Frisbee</option>
+            <option value="g010" data-score-mode="head-to-head" data-multiplier="1">Capture the Splash</option>
+            <option value="g011" data-score-mode="all-play" data-multiplier="1.5">Dodgeball - All Play</option>
           </select>
 
-          <label>Placements</label>
+          <div class="score-mode-note" id="scoreModeNote"></div>
           <div id="placementEntry"></div>
-          <button class="submit-btn">Submit Result</button>
+          <button class="submit-btn" type="button">Submit Result</button>
         </div>
       </div>
 
