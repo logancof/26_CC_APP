@@ -22,9 +22,10 @@ var lastMediaSignature = "";
 var latestTeams = [];
 var latestScores = [];
 var latestScoreEntries = [];
+var scoreEntryDirty = false;
 
-var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 100];
-var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 100];
+var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 0];
+var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 0];
 var HEAD_TO_HEAD_POINTS = {
   win: 3000,
   tie: 1500,
@@ -252,7 +253,7 @@ function apiRequest(payload) {
       return JSON.parse(text);
     } catch (e) {
       var messageMatch = text.match(/<div[^>]*>([^<]*(?:Script function not found|runtime exited unexpectedly)[^<]*)<\/div>/i);
-      var message = messageMatch ? messageMatch[1] : "The login service returned an invalid response.";
+      var message = messageMatch ? messageMatch[1] : "The Apps Script service returned an invalid response. Make sure this action exists in doPost(e) and the web app URL is current.";
       throw new Error(message);
     }
   }).catch(function(error) {
@@ -296,7 +297,7 @@ function renderCampData(data) {
     data.TEAM_NAME_ASSIGNMENTS || [],
     data.TEAM_NAMES || []
   );
-  renderPlacements();
+  if (!scoreEntryDirty) renderPlacements();
 }
 
 function calculateGameStatus(game) {
@@ -1240,6 +1241,7 @@ function renderPlacements() {
       '<label>Team B<select id="headToHeadTeamB">' + getTeamOptions(teams, 1) + '</select></label>' +
       '<label>Result<select id="headToHeadResult"><option value="a_win">Team A wins</option><option value="tie">Tie</option><option value="b_win">Team B wins</option></select></label>' +
     '</div>';
+    bindScoreEntryDirtyTracking();
     return;
   }
 
@@ -1255,6 +1257,7 @@ function renderPlacements() {
     '</div>';
 
     bindBonusPresetButtons();
+    bindScoreEntryDirtyTracking();
     return;
   }
 
@@ -1267,6 +1270,7 @@ function renderPlacements() {
   }).join("");
 
   bindPlacementPointPreview(mode);
+  bindScoreEntryDirtyTracking();
 }
 
 function getScoreEntryAgeGroup() {
@@ -1304,22 +1308,14 @@ function getScoreEntryTeams() {
     return teamMatchesScoreAge(team, ageGroup);
   });
 
-  if (!teams.length) teams = latestTeams || [];
-
   return teams.sort(function(a, b) {
     return Number(a.team_number || 0) - Number(b.team_number || 0);
   });
 }
 
-function getScoreEntryTeamNumber(team) {
-  var number = Number(team.team_number || 0);
-  if (!number) return "";
-  return ((number - 1) % 10) + 1;
-}
-
 function getTeamDisplayName(team) {
   if (!team) return "";
-  return "Team " + getScoreEntryTeamNumber(team);
+  return "Team " + (team.team_number || "");
 }
 
 function getTeamOptions(teams, selectedIndex) {
@@ -1338,6 +1334,20 @@ function getPlaceOptions(selectedPlace) {
     var place = index + 1;
     return '<option value="' + place + '" ' + (place === selectedPlace ? "selected" : "") + '>' + label + '</option>';
   }).join("");
+}
+
+function markScoreEntryDirty() {
+  scoreEntryDirty = true;
+}
+
+function bindScoreEntryDirtyTracking() {
+  var placementEntry = qs("#placementEntry");
+  if (!placementEntry) return;
+
+  qsa("#placementEntry select, #placementEntry input, #placementEntry textarea").forEach(function(field) {
+    field.addEventListener("change", markScoreEntryDirty);
+    field.addEventListener("input", markScoreEntryDirty);
+  });
 }
 
 function getPlacementScale(mode) {
@@ -1404,10 +1414,15 @@ function bindPlacementPointPreview(mode) {
   }
 
   qsa("[data-placement-select]").forEach(function(select) {
-    select.addEventListener("change", updatePreview);
+    select.addEventListener("change", function() {
+      markScoreEntryDirty();
+      updatePreview();
+    });
   });
 
+  var wasDirty = scoreEntryDirty;
   updatePreview();
+  scoreEntryDirty = wasDirty;
 }
 
 function bindBonusPresetButtons() {
@@ -1526,6 +1541,7 @@ function submitScoreResult() {
       .then(function(result) {
         if (!result.ok) throw new Error(result.message || "Score could not be saved.");
         if (status) status.textContent = "Score saved.";
+        scoreEntryDirty = false;
         fetchCampData();
       })
       .catch(function(error) {
@@ -1936,10 +1952,20 @@ function initApp() {
   if (authSubmit) authSubmit.addEventListener("click", submitAuth);
 
   var scoreGame = qs("#scoreGame");
-  if (scoreGame) scoreGame.addEventListener("change", renderPlacements);
+  if (scoreGame) {
+    scoreGame.addEventListener("change", function() {
+      scoreEntryDirty = false;
+      renderPlacements();
+    });
+  }
 
   var scoreEntryAgeGroup = qs("#scoreEntryAgeGroup");
-  if (scoreEntryAgeGroup) scoreEntryAgeGroup.addEventListener("change", renderPlacements);
+  if (scoreEntryAgeGroup) {
+    scoreEntryAgeGroup.addEventListener("change", function() {
+      scoreEntryDirty = false;
+      renderPlacements();
+    });
+  }
 
   var scoreSubmitButton = qs("#scoreSubmitButton");
   if (scoreSubmitButton) scoreSubmitButton.addEventListener("click", submitScoreResult);
