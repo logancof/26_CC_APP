@@ -843,7 +843,7 @@ textarea:focus {
 
 .placement-row {
     display: grid;
-    grid-template-columns: 52px 1fr 56px;
+    grid-template-columns: minmax(0, 1fr) 96px 56px;
     gap: 10px;
     align-items: center;
     padding: 8px 0;
@@ -865,6 +865,11 @@ textarea:focus {
     margin: 0
 }
 
+.score-empty {
+    color: rgba(214, 97, 40, .78);
+    font-weight: 900
+}
+
 .scorekeeper-card {
     display: grid;
     gap: 12px
@@ -878,14 +883,34 @@ textarea:focus {
     margin-top: 4px
 }
 
-.match-result-grid {
+.match-result-grid,
+.bonus-result-grid {
     display: grid;
     gap: 12px
 }
 
-.match-result-grid label {
+.match-result-grid label,
+.bonus-result-grid label {
     display: grid;
     gap: 6px
+}
+
+.bonus-presets {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+}
+
+.bonus-presets button {
+    background: transparent;
+    border: 1px solid rgba(214, 97, 40, .42);
+    border-radius: 999px;
+    color: var(--cof-orange);
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 950;
+    padding: 10px 8px
 }
 
 .menu-panel {

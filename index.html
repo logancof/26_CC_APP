@@ -439,7 +439,7 @@
             <option value="g001" data-score-mode="ranked" data-multiplier="1">Centipede & Spider Web</option>
             <option value="g002" data-score-mode="ranked" data-multiplier="1">Pipeline Panic</option>
             <option value="g003" data-score-mode="all-play" data-multiplier="1.5">Campwide Chaos - All Play</option>
-            <option value="g004" data-score-mode="ranked" data-multiplier="1">Slip and Slide Kickball</option>
+            <option value="g004" data-score-mode="head-to-head" data-multiplier="1">Slip and Slide Kickball</option>
             <option value="g005" data-score-mode="ranked" data-multiplier="1">Puzzle Pour</option>
             <option value="g006" data-score-mode="ranked" data-multiplier="1">Tug Boat</option>
             <option value="g007" data-score-mode="all-play" data-multiplier="1.5">Beach Ball Bash - All Play</option>
@@ -447,27 +447,29 @@
             <option value="g009" data-score-mode="head-to-head" data-multiplier="1">Ultimate Frisbee</option>
             <option value="g010" data-score-mode="head-to-head" data-multiplier="1">Capture the Splash</option>
             <option value="g011" data-score-mode="all-play" data-multiplier="1.5">Dodgeball - All Play</option>
+            <option value="bonus_points" data-score-mode="bonus" data-multiplier="1">Bonus Points</option>
           </select>
 
           <div class="score-mode-note" id="scoreModeNote"></div>
           <div id="placementEntry"></div>
-          <button class="submit-btn" type="button">Submit Result</button>
+          <button class="submit-btn" id="scoreSubmitButton" type="button">Submit Result</button>
+          <div class="updated" id="scoreEntryStatus"></div>
         </div>
       </div>
 
       <div id="scorefix" class="page" data-permission="score_corrections">
         <h2 class="section-title">Score Fix</h2>
-        <div class="updated">Approved scorekeepers can fix scores and add bonus duck points.</div>
+        <div class="updated">Approved scorekeepers can add manual bonus points or correct scores.</div>
 
         <div class="card entry-card">
-          <span class="pill">Bonus Ducks</span>
+          <span class="pill">Bonus Points</span>
           <div class="spacer"></div>
           <label>Age Group</label>
           <select><option>6-7th Grade</option><option>8-9th Grade</option><option>10-12th Grade</option></select>
           <label>Team</label>
           <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
-          <input type="number" placeholder="Mini ducks found x 20 pts" />
-          <input type="number" placeholder="Golden ducks found x 2000 pts" />
+          <input type="number" placeholder="Point amount, example: 20 or 2000" />
+          <textarea placeholder="Reason, example: mini duck or golden duck"></textarea>
           <button class="submit-btn">Add Bonus Points</button>
         </div>
 
@@ -573,7 +575,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.7.6</div>
+    <div class="app-version">v0.7.7</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

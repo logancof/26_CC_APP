@@ -19,6 +19,21 @@ var currentX = 0;
 var currentY = 0;
 var pdfRenderToken = 0;
 var lastMediaSignature = "";
+var latestTeams = [];
+var latestScores = [];
+var latestScoreEntries = [];
+
+var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 100];
+var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 100];
+var HEAD_TO_HEAD_POINTS = {
+  win: 3000,
+  tie: 1500,
+  loss: 0
+};
+var BONUS_POINT_PRESETS = {
+  mini_duck: 20,
+  golden_duck: 2000
+};
 
 var blockedTeamNameWords = [
   "ass", "arse", "bastard", "bitch", "boob", "crap", "damn", "dick", "drug", "drugs",
@@ -264,10 +279,14 @@ function getCampCache() {
 }
 
 function renderCampData(data) {
+  latestTeams = data.TEAMS || [];
+  latestScores = data.SCORES || [];
+  latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
+
   updateStatus(data.SCHEDULE || []);
-  renderScores(data.SCORES || [], data.TEAMS || []);
+  renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
   renderGames(data.GAMES || [], data.TEAMS || []);
-  renderTeams(data.TEAMS || [], data.SCORES || []);
+  renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries));
   renderMediaSections(data.CONTENT || []);
   renderImpactStories(data.IMPACTS || []);
   renderContacts(data.LEADER_CONTACTS || []);
@@ -277,6 +296,7 @@ function renderCampData(data) {
     data.TEAM_NAME_ASSIGNMENTS || [],
     data.TEAM_NAMES || []
   );
+  renderPlacements();
 }
 
 function calculateGameStatus(game) {
@@ -782,6 +802,69 @@ function buildTeamLookup(teams) {
   return lookup;
 }
 
+function getScoreTotals(scores, teams, entries) {
+  if (!entries || !entries.length) return scores || [];
+
+  var teamLookup = buildTeamLookup(teams || []);
+  var totals = {};
+
+  (teams || []).forEach(function(team) {
+    if (!team.team_id) return;
+
+    totals[team.team_id] = {
+      team_id: team.team_id,
+      age_group: team.age_group || getAgeGroupFromTeamNumber(team.team_number),
+      points: 0
+    };
+  });
+
+  getScoreAwardsFromEntries(entries).forEach(function(award) {
+    if (!award.team_id) return;
+
+    if (!totals[award.team_id]) {
+      totals[award.team_id] = {
+        team_id: award.team_id,
+        age_group: award.age_group || (teamLookup[award.team_id] || {}).age_group || "",
+        points: 0
+      };
+    }
+
+    totals[award.team_id].points += Number(award.points || 0);
+
+    if (!totals[award.team_id].age_group && award.age_group) {
+      totals[award.team_id].age_group = award.age_group;
+    }
+  });
+
+  return Object.keys(totals).map(function(teamId) {
+    return totals[teamId];
+  });
+}
+
+function getScoreAwardsFromEntries(entries) {
+  var awards = [];
+
+  (entries || []).forEach(function(entry) {
+    if (entry.awards) {
+      try {
+        JSON.parse(entry.awards).forEach(function(award) {
+          awards.push(Object.assign({}, award, {
+            age_group: award.age_group || entry.age_group || ""
+          }));
+        });
+      } catch (e) {}
+    } else if (entry.team_id && entry.points !== undefined) {
+      awards.push({
+        team_id: entry.team_id,
+        age_group: entry.age_group || "",
+        points: Number(entry.points || 0)
+      });
+    }
+  });
+
+  return awards;
+}
+
 function renderScores(scores, teams) {
   var selector = qs("#scoreAgeSelector");
   var boards = qs("#scoreBoards");
@@ -1122,54 +1205,321 @@ function renderPlacements() {
   var placementEntry = qs("#placementEntry");
   var scoreGame = qs("#scoreGame");
   var scoreModeNote = qs("#scoreModeNote");
+  var submitButton = qs("#scoreSubmitButton");
 
   if (!placementEntry) return;
 
   var selectedOption = scoreGame && scoreGame.options.length ? scoreGame.options[scoreGame.selectedIndex] : null;
   var mode = selectedOption ? selectedOption.getAttribute("data-score-mode") || "ranked" : "ranked";
-  var multiplier = selectedOption ? Number(selectedOption.getAttribute("data-multiplier") || 1) : 1;
-  var places = [
-    { label: "1st", points: 3000 },
-    { label: "2nd", points: 2500 },
-    { label: "3rd", points: 2000 },
-    { label: "4th", points: 1500 },
-    { label: "5th", points: 1000 },
-    { label: "6th", points: 100 }
-  ];
+  var teams = getScoreEntryTeams();
 
-  var teams = ["Team 1", "Team 2", "Team 3", "Team 4", "Team 5", "Team 6"];
+  if (submitButton) {
+    submitButton.textContent = mode === "bonus" ? "Add Bonus Points" : "Submit Result";
+  }
 
   if (scoreModeNote) {
     if (mode === "head-to-head") {
-      scoreModeNote.textContent = "Head-to-head game: enter both teams and the final game score.";
+      scoreModeNote.textContent = "Win = 3000, tie = 1500, loss = 0.";
     } else if (mode === "all-play") {
-      scoreModeNote.textContent = "All-play game: enter placements. Points show the all-play multiplier.";
+      scoreModeNote.textContent = "All-play placement scale: 4500, 3750, 3000, 2250, 1500, 0. Matching places are averaged for ties.";
+    } else if (mode === "bonus") {
+      scoreModeNote.textContent = "Mini rubber duck = 20 points. Golden rubber duck = 2000 points. You can also enter a manual amount.";
     } else {
-      scoreModeNote.textContent = "Placement game: enter finish order for this age group.";
+      scoreModeNote.textContent = "Placement scale: 3000, 2500, 2000, 1500, 1000, 0. Matching places are averaged for ties.";
     }
+  }
+
+  if (!teams.length) {
+    placementEntry.innerHTML = '<p class="score-empty">No teams found for this age group.</p>';
+    return;
   }
 
   if (mode === "head-to-head") {
     placementEntry.innerHTML = '<div class="match-result-grid">' +
-      '<label>Team 1<select><option>Team 1</option><option>Team 2</option><option>Team 3</option><option>Team 4</option><option>Team 5</option><option>Team 6</option></select></label>' +
-      '<label>Score<input type="number" min="0" inputmode="numeric" placeholder="0" /></label>' +
-      '<label>Team 2<select><option>Team 1</option><option selected>Team 2</option><option>Team 3</option><option>Team 4</option><option>Team 5</option><option>Team 6</option></select></label>' +
-      '<label>Score<input type="number" min="0" inputmode="numeric" placeholder="0" /></label>' +
+      '<label>Team A<select id="headToHeadTeamA">' + getTeamOptions(teams, 0) + '</select></label>' +
+      '<label>Team B<select id="headToHeadTeamB">' + getTeamOptions(teams, 1) + '</select></label>' +
+      '<label>Result<select id="headToHeadResult"><option value="a_win">Team A wins</option><option value="tie">Tie</option><option value="b_win">Team B wins</option></select></label>' +
     '</div>';
     return;
   }
 
-  placementEntry.innerHTML = places.map(function(place, index) {
-    var points = Math.round(place.points * multiplier);
+  if (mode === "bonus") {
+    placementEntry.innerHTML = '<div class="bonus-result-grid">' +
+      '<label>Team<select id="bonusTeam">' + getTeamOptions(teams, 0) + '</select></label>' +
+      '<div class="bonus-presets">' +
+        '<button type="button" data-bonus-preset="mini_duck">Mini Duck +20</button>' +
+        '<button type="button" data-bonus-preset="golden_duck">Golden Duck +2000</button>' +
+      '</div>' +
+      '<label>Point Amount<input id="bonusPoints" type="number" inputmode="numeric" placeholder="Example: 20" /></label>' +
+      '<label>Note<textarea id="bonusNote" placeholder="Reason or award details"></textarea></label>' +
+    '</div>';
 
-    return '<div class="placement-row">' +
-      '<span>' + place.label + '</span>' +
-      '<select>' + teams.map(function(team, i) {
-        return '<option ' + (i === index ? "selected" : "") + '>' + team + '</option>';
-      }).join("") + '</select>' +
-      '<strong>' + points + '</strong>' +
+    bindBonusPresetButtons();
+    return;
+  }
+
+  placementEntry.innerHTML = teams.map(function(team, index) {
+    return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(team.team_id) + '">' +
+      '<span>' + escapeHtml(getTeamDisplayName(team)) + '</span>' +
+      '<select data-placement-select>' + getPlaceOptions(index + 1) + '</select>' +
+      '<strong data-placement-points>0</strong>' +
     '</div>';
   }).join("");
+
+  bindPlacementPointPreview(mode);
+}
+
+function getScoreEntryAgeGroup() {
+  var selector = qs("#scoreEntryAgeGroup");
+  return selector ? selector.value : "";
+}
+
+function normalizeAgeGroup(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/grade/g, "")
+    .replace(/th|st|nd|rd/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function teamMatchesScoreAge(team, ageGroup) {
+  var normalizedAge = normalizeAgeGroup(ageGroup);
+  var teamAge = normalizeAgeGroup(team.age_group);
+
+  if (teamAge && normalizedAge && teamAge.indexOf(normalizedAge.replace("-", "")) !== -1) return true;
+  if (teamAge && normalizedAge && normalizedAge.indexOf(teamAge) !== -1) return true;
+
+  var number = Number(team.team_number);
+  if (normalizedAge.indexOf("6-7") !== -1) return number >= 1 && number <= 10;
+  if (normalizedAge.indexOf("8-9") !== -1) return number >= 11 && number <= 20;
+  if (normalizedAge.indexOf("10-12") !== -1) return number >= 21 && number <= 30;
+
+  return false;
+}
+
+function getScoreEntryTeams() {
+  var ageGroup = getScoreEntryAgeGroup();
+  var teams = (latestTeams || []).filter(function(team) {
+    return teamMatchesScoreAge(team, ageGroup);
+  });
+
+  if (!teams.length) teams = latestTeams || [];
+
+  return teams.sort(function(a, b) {
+    return Number(a.team_number || 0) - Number(b.team_number || 0);
+  }).slice(0, 6);
+}
+
+function getTeamDisplayName(team) {
+  if (!team) return "";
+  return (team.team_name ? team.team_name + " " : "") + "Team " + (team.team_number || "");
+}
+
+function getTeamOptions(teams, selectedIndex) {
+  return teams.map(function(team, index) {
+    return '<option value="' + escapeHtml(team.team_id) + '" ' + (index === selectedIndex ? "selected" : "") + '>' +
+      escapeHtml(getTeamDisplayName(team)) +
+    '</option>';
+  }).join("");
+}
+
+function getPlaceOptions(selectedPlace) {
+  var labels = ["1st", "2nd", "3rd", "4th", "5th", "6th"];
+
+  return labels.map(function(label, index) {
+    var place = index + 1;
+    return '<option value="' + place + '" ' + (place === selectedPlace ? "selected" : "") + '>' + label + '</option>';
+  }).join("");
+}
+
+function getPlacementScale(mode) {
+  return mode === "all-play" ? ALL_PLAY_POINTS : PLACEMENT_POINTS;
+}
+
+function calculatePlacementAwards(entries, mode, ageGroup) {
+  var scale = getPlacementScale(mode);
+  var groups = {};
+
+  entries.forEach(function(entry) {
+    var place = Number(entry.place || 0);
+    if (!groups[place]) groups[place] = [];
+    groups[place].push(entry);
+  });
+
+  return Object.keys(groups).map(Number).sort(function(a, b) {
+    return a - b;
+  }).reduce(function(awards, place) {
+    var tiedEntries = groups[place];
+    var total = 0;
+
+    for (var i = 0; i < tiedEntries.length; i++) {
+      total += scale[place - 1 + i] || 0;
+    }
+
+    var points = Math.round(total / tiedEntries.length);
+
+    tiedEntries.forEach(function(entry) {
+      awards.push({
+        team_id: entry.team_id,
+        age_group: ageGroup,
+        place: place,
+        points: points
+      });
+    });
+
+    return awards;
+  }, []);
+}
+
+function bindPlacementPointPreview(mode) {
+  function updatePreview() {
+    var entries = qsa(".score-team-placement").map(function(row) {
+      var select = row.querySelector("[data-placement-select]");
+      return {
+        team_id: row.getAttribute("data-team-id"),
+        place: Number(select ? select.value : 0)
+      };
+    });
+
+    var awards = calculatePlacementAwards(entries, mode, getScoreEntryAgeGroup());
+    var awardsByTeam = {};
+
+    awards.forEach(function(award) {
+      awardsByTeam[award.team_id] = award.points;
+    });
+
+    qsa(".score-team-placement").forEach(function(row) {
+      var preview = row.querySelector("[data-placement-points]");
+      if (preview) preview.textContent = awardsByTeam[row.getAttribute("data-team-id")] || 0;
+    });
+  }
+
+  qsa("[data-placement-select]").forEach(function(select) {
+    select.addEventListener("change", updatePreview);
+  });
+
+  updatePreview();
+}
+
+function bindBonusPresetButtons() {
+  qsa("[data-bonus-preset]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var input = qs("#bonusPoints");
+      var preset = button.getAttribute("data-bonus-preset");
+      if (input) input.value = BONUS_POINT_PRESETS[preset] || "";
+    });
+  });
+}
+
+function getSelectedScoreGame() {
+  var scoreGame = qs("#scoreGame");
+  var option = scoreGame && scoreGame.options.length ? scoreGame.options[scoreGame.selectedIndex] : null;
+
+  return {
+    id: option ? option.value : "",
+    title: option ? option.textContent : "",
+    mode: option ? option.getAttribute("data-score-mode") || "ranked" : "ranked"
+  };
+}
+
+function buildScoreSubmission() {
+  var game = getSelectedScoreGame();
+  var ageGroup = getScoreEntryAgeGroup();
+  var awards = [];
+  var details = {};
+
+  if (game.mode === "head-to-head") {
+    var teamA = qs("#headToHeadTeamA") ? qs("#headToHeadTeamA").value : "";
+    var teamB = qs("#headToHeadTeamB") ? qs("#headToHeadTeamB").value : "";
+    var result = qs("#headToHeadResult") ? qs("#headToHeadResult").value : "";
+
+    if (!teamA || !teamB || teamA === teamB) {
+      throw new Error("Choose two different teams.");
+    }
+
+    if (result === "tie") {
+      awards = [
+        { team_id: teamA, age_group: ageGroup, result: "tie", points: HEAD_TO_HEAD_POINTS.tie },
+        { team_id: teamB, age_group: ageGroup, result: "tie", points: HEAD_TO_HEAD_POINTS.tie }
+      ];
+    } else if (result === "a_win") {
+      awards = [
+        { team_id: teamA, age_group: ageGroup, result: "win", points: HEAD_TO_HEAD_POINTS.win },
+        { team_id: teamB, age_group: ageGroup, result: "loss", points: HEAD_TO_HEAD_POINTS.loss }
+      ];
+    } else {
+      awards = [
+        { team_id: teamA, age_group: ageGroup, result: "loss", points: HEAD_TO_HEAD_POINTS.loss },
+        { team_id: teamB, age_group: ageGroup, result: "win", points: HEAD_TO_HEAD_POINTS.win }
+      ];
+    }
+
+    details = { team_a: teamA, team_b: teamB, result: result };
+  } else if (game.mode === "bonus") {
+    var bonusTeam = qs("#bonusTeam") ? qs("#bonusTeam").value : "";
+    var bonusPoints = Number(qs("#bonusPoints") ? qs("#bonusPoints").value : 0);
+    var note = qs("#bonusNote") ? qs("#bonusNote").value.trim() : "";
+
+    if (!bonusTeam || !bonusPoints) {
+      throw new Error("Choose a team and enter a point amount.");
+    }
+
+    awards = [{ team_id: bonusTeam, age_group: ageGroup, result: "bonus", points: bonusPoints }];
+    details = { team_id: bonusTeam, note: note };
+  } else {
+    var placements = qsa(".score-team-placement").map(function(row) {
+      var select = row.querySelector("[data-placement-select]");
+      return {
+        team_id: row.getAttribute("data-team-id"),
+        place: Number(select ? select.value : 0)
+      };
+    });
+
+    awards = calculatePlacementAwards(placements, game.mode, ageGroup);
+    details = { placements: placements };
+  }
+
+  return {
+    action: "submit_score_result",
+    username: currentUser.username,
+    token: currentUser.token || "",
+    age_group: ageGroup,
+    game_id: game.id,
+    game_title: game.title,
+    scoring_mode: game.mode,
+    awards: awards,
+    details: details
+  };
+}
+
+function submitScoreResult() {
+  var status = qs("#scoreEntryStatus");
+
+  try {
+    var payload = buildScoreSubmission();
+
+    if (status) status.textContent = "Saving score...";
+
+    if (!API_URL) {
+      if (status) status.textContent = "Demo score calculated: " + payload.awards.map(function(award) {
+        return award.team_id + " +" + award.points;
+      }).join(", ");
+      return;
+    }
+
+    apiRequest(payload)
+      .then(function(result) {
+        if (!result.ok) throw new Error(result.message || "Score could not be saved.");
+        if (status) status.textContent = "Score saved.";
+        fetchCampData();
+      })
+      .catch(function(error) {
+        if (status) status.textContent = error.message;
+      });
+  } catch (error) {
+    if (status) status.textContent = error.message;
+  }
 }
 
 function renderContacts(contacts) {
@@ -1573,6 +1923,12 @@ function initApp() {
 
   var scoreGame = qs("#scoreGame");
   if (scoreGame) scoreGame.addEventListener("change", renderPlacements);
+
+  var scoreEntryAgeGroup = qs("#scoreEntryAgeGroup");
+  if (scoreEntryAgeGroup) scoreEntryAgeGroup.addEventListener("change", renderPlacements);
+
+  var scoreSubmitButton = qs("#scoreSubmitButton");
+  if (scoreSubmitButton) scoreSubmitButton.addEventListener("click", submitScoreResult);
 
   var previewModeToggle = qs("#previewModeToggle");
   if (previewModeToggle) {
