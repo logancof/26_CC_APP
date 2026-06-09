@@ -1,7 +1,7 @@
 var API_URL = "https://script.google.com/macros/s/AKfycbyCeT35L-8gAoQwDgMrII53WCR8LPx0zPUM1x0Q5HpoyW0tvC7DAEZ0DktRE2mfnek_RQ/exec";
 var TEST_PASSWORD = "Cc2026";
 var REFRESH_MS = 30000;
-var PREVIEW_USERNAMES = ["Logan Parr", "loganisparr"];
+var PREVIEW_USERNAMES = ["logan.parr", "loganisparr"];
 
 var roleLevel = {
   public: 0,
