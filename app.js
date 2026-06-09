@@ -1221,11 +1221,11 @@ function renderPlacements() {
     if (mode === "head-to-head") {
       scoreModeNote.textContent = "Win = 3000, tie = 1500, loss = 0.";
     } else if (mode === "all-play") {
-      scoreModeNote.textContent = "All-play placement scale: 4500, 3750, 3000, 2250, 1500, 0. Matching places are averaged for ties.";
+      scoreModeNote.textContent = "All-play placement scale: 4500, 3750, 3000, 2250, 1500, 0. Leave non-scoring teams blank.";
     } else if (mode === "bonus") {
       scoreModeNote.textContent = "Mini rubber duck = 20 points. Golden rubber duck = 2000 points. You can also enter a manual amount.";
     } else {
-      scoreModeNote.textContent = "Placement scale: 3000, 2500, 2000, 1500, 1000, 0. Matching places are averaged for ties.";
+      scoreModeNote.textContent = "Placement scale: 3000, 2500, 2000, 1500, 1000, 0. Leave non-scoring teams blank.";
     }
   }
 
@@ -1258,10 +1258,10 @@ function renderPlacements() {
     return;
   }
 
-  placementEntry.innerHTML = teams.map(function(team, index) {
+  placementEntry.innerHTML = teams.map(function(team) {
     return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(team.team_id) + '">' +
       '<span>' + escapeHtml(getTeamDisplayName(team)) + '</span>' +
-      '<select data-placement-select>' + getPlaceOptions(index + 1) + '</select>' +
+      '<select data-placement-select>' + getPlaceOptions(0) + '</select>' +
       '<strong data-placement-points>0</strong>' +
     '</div>';
   }).join("");
@@ -1299,21 +1299,14 @@ function teamMatchesScoreAge(team, ageGroup) {
 }
 
 function getScoreEntryTeams() {
-  var ageGroup = getScoreEntryAgeGroup();
-  var teams = (latestTeams || []).filter(function(team) {
-    return teamMatchesScoreAge(team, ageGroup);
-  });
-
-  if (!teams.length) teams = latestTeams || [];
-
-  return teams.sort(function(a, b) {
+  return (latestTeams || []).slice().sort(function(a, b) {
     return Number(a.team_number || 0) - Number(b.team_number || 0);
-  }).slice(0, 6);
+  });
 }
 
 function getTeamDisplayName(team) {
   if (!team) return "";
-  return (team.team_name ? team.team_name + " " : "") + "Team " + (team.team_number || "");
+  return "Team " + (team.team_number || "");
 }
 
 function getTeamOptions(teams, selectedIndex) {
@@ -1326,8 +1319,9 @@ function getTeamOptions(teams, selectedIndex) {
 
 function getPlaceOptions(selectedPlace) {
   var labels = ["1st", "2nd", "3rd", "4th", "5th", "6th"];
+  var options = '<option value="">No score</option>';
 
-  return labels.map(function(label, index) {
+  return options + labels.map(function(label, index) {
     var place = index + 1;
     return '<option value="' + place + '" ' + (place === selectedPlace ? "selected" : "") + '>' + label + '</option>';
   }).join("");
@@ -1343,6 +1337,7 @@ function calculatePlacementAwards(entries, mode, ageGroup) {
 
   entries.forEach(function(entry) {
     var place = Number(entry.place || 0);
+    if (!place) return;
     if (!groups[place]) groups[place] = [];
     groups[place].push(entry);
   });
@@ -1474,7 +1469,13 @@ function buildScoreSubmission() {
         team_id: row.getAttribute("data-team-id"),
         place: Number(select ? select.value : 0)
       };
+    }).filter(function(entry) {
+      return entry.place > 0;
     });
+
+    if (!placements.length) {
+      throw new Error("Choose at least one scoring team.");
+    }
 
     awards = calculatePlacementAwards(placements, game.mode, ageGroup);
     details = { placements: placements };
