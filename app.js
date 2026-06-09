@@ -797,10 +797,16 @@ function buildTeamLookup(teams) {
   var lookup = {};
 
   teams.forEach(function(team) {
-    lookup[team.team_id] = team;
+    var teamId = getTeamId(team);
+    if (teamId) lookup[teamId] = team;
   });
 
   return lookup;
+}
+
+function getTeamId(team) {
+  if (!team) return "";
+  return team.team_id || team["1"] || (team.team_number ? "team_" + team.team_number : "");
 }
 
 function getScoreTotals(scores, teams, entries) {
@@ -810,10 +816,11 @@ function getScoreTotals(scores, teams, entries) {
   var totals = {};
 
   (teams || []).forEach(function(team) {
-    if (!team.team_id) return;
+    var teamId = getTeamId(team);
+    if (!teamId) return;
 
-    totals[team.team_id] = {
-      team_id: team.team_id,
+    totals[teamId] = {
+      team_id: teamId,
       age_group: team.age_group || getAgeGroupFromTeamNumber(team.team_number),
       points: 0
     };
@@ -970,7 +977,7 @@ function renderTeams(teams, scores) {
       '<div class="team-card-body">' +
         '<div class="team-card-top"><h3>' + (team.team_name || "Team " + team.team_number) + '</h3><span class="pill">Team ' + (team.team_number || "") + '</span></div>' +
         '<p><strong>Age Group:</strong> ' + (team.age_group || getAgeGroupFromTeamNumber(team.team_number)) + '</p>' +
-        '<p><strong>Points:</strong> ' + (scoresByTeam[team.team_id] || 0) + '</p>' +
+        '<p><strong>Points:</strong> ' + (scoresByTeam[getTeamId(team)] || 0) + '</p>' +
         '<p><strong>Leaders:</strong> ' + (team.leaders || "") + '</p>' +
         '<p><strong>Students:</strong> ' + (team.students || "") + '</p>' +
       '</div>' +
@@ -1262,7 +1269,7 @@ function renderPlacements() {
   }
 
   placementEntry.innerHTML = teams.map(function(team) {
-    return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(team.team_id) + '">' +
+    return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(getTeamId(team)) + '">' +
       '<span>' + escapeHtml(getTeamDisplayName(team)) + '</span>' +
       '<select data-placement-select>' + getPlaceOptions(0) + '</select>' +
       '<strong data-placement-points>0</strong>' +
@@ -1320,7 +1327,7 @@ function getTeamDisplayName(team) {
 
 function getTeamOptions(teams, selectedIndex) {
   return teams.map(function(team, index) {
-    return '<option value="' + escapeHtml(team.team_id) + '" ' + (index === selectedIndex ? "selected" : "") + '>' +
+    return '<option value="' + escapeHtml(getTeamId(team)) + '" ' + (index === selectedIndex ? "selected" : "") + '>' +
       escapeHtml(getTeamDisplayName(team)) +
     '</option>';
   }).join("");
