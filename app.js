@@ -212,7 +212,7 @@ function apiRequest(payload) {
     }
   }).catch(function(error) {
     if (error && error.message === "Failed to fetch") {
-      throw new Error("Could not reach the login service. Check the Apps Script deployment access and web app URL.");
+      throw new Error("Login service is blocked. The Apps Script web app needs a doPost(e) handler and must be deployed for anyone with the link.");
     }
 
     throw error;
