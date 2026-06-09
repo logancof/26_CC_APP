@@ -77,6 +77,7 @@ var demoContent = [
 
 var defaultResourceLinks = {
   leader_role_description: "assets/pdfs/Community%20Camp%20Leader%20Role%20Description.pdf",
+  community_camp_schedule: "assets/pdfs/CC%20Daily%20Schedule.pdf",
   leadership_structure: "assets/pdfs/Leadership%20Structure.pdf",
   code_of_conduct: "assets/pdfs/CC%20Code%20of%20Conduct.pdf",
   tiers_of_communication: "assets/pdfs/Tiers%20of%20Communication.pdf",
@@ -90,7 +91,9 @@ var defaultResourceLinks = {
   baptisms: "assets/pdfs/Baptisms.pdf",
   spontaneous_baptisms: "assets/pdfs/Spontaneous%20Baptisms.pdf",
   testimonies: "assets/pdfs/Testimonies.pdf",
-  visitor_policy: "assets/pdfs/CC%20Visitor%20Policy.pdf"
+  visitor_policy: "assets/pdfs/CC%20Visitor%20Policy.pdf",
+  parent_general_information: "assets/pdfs/CC%20Parent%20Meeting%20Handout%20-%202026.pdf",
+  packing_list: "assets/pdfs/CC%20Packing%20List.pdf"
 };
 
 try {
