@@ -810,7 +810,8 @@ function getTeamId(team) {
 }
 
 function getScoreTotals(scores, teams, entries) {
-  if (!entries || !entries.length) return scores || [];
+  if (scores && scores.length) return scores;
+  if (!entries || !entries.length) return [];
 
   var teamLookup = buildTeamLookup(teams || []);
   var totals = {};
