@@ -41,19 +41,15 @@
           <div class="menu-user-card test-role-card">
             <p>Testing Role Preview</p>
             <select id="testRoleSelect">
-              <option value="public">Public</option>
               <option value="guest">Guest</option>
               <option value="leader">Leader</option>
-              <option value="referee">Referee</option>
-              <option value="head_referee">Head Referee</option>
-              <option value="camp_admin">Camp Admin</option>
               <option value="admin">Admin</option>
             </select>
             <button class="menu-login-main" id="applyTestRole">Preview Role</button>
           </div>
 
           <div class="menu-section-title">Available Tools</div>
-          <button class="role-menu-item" data-min-role="referee" data-role-view="scorekeeper">
+          <button class="role-menu-item" data-permission="scorekeeper" data-role-view="scorekeeper">
             <div><strong>Input Scores</strong><small>For referees and scorekeepers</small></div>
           </button>
           <button class="role-menu-item" data-min-role="leader" data-role-view="leaders">
@@ -65,13 +61,13 @@
           <button class="role-menu-item" data-permission="attendance" data-role-view="attendance">
             <div><strong>Attendance</strong><small>Safety team attendance checkpoints</small></div>
           </button>
-          <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
+          <button class="role-menu-item" data-permission="score_corrections" data-role-view="scorefix">
             <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
           </button>
-          <button class="role-menu-item" data-min-role="camp_admin" data-role-view="storyadmin">
+          <button class="role-menu-item" data-permission="story_admin" data-role-view="storyadmin">
             <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
           </button>
-          <button class="role-menu-item" data-min-role="camp_admin" data-role-view="teamnameadmin">
+          <button class="role-menu-item" data-permission="team_name_admin" data-role-view="teamnameadmin">
             <div><strong>Team Name Admin</strong><small>Fix team names and control the naming window</small></div>
           </button>
 
@@ -393,7 +389,7 @@
         </div>
       </div>
 
-      <div id="scorekeeper" class="page">
+      <div id="scorekeeper" class="page" data-permission="scorekeeper">
         <h2 class="section-title">Scorekeeper</h2>
         <div class="updated">Referees can enter placements. Points are calculated automatically.</div>
 
@@ -429,9 +425,9 @@
         </div>
       </div>
 
-      <div id="scorefix" class="page">
+      <div id="scorefix" class="page" data-permission="score_corrections">
         <h2 class="section-title">Score Fix</h2>
-        <div class="updated">Head referees can fix scores and add bonus duck points.</div>
+        <div class="updated">Approved scorekeepers can fix scores and add bonus duck points.</div>
 
         <div class="card entry-card">
           <span class="pill">Bonus Ducks</span>
@@ -456,7 +452,7 @@
         </div>
       </div>
 
-      <div id="storyadmin" class="page">
+      <div id="storyadmin" class="page" data-permission="story_admin">
         <h2 class="section-title">Story Review</h2>
         <div class="updated">Camp admins can approve and edit leader-submitted stories here.</div>
         <div class="card">
@@ -467,7 +463,7 @@
         </div>
       </div>
 
-      <div id="teamnameadmin" class="page">
+      <div id="teamnameadmin" class="page" data-permission="team_name_admin">
         <h2 class="section-title">Team Name Admin</h2>
         <div class="updated">Camp admins control the naming window and can correct misspellings.</div>
 
@@ -547,7 +543,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.7.1</div>
+    <div class="app-version">v0.7.3</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

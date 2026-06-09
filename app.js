@@ -6,10 +6,7 @@ var roleLevel = {
   public: 0,
   guest: 0,
   leader: 1,
-  referee: 2,
-  head_referee: 3,
-  camp_admin: 4,
-  admin: 5
+  admin: 2
 };
 
 var currentUser = { username: "public", role: "public", permissions: [] };
@@ -204,7 +201,21 @@ function apiRequest(payload) {
     method: "POST",
     body: JSON.stringify(payload)
   }).then(function(response) {
-    return response.json();
+    return response.text();
+  }).then(function(text) {
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      var messageMatch = text.match(/<div[^>]*>([^<]*(?:Script function not found|runtime exited unexpectedly)[^<]*)<\/div>/i);
+      var message = messageMatch ? messageMatch[1] : "The login service returned an invalid response.";
+      throw new Error(message);
+    }
+  }).catch(function(error) {
+    if (error && error.message === "Failed to fetch") {
+      throw new Error("Could not reach the login service. Check the Apps Script deployment access and web app URL.");
+    }
+
+    throw error;
   });
 }
 
@@ -360,7 +371,9 @@ function updateVisibleMenuItems() {
 }
 
 function setTestRole(role) {
-  var permissions = role === "camp_admin" || role === "admin" ? ["attendance"] : [];
+  var permissions = role === "admin"
+    ? ["attendance", "scorekeeper", "score_corrections", "story_admin", "team_name_admin"]
+    : [];
   currentUser = { username: role === "public" ? "public" : "test_" + role, role: role, permissions: permissions };
 
   try {
