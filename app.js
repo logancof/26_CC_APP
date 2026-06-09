@@ -1299,14 +1299,27 @@ function teamMatchesScoreAge(team, ageGroup) {
 }
 
 function getScoreEntryTeams() {
-  return (latestTeams || []).slice().sort(function(a, b) {
+  var ageGroup = getScoreEntryAgeGroup();
+  var teams = (latestTeams || []).filter(function(team) {
+    return teamMatchesScoreAge(team, ageGroup);
+  });
+
+  if (!teams.length) teams = latestTeams || [];
+
+  return teams.sort(function(a, b) {
     return Number(a.team_number || 0) - Number(b.team_number || 0);
   });
 }
 
+function getScoreEntryTeamNumber(team) {
+  var number = Number(team.team_number || 0);
+  if (!number) return "";
+  return ((number - 1) % 10) + 1;
+}
+
 function getTeamDisplayName(team) {
   if (!team) return "";
-  return "Team " + (team.team_number || "");
+  return "Team " + getScoreEntryTeamNumber(team);
 }
 
 function getTeamOptions(teams, selectedIndex) {
