@@ -22,61 +22,61 @@
 
   <main class="phone">
     <section class="hero">
-      <div class="hero-inner">
-        <div class="account-menu">
-          <button class="menu-button" id="menuButton" aria-label="Open menu">
-            <span></span><span></span><span></span>
+      <div class="account-menu">
+        <button class="menu-button" id="menuButton" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
+        <div class="menu-panel" id="menuPanel">
+          <div class="menu-header simple">
+            <h2>Camp Account</h2>
+            <button class="menu-close" id="menuBack">Close</button>
+          </div>
+
+          <div class="menu-user-card">
+            <p id="menuUserLabel">Not logged in</p>
+            <button class="menu-login-main" data-open-login>Login</button>
+          </div>
+
+          <div class="menu-user-card test-role-card">
+            <p>Testing Role Preview</p>
+            <select id="testRoleSelect">
+              <option value="public">Public</option>
+              <option value="guest">Guest</option>
+              <option value="leader">Leader</option>
+              <option value="referee">Referee</option>
+              <option value="head_referee">Head Referee</option>
+              <option value="camp_admin">Camp Admin</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button class="menu-login-main" id="applyTestRole">Preview Role</button>
+          </div>
+
+          <div class="menu-section-title">Available Tools</div>
+          <button class="role-menu-item" data-min-role="referee" data-role-view="scorekeeper">
+            <div><strong>Input Scores</strong><small>For referees and scorekeepers</small></div>
+          </button>
+          <button class="role-menu-item" data-min-role="leader" data-role-view="leaders">
+            <div>
+              <strong>Leader Hub</strong>
+              <small>Training, resources, assignments, and attendance</small>
+            </div>
+          </button>
+          <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
+            <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
+          </button>
+          <button class="role-menu-item" data-min-role="camp_admin" data-role-view="storyadmin">
+            <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
+          </button>
+          <button class="role-menu-item" data-min-role="camp_admin" data-role-view="teamnameadmin">
+            <div><strong>Team Name Admin</strong><small>Fix team names and control the naming window</small></div>
           </button>
 
-          <div class="menu-panel" id="menuPanel">
-            <div class="menu-header simple">
-              <h2>Camp Account</h2>
-              <button class="menu-close" id="menuBack">Close</button>
-            </div>
-
-            <div class="menu-user-card">
-              <p id="menuUserLabel">Not logged in</p>
-              <button class="menu-login-main" data-open-login>Login</button>
-            </div>
-
-            <div class="menu-user-card test-role-card">
-              <p>Testing Role Preview</p>
-              <select id="testRoleSelect">
-                <option value="public">Public</option>
-                <option value="guest">Guest</option>
-                <option value="leader">Leader</option>
-                <option value="referee">Referee</option>
-                <option value="head_referee">Head Referee</option>
-                <option value="camp_admin">Camp Admin</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button class="menu-login-main" id="applyTestRole">Preview Role</button>
-            </div>
-
-            <div class="menu-section-title">Available Tools</div>
-            <button class="role-menu-item" data-min-role="referee" data-role-view="scorekeeper">
-              <div><strong>Input Scores</strong><small>For referees and scorekeepers</small></div>
-            </button>
-            <button class="role-menu-item" data-min-role="leader" data-role-view="leaders">
-              <div>
-                <strong>Leader Hub</strong>
-                <small>Training, resources, assignments, and attendance</small>
-              </div>
-            </button>
-            <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
-              <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
-            </button>
-            <button class="role-menu-item" data-min-role="camp_admin" data-role-view="storyadmin">
-              <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
-            </button>
-            <button class="role-menu-item" data-min-role="camp_admin" data-role-view="teamnameadmin">
-              <div><strong>Team Name Admin</strong><small>Fix team names and control the naming window</small></div>
-            </button>
-
-            <button class="menu-logout" id="logoutButton">Logout</button>
-          </div>
+          <button class="menu-logout" id="logoutButton">Logout</button>
         </div>
+      </div>
 
+      <div class="hero-inner">
         <div class="hero-title-lockup">
           <img src="assets/images/community-camp-logo_002.png" alt="Community Camp" />
         </div>
