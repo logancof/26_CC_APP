@@ -44,6 +44,7 @@
               <option value="public">Public</option>
               <option value="guest">Guest</option>
               <option value="leader">Leader</option>
+              <option value="safety">Safety</option>
               <option value="referee">Referee</option>
               <option value="head_referee">Head Referee</option>
               <option value="camp_admin">Camp Admin</option>
@@ -59,8 +60,11 @@
           <button class="role-menu-item" data-min-role="leader" data-role-view="leaders">
             <div>
               <strong>Leader Hub</strong>
-              <small>Training, resources, assignments, and attendance</small>
+              <small>Training, resources, assignments, and logistics</small>
             </div>
+          </button>
+          <button class="role-menu-item" data-min-role="safety" data-role-view="attendance">
+            <div><strong>Attendance</strong><small>Safety team attendance checkpoints</small></div>
           </button>
           <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
             <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
@@ -178,7 +182,7 @@
         <h2 class="section-title">Documents</h2>
         <div class="grid">
           <button class="leader-resource role-protected" data-role-view="leaders" data-min-role="leader">
-            Leader Documents<span>Training, safety, assignments, attendance, and camp logistics</span>
+            Leader Documents<span>Training, safety, assignments, and camp logistics</span>
           </button>
           <button class="leader-resource" data-page-link="parent-documents">
             Parents Documents<span>Forms, packing info, and parent resources</span>
@@ -241,9 +245,6 @@
             </button>
             <button class="leader-category-card" data-page-link="leader-assignments">
               Assignments<span>Groups, teams, dorms, and buses</span>
-            </button>
-            <button class="leader-category-card" data-page-link="leader-attendance">
-              Attendance<span>Checkpoints and tracking</span>
             </button>
           </div>
         </div>
@@ -375,12 +376,12 @@
         </div>
       </div>
 
-      <div id="leader-attendance" class="page full-screen-page leader-category-page" data-min-role="leader">
+      <div id="attendance" class="page full-screen-page leader-category-page" data-min-role="safety">
         <div class="full-page-header">
-          <button class="back-button" data-page-link="leaders">← Leader Hub</button>
+          <button class="back-button" data-page-link="home">← Home</button>
           <div>
             <h2>Attendance</h2>
-            <p>Check when attendance matters and open the tracking tool when it is available.</p>
+            <p>Safety team attendance checkpoints and tracking.</p>
           </div>
         </div>
         <div class="resource-list">

@@ -6,10 +6,11 @@ var roleLevel = {
   public: 0,
   guest: 0,
   leader: 1,
-  referee: 2,
-  head_referee: 3,
-  camp_admin: 4,
-  admin: 5
+  safety: 2,
+  referee: 3,
+  head_referee: 4,
+  camp_admin: 5,
+  admin: 6
 };
 
 var currentUser = { username: "public", role: "public" };
