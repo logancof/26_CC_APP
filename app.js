@@ -875,12 +875,15 @@ function renderMediaCard(item) {
   var description = item.description || "";
   var inApp = canOpenMediaInApp(link, type);
 
-  return '<button class="media-card-button" type="button" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
-    '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
-      '<h3>' + escapeHtml(title) + '</h3>' +
-    '</div>' +
-    '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Watch" : "Open") + '</span></div>' +
-  '</button>';
+  return '<div class="media-card" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
+    '<button class="media-card-button" type="button">' +
+      '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
+        '<h3>' + escapeHtml(title) + '</h3>' +
+      '</div>' +
+      '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Play" : "Open") + '</span></div>' +
+    '</button>' +
+    '<div class="media-inline-player hidden"></div>' +
+  '</div>';
 }
 
 function canOpenMediaInApp(link, type) {
@@ -916,20 +919,52 @@ function bindMediaCards() {
     button._mediaBound = true;
 
     button.addEventListener("click", function() {
-      var link = button.getAttribute("data-media-link") || "";
-      var title = button.getAttribute("data-media-title") || "Camp Media";
-      var type = button.getAttribute("data-media-type") || "Media";
-      var inApp = button.getAttribute("data-media-in-app") === "true";
+      var card = button.closest(".media-card");
+      var link = card ? card.getAttribute("data-media-link") || "" : "";
+      var inApp = card && card.getAttribute("data-media-in-app") === "true";
 
       if (!link || link === "#") {
         alert("Media coming soon.");
       } else if (inApp) {
-        openMediaViewer(link, title, type);
+        openInlineMedia(card, link);
       } else {
         window.open(link, "_blank");
       }
     });
   });
+}
+
+function openInlineMedia(card, link) {
+  var player = card ? card.querySelector(".media-inline-player") : null;
+  var button = card ? card.querySelector(".media-card-button") : null;
+
+  if (!card || !player || !button) return;
+
+  qsa(".media-card.playing").forEach(function(openCard) {
+    if (openCard === card) return;
+
+    var openPlayer = openCard.querySelector(".media-inline-player");
+    var openButton = openCard.querySelector(".media-card-button");
+
+    openCard.classList.remove("playing");
+    if (openPlayer) {
+      openPlayer.classList.add("hidden");
+      openPlayer.innerHTML = "";
+    }
+    if (openButton) openButton.classList.remove("hidden");
+  });
+
+  if (card.classList.contains("playing")) return;
+
+  card.classList.add("playing");
+  button.classList.add("hidden");
+  player.classList.remove("hidden");
+
+  if (/\.(mp4|webm|mov)($|[?#])/i.test(String(link || ""))) {
+    player.innerHTML = '<video controls playsinline src="' + escapeHtml(link) + '"></video>';
+  } else {
+    player.innerHTML = '<iframe title="Camp media player" src="' + escapeHtml(getEmbeddedMediaLink(link)) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
+  }
 }
 
 function openMediaViewer(link, title, type) {

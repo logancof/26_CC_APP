@@ -743,17 +743,24 @@ textarea:focus {
     margin-top: 8px
 }
 
-.media-card-button {
+.media-card {
     width: 100%;
-    display: grid;
     overflow: hidden;
-    border: 0;
     background: var(--panel);
     color: var(--cof-orange);
     border-radius: 28px;
+    box-shadow: none;
+}
+
+.media-card-button {
+    width: 100%;
+    display: grid;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
     text-align: left;
     cursor: pointer;
-    box-shadow: none;
 }
 
 .media-image {
@@ -806,6 +813,20 @@ textarea:focus {
     font-size: 12px;
     font-weight: 950;
     text-transform: uppercase;
+}
+
+.media-inline-player {
+    width: 100%;
+    background: #17130f;
+}
+
+.media-inline-player iframe,
+.media-inline-player video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    background: #17130f;
 }
 
 .home-media-block {
@@ -1408,7 +1429,7 @@ body.menu-open .hero::after {
 .parent-team-card,
 .team-search-card,
 .resource-card,
-.media-card-button {
+.media-card {
     transition:
         transform .16s ease,
         border-color .16s ease,
@@ -1422,7 +1443,7 @@ body.menu-open .hero::after {
 .parent-team-card:active,
 .team-search-card:active,
 .resource-card:active,
-.media-card-button:active,
+.media-card:active,
 .submit-btn:active,
 .age-pill:active,
 .menu-login-main:active,
@@ -1430,6 +1451,10 @@ body.menu-open .hero::after {
 .menu-logout:active,
 .menu-close:active {
     transform: scale(.98);
+}
+
+.media-card.playing:active {
+    transform: none;
 }
 
 /* Better focus states for outdoor readability */
@@ -2008,7 +2033,7 @@ h4,
 .team-search-card,
 .parent-team-card,
 .resource-card,
-.media-card-button,
+.media-card,
 .menu-user-card,
 .role-menu-item,
 .leader-category-card,
@@ -2034,7 +2059,7 @@ h4,
 .leader-category-card,
 .leader-resource,
 .resource-card,
-.media-card-button,
+.media-card,
 .menu-header.simple h2 {
     color: var(--cof-orange);
 }
@@ -2191,7 +2216,7 @@ body.menu-open .hero::after {
 .leader-category-card,
 .leader-resource,
 .resource-card,
-.media-card-button {
+.media-card {
     border-radius: 24px !important;
 }
 
@@ -2205,7 +2230,7 @@ body.menu-open .hero::after {
 
 .leader-resource,
 .resource-card,
-.media-card-button {
+.media-card {
     border-bottom: 1px dotted rgba(214, 97, 40, .34) !important;
 }
 
