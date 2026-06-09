@@ -1,6 +1,7 @@
 var API_URL = "https://script.google.com/macros/s/AKfycbyCeT35L-8gAoQwDgMrII53WCR8LPx0zPUM1x0Q5HpoyW0tvC7DAEZ0DktRE2mfnek_RQ/exec";
 var TEST_PASSWORD = "Cc2026";
 var REFRESH_MS = 30000;
+var PREVIEW_USERNAMES = ["Logan Parr", "loganisparr"];
 
 var roleLevel = {
   public: 0,
@@ -96,6 +97,9 @@ var defaultResourceLinks = {
 try {
   currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\",\"permissions\":[]}");
   currentUser.permissions = parsePermissions(currentUser.permissions);
+  if (currentUser.previewOriginal) {
+    currentUser.previewOriginal.permissions = parsePermissions(currentUser.previewOriginal.permissions);
+  }
 } catch (e) {
   currentUser = { username: "public", role: "public", permissions: [] };
 }
@@ -131,6 +135,29 @@ function hasPermission(permission) {
   if (!permission) return true;
   if (currentUser.role === "admin") return true;
   return parsePermissions(currentUser.permissions).indexOf(String(permission).toLowerCase().trim()) !== -1;
+}
+
+function saveCurrentUser() {
+  try {
+    localStorage.setItem("campUser", JSON.stringify(currentUser));
+  } catch (e) {}
+}
+
+function getPreviewBaseUser() {
+  return currentUser.previewOriginal || currentUser;
+}
+
+function canUseRolePreview() {
+  var baseUser = getPreviewBaseUser();
+  var username = String(baseUser.username || "").toLowerCase().trim();
+  var permissions = parsePermissions(baseUser.permissions);
+  return PREVIEW_USERNAMES.indexOf(username) !== -1 || permissions.indexOf("role_preview") !== -1;
+}
+
+function getPreviewPermissions(role) {
+  return role === "admin"
+    ? ["attendance", "scorekeeper", "score_corrections", "story_admin", "team_name_admin"]
+    : [];
 }
 
 function canUseElement(element) {
@@ -360,26 +387,51 @@ function updateVisibleMenuItems() {
   if (label) {
     label.textContent = currentUser.username === "public"
       ? "Not logged in"
-      : "Logged in as " + currentUser.username + " • " + currentUser.role;
+      : "Logged in as " + currentUser.username + " • " + currentUser.role + (currentUser.previewActive ? " preview" : "");
   }
 
+  var testRoleCard = qs("#testRoleCard");
+  if (testRoleCard) {
+    if (canUseRolePreview()) testRoleCard.classList.remove("hidden");
+    else testRoleCard.classList.add("hidden");
+  }
+
+  var previewModeToggle = qs("#previewModeToggle");
+  if (previewModeToggle) previewModeToggle.checked = !!currentUser.previewActive;
+
   var testRoleSelect = qs("#testRoleSelect");
-  if (testRoleSelect) testRoleSelect.value = currentUser.role || "public";
+  if (testRoleSelect) testRoleSelect.value = currentUser.previewRole || currentUser.role || "guest";
 
   var authStatus = qs("#authStatus");
   if (authStatus) authStatus.textContent = "Current role: " + currentUser.role;
 }
 
 function setTestRole(role) {
-  var permissions = role === "admin"
-    ? ["attendance", "scorekeeper", "score_corrections", "story_admin", "team_name_admin"]
-    : [];
-  currentUser = { username: role === "public" ? "public" : "test_" + role, role: role, permissions: permissions };
+  if (!canUseRolePreview()) return;
 
-  try {
-    localStorage.setItem("campUser", JSON.stringify(currentUser));
-  } catch (e) {}
+  var baseUser = getPreviewBaseUser();
+  currentUser = {
+    username: baseUser.username,
+    role: role,
+    display_name: baseUser.display_name || "",
+    permissions: getPreviewPermissions(role),
+    token: baseUser.token || "",
+    previewActive: true,
+    previewRole: role,
+    previewOriginal: baseUser
+  };
 
+  saveCurrentUser();
+
+  updateVisibleMenuItems();
+}
+
+function stopRolePreview() {
+  if (!currentUser.previewOriginal) return;
+
+  currentUser = currentUser.previewOriginal;
+  currentUser.permissions = parsePermissions(currentUser.permissions);
+  saveCurrentUser();
   updateVisibleMenuItems();
 }
 
@@ -414,9 +466,7 @@ function submitAuth() {
   if (!API_URL) {
     currentUser = { username: username, role: "leader", permissions: [] };
 
-    try {
-      localStorage.setItem("campUser", JSON.stringify(currentUser));
-    } catch (e) {}
+    saveCurrentUser();
 
     if (status) status.textContent = "Demo sign-in: " + username + " • leader";
 
@@ -440,13 +490,12 @@ function submitAuth() {
       currentUser = {
         username: result.username,
         role: result.role || "guest",
+        display_name: result.display_name || "",
         permissions: parsePermissions(result.permissions),
         token: result.token || ""
       };
 
-      try {
-        localStorage.setItem("campUser", JSON.stringify(currentUser));
-      } catch (e) {}
+      saveCurrentUser();
 
       if (status) status.textContent = "Signed in as " + result.username + " • role: " + currentUser.role;
 
@@ -1492,13 +1541,24 @@ function initApp() {
   var authSubmit = qs("#authSubmit");
   if (authSubmit) authSubmit.addEventListener("click", submitAuth);
 
+  var previewModeToggle = qs("#previewModeToggle");
+  if (previewModeToggle) {
+    previewModeToggle.addEventListener("change", function() {
+      if (previewModeToggle.checked) {
+        var role = qs("#testRoleSelect") ? qs("#testRoleSelect").value : "guest";
+        setTestRole(role);
+      } else {
+        stopRolePreview();
+      }
+    });
+  }
+
   var applyTestRole = qs("#applyTestRole");
   if (applyTestRole) {
     applyTestRole.addEventListener("click", function() {
-      var role = qs("#testRoleSelect") ? qs("#testRoleSelect").value : "public";
+      var role = qs("#testRoleSelect") ? qs("#testRoleSelect").value : "guest";
       setTestRole(role);
       closeCampMenu();
-      location.reload();
     });
   }
 

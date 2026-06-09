@@ -38,8 +38,12 @@
             <button class="menu-login-main" data-open-login>Login</button>
           </div>
 
-          <div class="menu-user-card test-role-card">
+          <div class="menu-user-card test-role-card hidden" id="testRoleCard">
             <p>Testing Role Preview</p>
+            <label class="preview-toggle">
+              <input id="previewModeToggle" type="checkbox" />
+              Preview mode
+            </label>
             <select id="testRoleSelect">
               <option value="guest">Guest</option>
               <option value="leader">Leader</option>
@@ -543,7 +547,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.7.4</div>
+    <div class="app-version">v0.7.5</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

@@ -947,6 +947,22 @@ body.menu-open .hero::after {
     margin-bottom: 12px
 }
 
+.preview-toggle {
+    align-items: center;
+    color: var(--cof-orange);
+    display: flex;
+    font-size: 14px;
+    font-weight: 900;
+    gap: 10px;
+    margin-bottom: 12px
+}
+
+.preview-toggle input {
+    accent-color: var(--cof-orange);
+    height: 18px;
+    width: 18px
+}
+
 .menu-login-main,
 .menu-logout,
 .role-menu-item {
