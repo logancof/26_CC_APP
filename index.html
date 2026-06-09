@@ -44,7 +44,6 @@
               <option value="public">Public</option>
               <option value="guest">Guest</option>
               <option value="leader">Leader</option>
-              <option value="safety">Safety</option>
               <option value="referee">Referee</option>
               <option value="head_referee">Head Referee</option>
               <option value="camp_admin">Camp Admin</option>
@@ -63,7 +62,7 @@
               <small>Training, resources, assignments, and logistics</small>
             </div>
           </button>
-          <button class="role-menu-item" data-min-role="safety" data-role-view="attendance">
+          <button class="role-menu-item" data-permission="attendance" data-role-view="attendance">
             <div><strong>Attendance</strong><small>Safety team attendance checkpoints</small></div>
           </button>
           <button class="role-menu-item" data-min-role="head_referee" data-role-view="scorefix">
@@ -376,7 +375,7 @@
         </div>
       </div>
 
-      <div id="attendance" class="page full-screen-page leader-category-page" data-min-role="safety">
+      <div id="attendance" class="page full-screen-page leader-category-page" data-permission="attendance">
         <div class="full-page-header">
           <button class="back-button" data-page-link="home">← Home</button>
           <div>
@@ -544,12 +543,11 @@
         <input id="authUsername" type="text" placeholder="Username" />
         <input id="authPassword" type="password" placeholder="Password" />
         <button class="submit-btn" id="authSubmit">Login</button>
-        <button class="auth-secondary" id="authSwitch">I don’t have an account. Create one.</button>
         <div class="updated" id="authStatus">Current role: public</div>
       </div>
     </div>
 
-    <div class="app-version">v0.7.0</div>
+    <div class="app-version">v0.7.1</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

@@ -6,15 +6,13 @@ var roleLevel = {
   public: 0,
   guest: 0,
   leader: 1,
-  safety: 2,
-  referee: 3,
-  head_referee: 4,
-  camp_admin: 5,
-  admin: 6
+  referee: 2,
+  head_referee: 3,
+  camp_admin: 4,
+  admin: 5
 };
 
-var currentUser = { username: "public", role: "public" };
-var authMode = "login";
+var currentUser = { username: "public", role: "public", permissions: [] };
 var teamNameWindowOpen = false;
 var teamNameAssignment = null;
 var resourceLinks = {};
@@ -99,9 +97,10 @@ var defaultResourceLinks = {
 };
 
 try {
-  currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\"}");
+  currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\",\"permissions\":[]}");
+  currentUser.permissions = parsePermissions(currentUser.permissions);
 } catch (e) {
-  currentUser = { username: "public", role: "public" };
+  currentUser = { username: "public", role: "public", permissions: [] };
 }
 
 function qs(selector) {
@@ -114,6 +113,36 @@ function qsa(selector) {
 
 function canAccess(requiredRole) {
   return (roleLevel[currentUser.role] || 0) >= (roleLevel[requiredRole] || 0);
+}
+
+function parsePermissions(value) {
+  if (Array.isArray(value)) {
+    return value.map(function(item) {
+      return String(item || "").toLowerCase().trim();
+    }).filter(Boolean);
+  }
+
+  return String(value || "")
+    .split(",")
+    .map(function(item) {
+      return item.toLowerCase().trim();
+    })
+    .filter(Boolean);
+}
+
+function hasPermission(permission) {
+  if (!permission) return true;
+  if (currentUser.role === "admin") return true;
+  return parsePermissions(currentUser.permissions).indexOf(String(permission).toLowerCase().trim()) !== -1;
+}
+
+function canUseElement(element) {
+  if (!element) return false;
+
+  var neededRole = element.getAttribute("data-min-role") || "";
+  var neededPermission = element.getAttribute("data-permission") || "";
+
+  return (!neededRole || canAccess(neededRole)) && (!neededPermission || hasPermission(neededPermission));
 }
 
 function isTrue(value) {
@@ -233,9 +262,8 @@ function activatePage(pageId) {
   var targetPage = document.getElementById(pageId);
   if (!targetPage) return;
 
-  var needed = targetTab ? targetTab.getAttribute("data-min-role") : "";
-  if (!needed) needed = targetPage.getAttribute("data-min-role") || "";
-  if (needed && !canAccess(needed)) {
+  var accessElement = targetTab || targetPage;
+  if (!canUseElement(accessElement)) {
     openAuth("login");
     return;
   }
@@ -277,19 +305,12 @@ function closeCampMenu() {
 }
 
 function openAuth(mode) {
-  authMode = mode || "login";
-
   var modal = qs("#authModal");
   if (!modal) return;
 
-  qs("#authTitle").textContent = authMode === "login" ? "Login" : "Create Account";
-  qs("#authHelp").textContent = authMode === "login"
-    ? "Enter your username and password."
-    : "Create a username and password. New accounts start as Guest.";
-  qs("#authSubmit").textContent = authMode === "login" ? "Login" : "Create Account";
-  qs("#authSwitch").textContent = authMode === "login"
-    ? "I don't have an account. Create one."
-    : "I already have an account. Login.";
+  qs("#authTitle").textContent = "Login";
+  qs("#authHelp").textContent = "Enter your username and password.";
+  qs("#authSubmit").textContent = "Login";
 
   modal.classList.add("open");
   closeCampMenu();
@@ -302,14 +323,12 @@ function closeAuth() {
 
 function updateVisibleMenuItems() {
   qsa(".role-menu-item").forEach(function(item) {
-    var needed = item.getAttribute("data-min-role");
-    if (canAccess(needed)) item.classList.remove("hidden");
+    if (canUseElement(item)) item.classList.remove("hidden");
     else item.classList.add("hidden");
   });
 
   qsa(".role-protected").forEach(function(item) {
-    var needed = item.getAttribute("data-min-role");
-    if (canAccess(needed)) item.classList.remove("hidden");
+    if (canUseElement(item)) item.classList.remove("hidden");
     else item.classList.add("hidden");
   });
 
@@ -341,7 +360,8 @@ function updateVisibleMenuItems() {
 }
 
 function setTestRole(role) {
-  currentUser = { username: role === "public" ? "public" : "test_" + role, role: role };
+  var permissions = role === "camp_admin" || role === "admin" ? ["attendance"] : [];
+  currentUser = { username: role === "public" ? "public" : "test_" + role, role: role, permissions: permissions };
 
   try {
     localStorage.setItem("campUser", JSON.stringify(currentUser));
@@ -379,15 +399,13 @@ function submitAuth() {
   }
 
   if (!API_URL) {
-    var demoRole = authMode === "create" ? "guest" : "leader";
-
-    currentUser = { username: username, role: demoRole };
+    currentUser = { username: username, role: "leader", permissions: [] };
 
     try {
       localStorage.setItem("campUser", JSON.stringify(currentUser));
     } catch (e) {}
 
-    if (status) status.textContent = "Demo sign-in: " + username + " • " + demoRole;
+    if (status) status.textContent = "Demo sign-in: " + username + " • leader";
 
     setTimeout(function() {
       location.reload();
@@ -396,10 +414,10 @@ function submitAuth() {
     return;
   }
 
-  if (status) status.textContent = authMode === "login" ? "Logging in..." : "Creating account...";
+  if (status) status.textContent = "Logging in...";
 
   apiRequest({
-    action: authMode,
+    action: "login",
     username: username,
     password: password
   })
@@ -409,6 +427,7 @@ function submitAuth() {
       currentUser = {
         username: result.username,
         role: result.role || "guest",
+        permissions: parsePermissions(result.permissions),
         token: result.token || ""
       };
 
@@ -1433,9 +1452,8 @@ function initApp() {
   qsa("[data-role-view]").forEach(function(button) {
     button.addEventListener("click", function() {
       var page = button.getAttribute("data-role-view");
-      var needed = button.getAttribute("data-min-role");
 
-      if (needed && !canAccess(needed)) openAuth("login");
+      if (!canUseElement(button)) openAuth("login");
       else activatePage(page);
 
       closeCampMenu();
@@ -1457,13 +1475,6 @@ function initApp() {
 
   var authClose = qs("#authClose");
   if (authClose) authClose.addEventListener("click", closeAuth);
-
-  var authSwitch = qs("#authSwitch");
-  if (authSwitch) {
-    authSwitch.addEventListener("click", function() {
-      openAuth(authMode === "login" ? "create" : "login");
-    });
-  }
 
   var authSubmit = qs("#authSubmit");
   if (authSubmit) authSubmit.addEventListener("click", submitAuth);
