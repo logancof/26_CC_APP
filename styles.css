@@ -1925,8 +1925,9 @@ body,
 }
 
 .account-menu {
-    top: calc(env(safe-area-inset-top) + 18px);
-    right: 18px;
+    top: calc(env(safe-area-inset-top) + 28px);
+    left: 18px;
+    right: auto;
 }
 
 .menu-button {
