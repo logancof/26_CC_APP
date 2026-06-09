@@ -860,7 +860,7 @@ function renderHomeMedia(content) {
     return;
   }
 
-  page.innerHTML = '<div class="home-media-block"><span class="pill">Latest Media</span>' + renderMediaCard(visible[0]) + '</div>';
+  page.innerHTML = '<div class="home-media-block">' + renderMediaCard(visible[0]) + '</div>';
   bindMediaCards();
 }
 
@@ -874,7 +874,7 @@ function renderMediaCard(item) {
 
   return '<button class="media-card-button" type="button" data-media-link="' + escapeHtml(link) + '" data-media-title="' + escapeHtml(title) + '" data-media-type="' + escapeHtml(type) + '" data-media-in-app="' + (inApp ? "true" : "false") + '">' +
     '<div class="media-image" style="background-image:linear-gradient(rgba(23,19,15,.08), rgba(23,19,15,.58)), url(&quot;' + escapeHtml(image) + '&quot;)">' +
-      '<span class="pill">' + escapeHtml(type) + '</span><h3>' + escapeHtml(title) + '</h3>' +
+      '<h3>' + escapeHtml(title) + '</h3>' +
     '</div>' +
     '<div class="media-card-copy"><p>' + escapeHtml(description) + '</p><span class="media-open">' + (inApp ? "Watch" : "Open") + '</span></div>' +
   '</button>';

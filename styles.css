@@ -760,7 +760,7 @@ textarea:focus {
     min-height: 148px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: flex-start;
     gap: 26px;
     background-size: cover;
@@ -1925,8 +1925,8 @@ body,
 }
 
 .account-menu {
-    top: calc(env(safe-area-inset-top) + 182px);
-    right: 28px;
+    top: calc(env(safe-area-inset-top) + 18px);
+    right: 18px;
 }
 
 .menu-button {
