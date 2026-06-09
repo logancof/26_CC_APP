@@ -21,6 +21,7 @@ var mapZoom = 1;
 var currentX = 0;
 var currentY = 0;
 var pdfRenderToken = 0;
+var lastMediaSignature = "";
 
 var blockedTeamNameWords = [
   "ass", "arse", "bastard", "bitch", "boob", "crap", "damn", "dick", "drug", "drugs",
@@ -196,8 +197,7 @@ function renderCampData(data) {
   renderScores(data.SCORES || [], data.TEAMS || []);
   renderGames(data.GAMES || [], data.TEAMS || []);
   renderTeams(data.TEAMS || [], data.SCORES || []);
-  renderMedia(data.CONTENT || []);
-  renderHomeMedia(data.CONTENT || []);
+  renderMediaSections(data.CONTENT || []);
   renderImpactStories(data.IMPACTS || []);
   renderContacts(data.LEADER_CONTACTS || []);
   renderResourceLinks(data.LEADER_RESOURCES || []);
@@ -824,6 +824,31 @@ function bindTeamSearch() {
       card.style.display = card.getAttribute("data-search").indexOf(query) !== -1 ? "block" : "none";
     });
   });
+}
+
+function getMediaSignature(content) {
+  return JSON.stringify((content || []).map(function(item) {
+    return {
+      type: item.type || "",
+      title: item.title || "",
+      description: item.description || "",
+      link: item.link || "",
+      image: item.image || "",
+      thumbnail: item.thumbnail || "",
+      visible: item.visible || "",
+      publish_datetime: item.publish_datetime || ""
+    };
+  }));
+}
+
+function renderMediaSections(content) {
+  var signature = getMediaSignature(content);
+
+  if (signature === lastMediaSignature) return;
+
+  lastMediaSignature = signature;
+  renderMedia(content);
+  renderHomeMedia(content);
 }
 
 function renderMedia(content) {
