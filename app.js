@@ -175,7 +175,7 @@ function canUseRolePreview() {
 
 function getPreviewPermissions(role) {
   return role === "admin"
-    ? ["attendance", "scorekeeper", "score_corrections", "story_admin", "team_name_admin"]
+    ? ["attendance", "scorekeeper", "bonus_points", "score_corrections", "story_admin", "team_name_admin"]
     : [];
 }
 
@@ -438,6 +438,34 @@ function updateVisibleMenuItems() {
 
   var authStatus = qs("#authStatus");
   if (authStatus) authStatus.textContent = "Current role: " + currentUser.role;
+
+  updateScoreGameAccess();
+}
+
+function updateScoreGameAccess() {
+  var scoreGame = qs("#scoreGame");
+  if (!scoreGame) return;
+
+  Array.prototype.slice.call(scoreGame.options).forEach(function(option) {
+    var permission = option.getAttribute("data-permission");
+    var allowed = !permission || hasPermission(permission);
+
+    option.hidden = !allowed;
+    option.disabled = !allowed;
+  });
+
+  var selected = scoreGame.options[scoreGame.selectedIndex];
+  if (selected && selected.disabled) {
+    var firstAllowed = Array.prototype.slice.call(scoreGame.options).find(function(option) {
+      return !option.disabled;
+    });
+
+    if (firstAllowed) {
+      scoreGame.value = firstAllowed.value;
+      scoreEntryDirty = false;
+      renderPlacements();
+    }
+  }
 }
 
 function setTestRole(role) {
@@ -1496,6 +1524,10 @@ function buildScoreSubmission() {
   var awards = [];
   var details = {};
 
+  if (game.mode === "bonus" && !hasPermission("bonus_points")) {
+    throw new Error("You do not have access to add bonus points.");
+  }
+
   if (game.mode === "head-to-head") {
     var teamA = qs("#headToHeadTeamA") ? qs("#headToHeadTeamA").value : "";
     var teamB = qs("#headToHeadTeamB") ? qs("#headToHeadTeamB").value : "";
@@ -1934,6 +1966,7 @@ function fetchCampData() {
 
 function initApp() {
   updateVisibleMenuItems();
+  updateScoreGameAccess();
   renderPlacements();
 
   try {
