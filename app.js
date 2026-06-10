@@ -22,8 +22,14 @@ var lastMediaSignature = "";
 var latestTeams = [];
 var latestScores = [];
 var latestScoreEntries = [];
+var latestAttendancePrompts = [];
+var latestAttendanceRoster = [];
+var latestStoryPrompts = [];
+var activeAttendancePrompt = null;
+var pendingAttendancePayload = null;
 var scoreEntryDirty = false;
 var teamNameAdminDirty = false;
+var attendanceDirty = false;
 
 var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 0];
 var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 0];
@@ -294,6 +300,9 @@ function renderCampData(data) {
   latestTeams = data.TEAMS || [];
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
+  latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
+  latestAttendanceRoster = data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
+  latestStoryPrompts = data.STORY_PROMPTS || data.REVIEW_STORY_PROMPTS || [];
 
   updateStatus(data.SCHEDULE || []);
   renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
@@ -308,6 +317,8 @@ function renderCampData(data) {
     data.TEAM_NAME_ASSIGNMENTS || [],
     data.TEAM_NAMES || []
   );
+  renderHomePrompts();
+  if (!attendanceDirty) renderAttendancePage();
   if (!scoreEntryDirty) renderPlacements();
   renderScoreCorrectionForm();
   if (!teamNameAdminDirty) renderTeamNameAdminForm();
@@ -1275,6 +1286,391 @@ function renderImpactStories(impacts) {
   if (card && approved.length) {
     card.textContent = "“" + approved[approved.length - 1].story + "”";
   }
+}
+
+function getRowValue(row, keys) {
+  if (!row) return "";
+
+  for (var i = 0; i < keys.length; i++) {
+    if (row[keys[i]] !== undefined && row[keys[i]] !== "") return row[keys[i]];
+  }
+
+  return "";
+}
+
+function splitList(value) {
+  return String(value || "")
+    .split(/[,\n;]/)
+    .map(function(item) {
+      return item.toLowerCase().trim();
+    })
+    .filter(Boolean);
+}
+
+function parsePromptDate(dateValue, timeValue) {
+  var dateText = String(dateValue || "").trim();
+  var timeText = String(timeValue || "").trim();
+  var now = new Date();
+  var year = now.getFullYear();
+  var month = now.getMonth();
+  var day = now.getDate();
+
+  if (dateText) {
+    if (dateText.indexOf("/") !== -1) {
+      var slashParts = dateText.split("/");
+      month = Number(slashParts[0]) - 1;
+      day = Number(slashParts[1]);
+      year = Number(slashParts[2] || year);
+    } else if (dateText.indexOf("-") !== -1) {
+      var dashParts = dateText.split("-");
+      year = Number(dashParts[0]);
+      month = Number(dashParts[1]) - 1;
+      day = Number(dashParts[2]);
+    }
+  }
+
+  if (!timeText) return null;
+
+  var meridian = (timeText.match(/\b(am|pm)\b/i) || [])[1] || "";
+  var cleanTime = timeText.toLowerCase().replace(/\s*(am|pm)\s*/i, "");
+  var timeParts = cleanTime.split(":");
+  var hour = Number(timeParts[0]);
+  var minute = Number(timeParts[1] || 0);
+
+  if (meridian.toLowerCase() === "pm" && hour < 12) hour += 12;
+  if (meridian.toLowerCase() === "am" && hour === 12) hour = 0;
+
+  if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) return null;
+
+  return new Date(year, month, day, hour, minute, 0);
+}
+
+function getPromptId(prompt) {
+  return String(getRowValue(prompt, ["prompt_id", "checkpoint_id", "id", "slug"]) || slug(getPromptTitle(prompt))).trim();
+}
+
+function getPromptTitle(prompt) {
+  return String(getRowValue(prompt, ["title", "name", "checkpoint", "label"]) || "Attendance Checkpoint").trim();
+}
+
+function isPromptForCurrentUser(prompt, fallbackPermission) {
+  if (!prompt) return false;
+  if (prompt.active !== undefined && prompt.active !== "" && !isTrue(prompt.active)) return false;
+  if (prompt.visible !== undefined && prompt.visible !== "" && !isTrue(prompt.visible)) return false;
+
+  var username = String(currentUser.username || "").toLowerCase().trim();
+  if (!username || username === "public") return false;
+
+  var recipients = splitList(getRowValue(prompt, [
+    "target_usernames",
+    "usernames",
+    "recipients",
+    "recipient_usernames",
+    "leader_usernames",
+    "leader_username",
+    "username"
+  ]));
+
+  if (!recipients.length) return hasPermission(fallbackPermission || "attendance");
+  if (recipients.indexOf("all") !== -1) return true;
+  if (recipients.indexOf(username) !== -1) return true;
+
+  return false;
+}
+
+function isPromptActiveNow(prompt) {
+  var start = parsePromptDate(
+    getRowValue(prompt, ["date", "prompt_date", "day"]),
+    getRowValue(prompt, ["start_time", "send_time", "time"])
+  );
+  var end = parsePromptDate(
+    getRowValue(prompt, ["date", "prompt_date", "day"]),
+    getRowValue(prompt, ["end_time", "expires_at", "close_time"])
+  );
+
+  if (!start && !end) return true;
+
+  var now = new Date();
+  if (start && now < start) return false;
+
+  if (!end && start) {
+    end = new Date(start.getTime() + 4 * 60 * 60 * 1000);
+  }
+
+  return !end || now <= end;
+}
+
+function getActiveAttendancePrompts() {
+  return latestAttendancePrompts.filter(function(prompt) {
+    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
+    return type.indexOf("attendance") !== -1 && isPromptForCurrentUser(prompt, "attendance") && isPromptActiveNow(prompt);
+  });
+}
+
+function getActiveStoryPrompts() {
+  var prompts = latestStoryPrompts.concat(latestAttendancePrompts.filter(function(prompt) {
+    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "").toLowerCase();
+    return type.indexOf("story") !== -1 || type.indexOf("review") !== -1;
+  }));
+
+  return prompts.filter(function(prompt) {
+    return isPromptForCurrentUser(prompt, "story_admin") && isPromptActiveNow(prompt);
+  });
+}
+
+function getRosterForPrompt(prompt) {
+  var promptId = getPromptId(prompt);
+  var username = String(currentUser.username || "").toLowerCase().trim();
+
+  return latestAttendanceRoster.filter(function(row) {
+    if (row.active !== undefined && row.active !== "" && !isTrue(row.active)) return false;
+
+    var rowPromptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
+    var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
+
+    if (rowPromptId && rowPromptId !== promptId) return false;
+    return !rowLeader || rowLeader === username;
+  }).sort(function(a, b) {
+    return Number(getRowValue(a, ["sort_order", "order"]) || 999) - Number(getRowValue(b, ["sort_order", "order"]) || 999);
+  });
+}
+
+function renderHomePrompts() {
+  var list = qs("#homePromptList");
+  if (!list) return;
+
+  var attendancePrompts = getActiveAttendancePrompts();
+  var storyPrompts = getActiveStoryPrompts();
+
+  if (!attendancePrompts.length && !storyPrompts.length) {
+    list.innerHTML = "";
+    return;
+  }
+
+  list.innerHTML = attendancePrompts.map(function(prompt) {
+    var promptId = escapeHtml(getPromptId(prompt));
+    var title = escapeHtml(getPromptTitle(prompt));
+    var message = escapeHtml(getRowValue(prompt, ["message", "description", "note"]) || "Take attendance for your assigned students.");
+
+    return '<button class="home-prompt-card" type="button" data-attendance-prompt="' + promptId + '">' +
+      '<span>Action Needed</span>' +
+      '<strong>' + title + '</strong>' +
+      '<small>' + message + '</small>' +
+    '</button>';
+  }).concat(storyPrompts.map(function(prompt) {
+    var promptId = escapeHtml(getPromptId(prompt));
+    var title = escapeHtml(getPromptTitle(prompt));
+    var message = escapeHtml(getRowValue(prompt, ["message", "description", "note"]) || "Review pending camp stories.");
+
+    return '<button class="home-prompt-card story-prompt-card" type="button" data-story-prompt="' + promptId + '">' +
+      '<span>Review Needed</span>' +
+      '<strong>' + title + '</strong>' +
+      '<small>' + message + '</small>' +
+    '</button>';
+  })).join("");
+
+  qsa("[data-attendance-prompt]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var promptId = button.getAttribute("data-attendance-prompt");
+      activeAttendancePrompt = attendancePrompts.find(function(prompt) {
+        return getPromptId(prompt) === promptId;
+      }) || attendancePrompts[0];
+      attendanceDirty = false;
+      renderAttendancePage();
+      activatePage("attendance");
+    });
+  });
+
+  qsa("[data-story-prompt]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      activatePage("storyadmin");
+    });
+  });
+}
+
+function renderAttendancePage() {
+  var meta = qs("#attendanceCheckpointMeta");
+  var checklist = qs("#attendanceChecklist");
+  var notes = qs("#attendanceNotes");
+  var status = qs("#attendanceStatus");
+
+  if (!meta || !checklist) return;
+
+  var prompts = getActiveAttendancePrompts();
+  var activePromptId = activeAttendancePrompt ? getPromptId(activeAttendancePrompt) : "";
+  var refreshedPrompt = prompts.find(function(prompt) {
+    return getPromptId(prompt) === activePromptId;
+  });
+
+  if (!refreshedPrompt) {
+    activeAttendancePrompt = prompts[0] || null;
+  } else {
+    activeAttendancePrompt = refreshedPrompt;
+  }
+
+  if (!activeAttendancePrompt) {
+    meta.textContent = "No attendance checkpoint is active for your account right now.";
+    checklist.innerHTML = "";
+    if (status) status.textContent = "";
+    if (notes) notes.value = "";
+    return;
+  }
+
+  var roster = getRosterForPrompt(activeAttendancePrompt);
+  var timeText = getRowValue(activeAttendancePrompt, ["start_time", "send_time", "time"]);
+  var title = getPromptTitle(activeAttendancePrompt);
+
+  meta.innerHTML = '<strong>' + escapeHtml(title) + '</strong>' +
+    (timeText ? '<span>' + escapeHtml(/[ap]m/i.test(timeText) ? timeText : formatTime(timeText)) + '</span>' : '') +
+    '<small>' + escapeHtml(getRowValue(activeAttendancePrompt, ["message", "description", "note"]) || "Check each student you have eyes on, then submit.") + '</small>';
+
+  if (!roster.length) {
+    checklist.innerHTML = '<div class="attendance-empty">No students are assigned to your attendance list yet.</div>';
+    if (status) status.textContent = "";
+    return;
+  }
+
+  checklist.innerHTML = roster.map(function(student, index) {
+    var studentId = escapeHtml(getRowValue(student, ["student_id", "id"]) || "student_" + index);
+    var studentName = escapeHtml(getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1));
+    var detail = escapeHtml(getRowValue(student, ["team_name", "team_number", "group", "cabin"]) || "");
+
+    return '<label class="attendance-row">' +
+      '<input type="checkbox" data-student-id="' + studentId + '" />' +
+      '<span><strong>' + studentName + '</strong>' +
+      (detail ? '<small>' + detail + '</small>' : '') +
+      '</span>' +
+    '</label>';
+  }).join("");
+
+  qsa("#attendanceChecklist input").forEach(function(input) {
+    input.addEventListener("change", function() {
+      attendanceDirty = true;
+    });
+  });
+
+  if (status) status.textContent = "";
+}
+
+function buildAttendancePayload(missingReason) {
+  if (!activeAttendancePrompt) return null;
+
+  var roster = getRosterForPrompt(activeAttendancePrompt);
+  var checkedIds = qsa("#attendanceChecklist input:checked").map(function(input) {
+    return input.getAttribute("data-student-id");
+  });
+  var checkedLookup = {};
+  checkedIds.forEach(function(id) {
+    checkedLookup[id] = true;
+  });
+
+  var rows = roster.map(function(student, index) {
+    var studentId = String(getRowValue(student, ["student_id", "id"]) || "student_" + index);
+    return {
+      student_id: studentId,
+      student_name: getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1),
+      present: !!checkedLookup[studentId],
+      team_id: getRowValue(student, ["team_id"]),
+      team_number: getRowValue(student, ["team_number"])
+    };
+  });
+
+  return {
+    action: "submit_attendance",
+    username: currentUser.username,
+    token: currentUser.token || "",
+    prompt_id: getPromptId(activeAttendancePrompt),
+    prompt_title: getPromptTitle(activeAttendancePrompt),
+    notes: qs("#attendanceNotes") ? qs("#attendanceNotes").value.trim() : "",
+    missing_reason: missingReason || "",
+    rows: rows
+  };
+}
+
+function openAttendanceMissingModal(message, payload) {
+  var modal = qs("#attendanceMissingModal");
+  var text = qs("#attendanceMissingMessage");
+  var reason = qs("#attendanceMissingReason");
+
+  pendingAttendancePayload = payload;
+  if (text) text.textContent = message;
+  if (reason) reason.value = "";
+  if (modal) {
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+}
+
+function closeAttendanceMissingModal() {
+  var modal = qs("#attendanceMissingModal");
+  pendingAttendancePayload = null;
+  if (modal) {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+}
+
+function sendAttendancePayload(payload) {
+  var status = qs("#attendanceStatus");
+
+  if (!payload || !payload.rows || !payload.rows.length) {
+    if (status) status.textContent = "No students are assigned to submit.";
+    return;
+  }
+
+  if (status) status.textContent = "Submitting attendance...";
+
+  apiRequest(payload)
+    .then(function(result) {
+      if (!result.ok && result.status !== "ok") throw new Error(result.error || "Attendance was not saved.");
+
+      if (status) status.textContent = "Attendance submitted.";
+      attendanceDirty = false;
+      closeAttendanceMissingModal();
+    })
+    .catch(function(error) {
+      if (status) status.textContent = error.message;
+    });
+}
+
+function submitAttendance() {
+  if (currentUser.username === "public") {
+    openAuth("login");
+    return;
+  }
+
+  var payload = buildAttendancePayload("");
+  if (!payload) return;
+
+  var missing = payload.rows.filter(function(row) {
+    return !row.present;
+  });
+
+  if (missing.length) {
+    openAttendanceMissingModal(
+      missing.length + " student" + (missing.length === 1 ? " is" : "s are") + " not checked off. Add a reason before submitting.",
+      payload
+    );
+    return;
+  }
+
+  sendAttendancePayload(payload);
+}
+
+function submitAttendanceWithMissingReason() {
+  var reason = qs("#attendanceMissingReason") ? qs("#attendanceMissingReason").value.trim() : "";
+  var status = qs("#attendanceStatus");
+
+  if (!reason) {
+    if (status) status.textContent = "Add a reason for the missing student(s).";
+    return;
+  }
+
+  var payload = pendingAttendancePayload || buildAttendancePayload(reason);
+  if (!payload) return;
+
+  payload.missing_reason = reason;
+  sendAttendancePayload(payload);
 }
 
 function renderPlacements() {
@@ -2276,6 +2672,22 @@ function initApp() {
 
   var correctionSubmitButton = qs("#correctionSubmitButton");
   if (correctionSubmitButton) correctionSubmitButton.addEventListener("click", submitScoreCorrection);
+
+  var attendanceNotes = qs("#attendanceNotes");
+  if (attendanceNotes) {
+    attendanceNotes.addEventListener("input", function() {
+      attendanceDirty = true;
+    });
+  }
+
+  var attendanceSubmitButton = qs("#attendanceSubmitButton");
+  if (attendanceSubmitButton) attendanceSubmitButton.addEventListener("click", submitAttendance);
+
+  var attendanceMissingCancel = qs("#attendanceMissingCancel");
+  if (attendanceMissingCancel) attendanceMissingCancel.addEventListener("click", closeAttendanceMissingModal);
+
+  var attendanceMissingSubmit = qs("#attendanceMissingSubmit");
+  if (attendanceMissingSubmit) attendanceMissingSubmit.addEventListener("click", submitAttendanceWithMissingReason);
 
   var teamNameAdminTeam = qs("#teamNameAdminTeam");
   if (teamNameAdminTeam) teamNameAdminTeam.addEventListener("change", updateTeamNameAdminFields);

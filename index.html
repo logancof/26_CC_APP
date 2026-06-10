@@ -56,20 +56,8 @@
           <button class="role-menu-item" data-permission="scorekeeper" data-role-view="scorekeeper">
             <div><strong>Input Scores</strong><small>For referees and scorekeepers</small></div>
           </button>
-          <button class="role-menu-item" data-min-role="leader" data-role-view="leaders">
-            <div>
-              <strong>Leader Hub</strong>
-              <small>Training, resources, assignments, and logistics</small>
-            </div>
-          </button>
-          <button class="role-menu-item" data-permission="attendance" data-role-view="attendance">
-            <div><strong>Attendance</strong><small>Safety team attendance checkpoints</small></div>
-          </button>
           <button class="role-menu-item" data-permission="score_corrections" data-role-view="scorefix">
             <div><strong>Score Corrections</strong><small>Set, add, or subtract team points</small></div>
-          </button>
-          <button class="role-menu-item" data-permission="story_admin" data-role-view="storyadmin">
-            <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
           </button>
           <button class="role-menu-item" data-permission="team_name_admin" data-role-view="teamnameadmin">
             <div><strong>Team Name Admin</strong><small>Correct team names</small></div>
@@ -127,6 +115,8 @@
           <p>Team leaders can lock in their team name now.</p>
           <button class="submit-btn" data-page-link="leaders">Choose Team Name</button>
         </div>
+
+        <div id="homePromptList" class="home-prompt-list"></div>
 
         <div class="grid">
           <div class="resource-grid">
@@ -399,21 +389,27 @@
         </div>
       </div>
 
-      <div id="attendance" class="page full-screen-page leader-category-page" data-permission="attendance">
+      <div id="attendance" class="page full-screen-page leader-category-page attendance-page">
         <div class="full-page-header">
           <button class="back-button" data-page-link="home">← Home</button>
           <div>
             <h2>Attendance</h2>
-            <p>Safety team attendance checkpoints and tracking.</p>
+            <p>Check off the students assigned to you for this checkpoint.</p>
           </div>
         </div>
-        <div class="resource-list">
-          <button class="leader-resource" data-resource-key="attendance_checkpoints">
-            Attendance Checkpoints<span>When leaders need to check students</span>
-          </button>
-          <button class="leader-resource action-resource" data-resource-key="track_attendance">
-            Track Attendance<span>Attendance through the app or linked form</span>
-          </button>
+
+        <div class="card entry-card attendance-card">
+          <div class="attendance-meta" id="attendanceCheckpointMeta">
+            Attendance checkpoint will appear here when it is sent to you.
+          </div>
+
+          <div class="attendance-list" id="attendanceChecklist"></div>
+
+          <label>Optional Note</label>
+          <textarea id="attendanceNotes" placeholder="Anything the safety team should know?"></textarea>
+
+          <button class="submit-btn" id="attendanceSubmitButton" type="button">Submit Attendance</button>
+          <div class="updated" id="attendanceStatus"></div>
         </div>
       </div>
 
@@ -577,7 +573,19 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.7</div>
+    <div class="attendance-missing-modal" id="attendanceMissingModal" aria-hidden="true">
+      <div class="attendance-missing-box">
+        <h2>Missing Students</h2>
+        <p id="attendanceMissingMessage">Add a reason before submitting.</p>
+        <textarea id="attendanceMissingReason" placeholder="Why are not all students checked off?"></textarea>
+        <div class="attendance-missing-actions">
+          <button class="back-button" id="attendanceMissingCancel" type="button">Cancel</button>
+          <button class="submit-btn" id="attendanceMissingSubmit" type="button">Submit</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-version">v0.8.8</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
