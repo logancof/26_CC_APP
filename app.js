@@ -23,6 +23,7 @@ var latestTeams = [];
 var latestScores = [];
 var latestScoreEntries = [];
 var scoreEntryDirty = false;
+var teamNameAdminDirty = false;
 
 var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 0];
 var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 0];
@@ -309,7 +310,7 @@ function renderCampData(data) {
   );
   if (!scoreEntryDirty) renderPlacements();
   renderScoreCorrectionForm();
-  renderTeamNameAdminForm();
+  if (!teamNameAdminDirty) renderTeamNameAdminForm();
 }
 
 function calculateGameStatus(game) {
@@ -1790,12 +1791,15 @@ function renderTeamNameAdminForm() {
 function updateTeamNameAdminFields() {
   var teamSelect = qs("#teamNameAdminTeam");
   var input = qs("#teamNameAdminName");
+  var reason = qs("#teamNameAdminReason");
   var status = qs("#teamNameAdminStatus");
 
   if (!teamSelect || !input) return;
 
   var team = getTeamById(teamSelect.value);
   input.value = team.team_name || "";
+  if (reason) reason.value = "";
+  teamNameAdminDirty = false;
 
   if (status) {
     status.textContent = teamSelect.value
@@ -1835,11 +1839,12 @@ function submitTeamNameCorrection() {
     team_name: name,
     reason: reason
   })
-    .then(function(result) {
-      if (!result.ok) throw new Error(result.message || "Team name could not be saved.");
-      if (status) status.textContent = "Team name saved.";
-      fetchCampData();
-    })
+      .then(function(result) {
+        if (!result.ok) throw new Error(result.message || "Team name could not be saved.");
+        if (status) status.textContent = "Team name saved.";
+        teamNameAdminDirty = false;
+        fetchCampData();
+      })
     .catch(function(error) {
       if (status) status.textContent = error.message;
     });
@@ -2274,6 +2279,16 @@ function initApp() {
 
   var teamNameAdminTeam = qs("#teamNameAdminTeam");
   if (teamNameAdminTeam) teamNameAdminTeam.addEventListener("change", updateTeamNameAdminFields);
+
+  var teamNameAdminName = qs("#teamNameAdminName");
+  if (teamNameAdminName) teamNameAdminName.addEventListener("input", function() {
+    teamNameAdminDirty = true;
+  });
+
+  var teamNameAdminReason = qs("#teamNameAdminReason");
+  if (teamNameAdminReason) teamNameAdminReason.addEventListener("input", function() {
+    teamNameAdminDirty = true;
+  });
 
   var teamNameAdminSubmit = qs("#teamNameAdminSubmit");
   if (teamNameAdminSubmit) teamNameAdminSubmit.addEventListener("click", submitTeamNameCorrection);
