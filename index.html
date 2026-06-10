@@ -72,7 +72,7 @@
             <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
           </button>
           <button class="role-menu-item" data-permission="team_name_admin" data-role-view="teamnameadmin">
-            <div><strong>Team Name Admin</strong><small>Fix team names and control the naming window</small></div>
+            <div><strong>Team Name Admin</strong><small>Correct team names</small></div>
           </button>
 
           <button class="menu-logout" id="logoutButton">Logout</button>
@@ -500,30 +500,27 @@
         </div>
       </div>
 
-      <div id="teamnameadmin" class="page" data-permission="team_name_admin">
-        <h2 class="section-title">Team Name Admin</h2>
-        <div class="updated">Camp admins control the naming window and can correct misspellings.</div>
-
-        <div class="card entry-card">
-          <span class="pill">Naming Window</span>
-          <div class="spacer"></div>
-          <label>Open naming window</label>
-          <select><option>TRUE</option><option>FALSE</option></select>
-          <label>Start datetime</label>
-          <input type="datetime-local" />
-          <label>End datetime</label>
-          <input type="datetime-local" />
-          <button class="submit-btn">Save Window Settings</button>
+      <div id="teamnameadmin" class="page full-screen-page scorekeeper-page" data-permission="team_name_admin">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="home">← Home</button>
+          <div>
+            <h2>Team Name Admin</h2>
+            <p>Choose a team and save the corrected team name.</p>
+          </div>
         </div>
 
         <div class="card entry-card correction-card">
-          <span class="pill">Correct Team Name</span>
-          <div class="spacer"></div>
           <label>Internal Team</label>
-          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
-          <input type="text" maxlength="28" placeholder="Corrected team name" />
-          <textarea placeholder="Reason for change"></textarea>
-          <button class="submit-btn">Save Name Change</button>
+          <select id="teamNameAdminTeam"></select>
+
+          <label>Corrected Team Name</label>
+          <input id="teamNameAdminName" type="text" maxlength="28" placeholder="Corrected team name" />
+
+          <label>Reason</label>
+          <textarea id="teamNameAdminReason" placeholder="Reason for change"></textarea>
+
+          <button class="submit-btn" id="teamNameAdminSubmit" type="button">Save Name Change</button>
+          <div class="updated" id="teamNameAdminStatus"></div>
         </div>
       </div>
     </section>
@@ -580,7 +577,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.5</div>
+    <div class="app-version">v0.8.6</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

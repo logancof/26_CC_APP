@@ -309,6 +309,7 @@ function renderCampData(data) {
   );
   if (!scoreEntryDirty) renderPlacements();
   renderScoreCorrectionForm();
+  renderTeamNameAdminForm();
 }
 
 function calculateGameStatus(game) {
@@ -1752,6 +1753,98 @@ function submitScoreCorrection() {
   }
 }
 
+function getTeamById(teamId) {
+  return (latestTeams || []).find(function(team) {
+    return getTeamId(team) === teamId;
+  }) || {};
+}
+
+function renderTeamNameAdminForm() {
+  var teamSelect = qs("#teamNameAdminTeam");
+  if (!teamSelect) return;
+
+  var currentValue = teamSelect.value;
+  var teams = (latestTeams || []).slice().sort(function(a, b) {
+    return Number(a.team_number || 0) - Number(b.team_number || 0);
+  });
+
+  teamSelect.innerHTML = teams.map(function(team) {
+    var teamId = getTeamId(team);
+    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
+    var currentName = team.team_name ? " - " + team.team_name : "";
+
+    return '<option value="' + escapeHtml(teamId) + '">' +
+      escapeHtml(getTeamDisplayName(team) + (ageGroup ? " • " + ageGroup : "") + currentName) +
+    '</option>';
+  }).join("");
+
+  if (currentValue && Array.prototype.slice.call(teamSelect.options).some(function(option) {
+    return option.value === currentValue;
+  })) {
+    teamSelect.value = currentValue;
+  }
+
+  updateTeamNameAdminFields();
+}
+
+function updateTeamNameAdminFields() {
+  var teamSelect = qs("#teamNameAdminTeam");
+  var input = qs("#teamNameAdminName");
+  var status = qs("#teamNameAdminStatus");
+
+  if (!teamSelect || !input) return;
+
+  var team = getTeamById(teamSelect.value);
+  input.value = team.team_name || "";
+
+  if (status) {
+    status.textContent = teamSelect.value
+      ? "Current name: " + (team.team_name || "No name set")
+      : "Choose a team.";
+  }
+}
+
+function submitTeamNameCorrection() {
+  var teamSelect = qs("#teamNameAdminTeam");
+  var input = qs("#teamNameAdminName");
+  var reason = qs("#teamNameAdminReason") ? qs("#teamNameAdminReason").value.trim() : "";
+  var status = qs("#teamNameAdminStatus");
+  var teamId = teamSelect ? teamSelect.value : "";
+  var team = getTeamById(teamId);
+  var name = input ? input.value.trim() : "";
+
+  if (!teamId) {
+    if (status) status.textContent = "Choose a team.";
+    return;
+  }
+
+  if (!name) {
+    if (status) status.textContent = "Enter the corrected team name.";
+    return;
+  }
+
+  if (status) status.textContent = "Saving team name...";
+
+  apiRequest({
+    action: "admin_update_team_name",
+    username: currentUser.username,
+    token: currentUser.token || "",
+    team_id: teamId,
+    team_number: team.team_number || "",
+    age_group: getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number)),
+    team_name: name,
+    reason: reason
+  })
+    .then(function(result) {
+      if (!result.ok) throw new Error(result.message || "Team name could not be saved.");
+      if (status) status.textContent = "Team name saved.";
+      fetchCampData();
+    })
+    .catch(function(error) {
+      if (status) status.textContent = error.message;
+    });
+}
+
 function renderContacts(contacts) {
   var list = qs("#helpList");
 
@@ -2093,6 +2186,7 @@ function initApp() {
   updateScoreGameAccess();
   renderPlacements();
   renderScoreCorrectionForm();
+  renderTeamNameAdminForm();
 
   try {
     if (sessionStorage.getItem("campPreviewUnlocked") === "true") {
@@ -2177,6 +2271,12 @@ function initApp() {
 
   var correctionSubmitButton = qs("#correctionSubmitButton");
   if (correctionSubmitButton) correctionSubmitButton.addEventListener("click", submitScoreCorrection);
+
+  var teamNameAdminTeam = qs("#teamNameAdminTeam");
+  if (teamNameAdminTeam) teamNameAdminTeam.addEventListener("change", updateTeamNameAdminFields);
+
+  var teamNameAdminSubmit = qs("#teamNameAdminSubmit");
+  if (teamNameAdminSubmit) teamNameAdminSubmit.addEventListener("click", submitTeamNameCorrection);
 
   var previewModeToggle = qs("#previewModeToggle");
   if (previewModeToggle) {
