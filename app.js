@@ -308,6 +308,7 @@ function renderCampData(data) {
     data.TEAM_NAMES || []
   );
   if (!scoreEntryDirty) renderPlacements();
+  renderScoreCorrectionForm();
 }
 
 function calculateGameStatus(game) {
@@ -1628,6 +1629,129 @@ function submitScoreResult() {
   }
 }
 
+function getCurrentScoreForTeam(teamId) {
+  var totals = getScoreTotals(latestScores, latestTeams, latestScoreEntries);
+  var row = totals.find(function(score) {
+    return score.team_id === teamId;
+  });
+
+  return row ? Number(row.points || 0) : 0;
+}
+
+function getCorrectionTeamOptions(teams) {
+  return teams.map(function(team) {
+    var teamId = getTeamId(team);
+    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
+
+    return '<option value="' + escapeHtml(teamId) + '">' +
+      escapeHtml(getTeamDisplayName(team) + (ageGroup ? " • " + ageGroup : "")) +
+    '</option>';
+  }).join("");
+}
+
+function renderScoreCorrectionForm() {
+  var teamSelect = qs("#correctionTeam");
+  if (!teamSelect) return;
+
+  var currentValue = teamSelect.value;
+  var teams = (latestTeams || []).slice().sort(function(a, b) {
+    return Number(a.team_number || 0) - Number(b.team_number || 0);
+  });
+
+  teamSelect.innerHTML = getCorrectionTeamOptions(teams);
+
+  if (currentValue && Array.prototype.slice.call(teamSelect.options).some(function(option) {
+    return option.value === currentValue;
+  })) {
+    teamSelect.value = currentValue;
+  }
+
+  updateCorrectionCurrentScore();
+}
+
+function updateCorrectionCurrentScore() {
+  var teamSelect = qs("#correctionTeam");
+  var currentScore = qs("#correctionCurrentScore");
+
+  if (!teamSelect || !currentScore) return;
+
+  var teamId = teamSelect.value;
+  currentScore.textContent = teamId ? "Current total: " + getCurrentScoreForTeam(teamId) : "Choose a team.";
+}
+
+function buildScoreCorrectionSubmission() {
+  var teamSelect = qs("#correctionTeam");
+  var mode = qs("#correctionMode") ? qs("#correctionMode").value : "";
+  var amount = Number(qs("#correctionAmount") ? qs("#correctionAmount").value : 0);
+  var reason = qs("#correctionReason") ? qs("#correctionReason").value.trim() : "";
+  var teamId = teamSelect ? teamSelect.value : "";
+  var team = (latestTeams || []).find(function(item) {
+    return getTeamId(item) === teamId;
+  }) || {};
+  var currentPoints = getCurrentScoreForTeam(teamId);
+  var newTotal = currentPoints;
+  var adjustment = 0;
+
+  if (!teamId) throw new Error("Choose a team.");
+  if (!amount && amount !== 0) throw new Error("Enter a point amount.");
+  if (mode !== "set_total" && amount <= 0) throw new Error("Enter a positive amount to add or subtract.");
+
+  if (mode === "set_total") {
+    newTotal = amount;
+    adjustment = newTotal - currentPoints;
+  } else if (mode === "add_points") {
+    adjustment = amount;
+    newTotal = currentPoints + adjustment;
+  } else if (mode === "subtract_points") {
+    adjustment = -amount;
+    newTotal = currentPoints + adjustment;
+  } else {
+    throw new Error("Choose a correction type.");
+  }
+
+  return {
+    action: "submit_score_correction",
+    username: currentUser.username,
+    token: currentUser.token || "",
+    team_id: teamId,
+    team_number: team.team_number || "",
+    age_group: getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number)),
+    correction_mode: mode,
+    current_points: currentPoints,
+    amount: amount,
+    adjustment: adjustment,
+    new_total: newTotal,
+    reason: reason
+  };
+}
+
+function submitScoreCorrection() {
+  var status = qs("#correctionStatus");
+
+  try {
+    var payload = buildScoreCorrectionSubmission();
+
+    if (status) status.textContent = "Saving correction...";
+
+    if (!API_URL) {
+      if (status) status.textContent = "Demo correction calculated: " + payload.new_total;
+      return;
+    }
+
+    apiRequest(payload)
+      .then(function(result) {
+        if (!result.ok) throw new Error(result.message || "Correction could not be saved.");
+        if (status) status.textContent = "Correction saved.";
+        fetchCampData();
+      })
+      .catch(function(error) {
+        if (status) status.textContent = error.message;
+      });
+  } catch (error) {
+    if (status) status.textContent = error.message;
+  }
+}
+
 function renderContacts(contacts) {
   var list = qs("#helpList");
 
@@ -1968,6 +2092,7 @@ function initApp() {
   updateVisibleMenuItems();
   updateScoreGameAccess();
   renderPlacements();
+  renderScoreCorrectionForm();
 
   try {
     if (sessionStorage.getItem("campPreviewUnlocked") === "true") {
@@ -2046,6 +2171,12 @@ function initApp() {
 
   var scoreSubmitButton = qs("#scoreSubmitButton");
   if (scoreSubmitButton) scoreSubmitButton.addEventListener("click", submitScoreResult);
+
+  var correctionTeam = qs("#correctionTeam");
+  if (correctionTeam) correctionTeam.addEventListener("change", updateCorrectionCurrentScore);
+
+  var correctionSubmitButton = qs("#correctionSubmitButton");
+  if (correctionSubmitButton) correctionSubmitButton.addEventListener("click", submitScoreCorrection);
 
   var previewModeToggle = qs("#previewModeToggle");
   if (previewModeToggle) {

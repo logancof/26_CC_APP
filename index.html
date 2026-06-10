@@ -66,7 +66,7 @@
             <div><strong>Attendance</strong><small>Safety team attendance checkpoints</small></div>
           </button>
           <button class="role-menu-item" data-permission="score_corrections" data-role-view="scorefix">
-            <div><strong>Score Corrections</strong><small>Fix scores and add bonus ducks</small></div>
+            <div><strong>Score Corrections</strong><small>Set, add, or subtract team points</small></div>
           </button>
           <button class="role-menu-item" data-permission="story_admin" data-role-view="storyadmin">
             <div><strong>Review Stories</strong><small>Approve and edit student wins</small></div>
@@ -457,30 +457,35 @@
         </div>
       </div>
 
-      <div id="scorefix" class="page" data-permission="score_corrections">
-        <h2 class="section-title">Score Fix</h2>
-        <div class="updated">Approved scorekeepers can add manual bonus points or correct scores.</div>
-
-        <div class="card entry-card">
-          <span class="pill">Bonus Points</span>
-          <div class="spacer"></div>
-          <label>Age Group</label>
-          <select><option>6-7th</option><option>8-9th</option><option>10-12th</option></select>
-          <label>Team</label>
-          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
-          <input type="number" placeholder="Point amount, example: 20 or 2000" />
-          <textarea placeholder="Reason, example: mini duck or golden duck"></textarea>
-          <button class="submit-btn">Add Bonus Points</button>
+      <div id="scorefix" class="page full-screen-page scorekeeper-page" data-permission="score_corrections">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="home">← Home</button>
+          <div>
+            <h2>Score Corrections</h2>
+            <p>Set a team total or add/subtract a specific point adjustment.</p>
+          </div>
         </div>
 
         <div class="card entry-card correction-card">
-          <span class="pill">Score Correction</span>
-          <div class="spacer"></div>
           <label>Team</label>
-          <select><option>Team 1</option><option>Team 2</option><option>Team 3</option></select>
-          <input type="number" placeholder="Adjustment amount, example: 500 or -500" />
-          <textarea placeholder="Reason for correction"></textarea>
-          <button class="submit-btn">Submit Correction</button>
+          <select id="correctionTeam"></select>
+          <div class="score-mode-note" id="correctionCurrentScore"></div>
+
+          <label>Correction Type</label>
+          <select id="correctionMode">
+            <option value="set_total">Set total score</option>
+            <option value="add_points">Add points</option>
+            <option value="subtract_points">Subtract points</option>
+          </select>
+
+          <label>Point Amount</label>
+          <input id="correctionAmount" type="number" inputmode="numeric" placeholder="Example: 500" />
+
+          <label>Reason</label>
+          <textarea id="correctionReason" placeholder="Reason for correction"></textarea>
+
+          <button class="submit-btn" id="correctionSubmitButton" type="button">Submit Correction</button>
+          <div class="updated" id="correctionStatus"></div>
         </div>
       </div>
 
@@ -575,7 +580,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.4</div>
+    <div class="app-version">v0.8.5</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
