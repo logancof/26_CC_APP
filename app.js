@@ -301,9 +301,9 @@ function renderCampData(data) {
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
-  latestAttendanceRoster = (data.ATTENDANCE_ROSTER && data.ATTENDANCE_ROSTER.length)
-    ? data.ATTENDANCE_ROSTER
-    : buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS || []);
+  latestAttendanceRoster = (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
+    ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
+    : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
   latestStoryPrompts = data.STORY_PROMPTS || data.REVIEW_STORY_PROMPTS || [];
 
   updateStatus(data.SCHEDULE || []);
@@ -1338,6 +1338,8 @@ function buildRosterFromAttendanceGroups(groups) {
     var sex = normalizeSex(getRowValue(group, ["sex", "gender"]));
     var students = splitStudentNames(getRowValue(group, ["students", "student_names", "student_list"]));
 
+    if (!leaderUsername || !students.length) return;
+
     students.forEach(function(studentName, studentIndex) {
       roster.push({
         prompt_id: promptId,
@@ -1482,9 +1484,10 @@ function getRosterForPrompt(prompt) {
 
     var rowPromptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
     var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
+    var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || "").trim();
 
     if (rowPromptId && rowPromptId !== promptId) return false;
-    return !rowLeader || rowLeader === username;
+    return !!studentName && !!rowLeader && rowLeader === username;
   }).sort(function(a, b) {
     return Number(getRowValue(a, ["sort_order", "order"]) || 999) - Number(getRowValue(b, ["sort_order", "order"]) || 999);
   });
