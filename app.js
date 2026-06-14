@@ -301,7 +301,9 @@ function renderCampData(data) {
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
-  latestAttendanceRoster = data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
+  latestAttendanceRoster = (data.ATTENDANCE_ROSTER && data.ATTENDANCE_ROSTER.length)
+    ? data.ATTENDANCE_ROSTER
+    : buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS || []);
   latestStoryPrompts = data.STORY_PROMPTS || data.REVIEW_STORY_PROMPTS || [];
 
   updateStatus(data.SCHEDULE || []);
@@ -1307,6 +1309,46 @@ function splitList(value) {
     .filter(Boolean);
 }
 
+function splitStudentNames(value) {
+  return String(value || "")
+    .split(/[,\n;]/)
+    .map(function(item) {
+      return item.trim();
+    })
+    .filter(Boolean);
+}
+
+function buildRosterFromAttendanceGroups(groups) {
+  var roster = [];
+
+  (groups || []).forEach(function(group, groupIndex) {
+    if (group.active !== undefined && group.active !== "" && !isTrue(group.active)) return;
+
+    var leaderUsername = String(getRowValue(group, ["leader_username", "username"]) || "").trim();
+    var leaderName = String(getRowValue(group, ["leader_name", "leader", "group_leader"]) || "").trim();
+    var promptId = String(getRowValue(group, ["prompt_id", "checkpoint_id"]) || "").trim();
+    var ageGroup = getRowValue(group, ["age_group", "group", "grade_group"]);
+    var sex = getRowValue(group, ["sex", "gender"]);
+    var students = splitStudentNames(getRowValue(group, ["students", "student_names", "student_list"]));
+
+    students.forEach(function(studentName, studentIndex) {
+      roster.push({
+        prompt_id: promptId,
+        leader_name: leaderName,
+        leader_username: leaderUsername,
+        age_group: ageGroup,
+        sex: sex,
+        student_id: "group_" + (groupIndex + 1) + "_student_" + (studentIndex + 1),
+        student_name: studentName,
+        sort_order: studentIndex + 1,
+        active: "TRUE"
+      });
+    });
+  });
+
+  return roster;
+}
+
 function parsePromptDate(dateValue, timeValue) {
   var dateText = String(dateValue || "").trim();
   var timeText = String(timeValue || "").trim();
@@ -1533,7 +1575,12 @@ function renderAttendancePage() {
   checklist.innerHTML = roster.map(function(student, index) {
     var studentId = escapeHtml(getRowValue(student, ["student_id", "id"]) || "student_" + index);
     var studentName = escapeHtml(getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1));
-    var detail = escapeHtml(getRowValue(student, ["team_name", "team_number", "group", "cabin"]) || "");
+    var detailParts = [
+      getRowValue(student, ["age_group", "group", "grade_group"]),
+      getRowValue(student, ["sex", "gender"]),
+      getRowValue(student, ["team_name", "team_number", "cabin"])
+    ].filter(Boolean);
+    var detail = escapeHtml(detailParts.join(" • "));
 
     return '<label class="attendance-row">' +
       '<input type="checkbox" data-student-id="' + studentId + '" />' +
