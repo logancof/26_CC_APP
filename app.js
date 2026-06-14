@@ -1318,6 +1318,13 @@ function splitStudentNames(value) {
     .filter(Boolean);
 }
 
+function normalizeSex(value) {
+  var text = String(value || "").trim().toLowerCase();
+  if (text === "f" || text === "female") return "Female";
+  if (text === "m" || text === "male") return "Male";
+  return String(value || "").trim();
+}
+
 function buildRosterFromAttendanceGroups(groups) {
   var roster = [];
 
@@ -1328,7 +1335,7 @@ function buildRosterFromAttendanceGroups(groups) {
     var leaderName = String(getRowValue(group, ["leader_name", "leader", "group_leader"]) || "").trim();
     var promptId = String(getRowValue(group, ["prompt_id", "checkpoint_id"]) || "").trim();
     var ageGroup = getRowValue(group, ["age_group", "group", "grade_group"]);
-    var sex = getRowValue(group, ["sex", "gender"]);
+    var sex = normalizeSex(getRowValue(group, ["sex", "gender"]));
     var students = splitStudentNames(getRowValue(group, ["students", "student_names", "student_list"]));
 
     students.forEach(function(studentName, studentIndex) {
@@ -1397,7 +1404,7 @@ function getPromptTitle(prompt) {
 
 function isPromptForCurrentUser(prompt, fallbackPermission) {
   if (!prompt) return false;
-  if (prompt.active !== undefined && prompt.active !== "" && !isTrue(prompt.active)) return false;
+  if (!isTrue(prompt.active)) return false;
   if (prompt.visible !== undefined && prompt.visible !== "" && !isTrue(prompt.visible)) return false;
 
   var username = String(currentUser.username || "").toLowerCase().trim();
@@ -1421,16 +1428,22 @@ function isPromptForCurrentUser(prompt, fallbackPermission) {
 }
 
 function isPromptActiveNow(prompt) {
+  var dateValue = getRowValue(prompt, ["date", "prompt_date", "day"]);
+  var startValue = getRowValue(prompt, ["start_time", "send_time", "time"]);
+  var endValue = getRowValue(prompt, ["end_time", "expires_at", "close_time"]);
+
+  if (!startValue) return false;
+
   var start = parsePromptDate(
-    getRowValue(prompt, ["date", "prompt_date", "day"]),
-    getRowValue(prompt, ["start_time", "send_time", "time"])
+    dateValue,
+    startValue
   );
   var end = parsePromptDate(
-    getRowValue(prompt, ["date", "prompt_date", "day"]),
-    getRowValue(prompt, ["end_time", "expires_at", "close_time"])
+    dateValue,
+    endValue
   );
 
-  if (!start && !end) return true;
+  if (!start) return false;
 
   var now = new Date();
   if (start && now < start) return false;
@@ -1577,7 +1590,7 @@ function renderAttendancePage() {
     var studentName = escapeHtml(getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1));
     var detailParts = [
       getRowValue(student, ["age_group", "group", "grade_group"]),
-      getRowValue(student, ["sex", "gender"]),
+      normalizeSex(getRowValue(student, ["sex", "gender"])),
       getRowValue(student, ["team_name", "team_number", "cabin"])
     ].filter(Boolean);
     var detail = escapeHtml(detailParts.join(" • "));
