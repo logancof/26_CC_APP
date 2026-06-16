@@ -1,5 +1,4 @@
 var API_URL = "https://script.google.com/macros/s/AKfycbyCeT35L-8gAoQwDgMrII53WCR8LPx0zPUM1x0Q5HpoyW0tvC7DAEZ0DktRE2mfnek_RQ/exec";
-var TEST_PASSWORD = "Cc2026";
 var REFRESH_MS = 30000;
 var PREVIEW_USERNAMES = ["logan.parr", "loganisparr"];
 
@@ -511,24 +510,6 @@ function stopRolePreview() {
   currentUser.permissions = parsePermissions(currentUser.permissions);
   saveCurrentUser();
   updateVisibleMenuItems();
-}
-
-function unlockTestGate() {
-  var input = qs("#testGatePassword");
-  var error = qs("#testGateError");
-  var gate = qs("#testGate");
-
-  if (!input || !gate) return;
-
-  if (input.value === TEST_PASSWORD) {
-    try {
-      sessionStorage.setItem("campPreviewUnlocked", "true");
-    } catch (e) {}
-
-    gate.classList.add("hidden");
-  } else if (error) {
-    error.textContent = "Incorrect password.";
-  }
 }
 
 function submitAuth() {
@@ -2651,23 +2632,6 @@ function initApp() {
   renderPlacements();
   renderScoreCorrectionForm();
   renderTeamNameAdminForm();
-
-  try {
-    if (sessionStorage.getItem("campPreviewUnlocked") === "true") {
-      var gate = qs("#testGate");
-      if (gate) gate.classList.add("hidden");
-    }
-  } catch (e) {}
-
-  var gateButton = qs("#testGateButton");
-  if (gateButton) gateButton.addEventListener("click", unlockTestGate);
-
-  var gateInput = qs("#testGatePassword");
-  if (gateInput) {
-    gateInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter" || event.keyCode === 13) unlockTestGate();
-    });
-  }
 
   qsa(".tab").forEach(function(tab) {
     tab.addEventListener("click", function() {
