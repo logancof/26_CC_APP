@@ -1219,15 +1219,17 @@ body.menu-open .hero::after {
     overflow: hidden;
     touch-action: none;
     display: grid;
-    place-items: start center;
-    padding: 18px
+    place-items: center;
+    padding: 0
 }
 
 #campMapImage {
-    width: 100%;
+    width: calc(100% - 36px);
     max-width: none;
-    transform-origin: top center;
-    transition: transform .15s ease;
+    max-height: calc(100% - 36px);
+    object-fit: contain;
+    transform-origin: center center;
+    will-change: transform;
     user-select: none;
     -webkit-user-drag: none
 }
@@ -1249,7 +1251,7 @@ body.menu-open .hero::after {
 
 .pdf-header {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
     padding: calc(env(safe-area-inset-top) + 12px) 14px 12px;
@@ -1290,19 +1292,43 @@ body.menu-open .hero::after {
     cursor: pointer;
 }
 
+.pdf-zoom-controls {
+    display: grid;
+    grid-template-columns: 36px 48px 36px;
+    align-items: center;
+    gap: 6px;
+}
+
+.pdf-zoom-controls button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.pdf-zoom-controls span {
+    color: var(--cream);
+    font-size: 12px;
+    font-weight: 950;
+    text-align: center;
+}
+
 .pdf-viewer {
     flex: 1;
     width: 100%;
     min-height: 0;
-    overflow-y: auto;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
     background: #242019;
     padding: 14px 12px 28px;
+    touch-action: pan-x pan-y;
 }
 
 .pdf-page {
     width: fit-content;
-    max-width: 100%;
+    max-width: none;
     margin: 0 auto 16px;
     position: relative;
     background: #fff;

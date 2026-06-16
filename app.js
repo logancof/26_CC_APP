@@ -16,6 +16,7 @@ var resourceLinks = {};
 var mapZoom = 1;
 var currentX = 0;
 var currentY = 0;
+var pdfZoom = 1;
 var pdfRenderToken = 0;
 var lastMediaSignature = "";
 var latestTeams = [];
@@ -2321,6 +2322,8 @@ function openMap() {
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
 
+  currentX = 0;
+  currentY = 0;
   setMapZoom(1);
 }
 
@@ -2351,6 +2354,7 @@ function openPdf(link, title) {
   if (heading) heading.textContent = title || "Resource";
   if (status) status.textContent = "Loading";
 
+  setPdfZoom(1);
   viewer.innerHTML = '<div class="pdf-loading">Loading resource...</div>';
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -2403,8 +2407,11 @@ function openPdf(link, title) {
 
             canvas.width = Math.floor(viewport.width * pixelRatio);
             canvas.height = Math.floor(viewport.height * pixelRatio);
+            canvas.setAttribute("data-base-width", viewport.width);
+            canvas.setAttribute("data-base-height", viewport.height);
             canvas.style.width = viewport.width + "px";
             canvas.style.height = viewport.height + "px";
+            pageShell.setAttribute("data-base-width", viewport.width);
 
             context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
@@ -2463,9 +2470,130 @@ function showPdfError(link) {
   }
 }
 
+function setPdfZoom(value, anchor) {
+  var viewer = qs("#pdfViewer");
+  var label = qs("#pdfZoomLabel");
+  var previousZoom = pdfZoom;
+  var nextZoom = Math.max(1, Math.min(3.2, value));
+  var anchorX = anchor && viewer ? anchor.x + viewer.scrollLeft : 0;
+  var anchorY = anchor && viewer ? anchor.y + viewer.scrollTop : 0;
+
+  pdfZoom = nextZoom;
+
+  qsa("#pdfViewer .pdf-page").forEach(function(pageShell) {
+    var canvas = pageShell.querySelector("canvas");
+    var baseWidth = Number(pageShell.getAttribute("data-base-width") || (canvas ? canvas.getAttribute("data-base-width") : 0));
+    var baseHeight = Number(canvas ? canvas.getAttribute("data-base-height") : 0);
+
+    if (!canvas || !baseWidth || !baseHeight) return;
+
+    pageShell.style.width = (baseWidth * pdfZoom) + "px";
+    canvas.style.width = (baseWidth * pdfZoom) + "px";
+    canvas.style.height = (baseHeight * pdfZoom) + "px";
+  });
+
+  if (label) label.textContent = Math.round(pdfZoom * 100) + "%";
+
+  if (viewer && anchor && previousZoom) {
+    viewer.scrollLeft = anchorX * (pdfZoom / previousZoom) - anchor.x;
+    viewer.scrollTop = anchorY * (pdfZoom / previousZoom) - anchor.y;
+  }
+}
+
+function adjustPdfZoom(delta) {
+  var viewer = qs("#pdfViewer");
+  var anchor = viewer
+    ? { x: viewer.clientWidth / 2, y: viewer.clientHeight / 2 }
+    : null;
+
+  setPdfZoom(pdfZoom + delta, anchor);
+}
+
+function enablePdfGestures() {
+  var viewer = qs("#pdfViewer");
+  if (!viewer) return;
+
+  var pointers = [];
+  var startDistance = 0;
+  var startZoom = 1;
+
+  function midpoint() {
+    var rect = viewer.getBoundingClientRect();
+    return {
+      x: ((pointers[0].clientX + pointers[1].clientX) / 2) - rect.left,
+      y: ((pointers[0].clientY + pointers[1].clientY) / 2) - rect.top
+    };
+  }
+
+  viewer.addEventListener("pointerdown", function(event) {
+    if (event.pointerType === "mouse") return;
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== event.pointerId;
+    });
+    pointers.push(event);
+
+    if (pointers.length === 2) {
+      startDistance = Math.hypot(
+        pointers[0].clientX - pointers[1].clientX,
+        pointers[0].clientY - pointers[1].clientY
+      );
+      startZoom = pdfZoom;
+    }
+  });
+
+  viewer.addEventListener("pointermove", function(event) {
+    for (var i = 0; i < pointers.length; i++) {
+      if (pointers[i].pointerId === event.pointerId) pointers[i] = event;
+    }
+
+    if (pointers.length === 2 && startDistance) {
+      event.preventDefault();
+      var distance = Math.hypot(
+        pointers[0].clientX - pointers[1].clientX,
+        pointers[0].clientY - pointers[1].clientY
+      );
+
+      setPdfZoom(startZoom * (distance / startDistance), midpoint());
+    }
+  });
+
+  function removePointer(pointerId) {
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== pointerId;
+    });
+
+    if (pointers.length < 2) startDistance = 0;
+  }
+
+  viewer.addEventListener("pointerup", function(event) {
+    removePointer(event.pointerId);
+  });
+
+  viewer.addEventListener("pointercancel", function(event) {
+    removePointer(event.pointerId);
+  });
+}
+
 function setMapZoom(value) {
   mapZoom = Math.max(1, Math.min(5, value));
   updateMapTransform();
+}
+
+function clampMapPan() {
+  var viewer = qs("#mapViewer");
+  var image = qs("#campMapImage");
+
+  if (!viewer || !image || mapZoom <= 1) {
+    currentX = 0;
+    currentY = 0;
+    return;
+  }
+
+  var maxX = Math.max(0, (image.clientWidth * mapZoom - viewer.clientWidth) / 2);
+  var maxY = Math.max(0, (image.clientHeight * mapZoom - viewer.clientHeight) / 2);
+
+  currentX = Math.max(-maxX, Math.min(maxX, currentX));
+  currentY = Math.max(-maxY, Math.min(maxY, currentY));
 }
 
 function updateMapTransform() {
@@ -2473,6 +2601,7 @@ function updateMapTransform() {
 
   if (!image) return;
 
+  clampMapPan();
   image.style.transform = "translate(" + currentX + "px, " + currentY + "px) scale(" + mapZoom + ")";
 }
 
@@ -2484,12 +2613,29 @@ function enableMapGestures() {
   var pointers = [];
   var startDistance = 0;
   var startZoom = 1;
+  var startX = 0;
+  var startY = 0;
+  var startCenterX = 0;
+  var startCenterY = 0;
+  var viewerCenterX = 0;
+  var viewerCenterY = 0;
   var lastX = 0;
   var lastY = 0;
   var dragging = false;
 
+  function pointerCenter() {
+    return {
+      x: (pointers[0].clientX + pointers[1].clientX) / 2,
+      y: (pointers[0].clientY + pointers[1].clientY) / 2
+    };
+  }
+
   viewer.addEventListener("pointerdown", function(event) {
+    event.preventDefault();
     viewer.setPointerCapture(event.pointerId);
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== event.pointerId;
+    });
     pointers.push(event);
 
     if (pointers.length === 1) {
@@ -2504,6 +2650,15 @@ function enableMapGestures() {
         pointers[0].clientY - pointers[1].clientY
       );
       startZoom = mapZoom;
+      startX = currentX;
+      startY = currentY;
+      var center = pointerCenter();
+      var rect = viewer.getBoundingClientRect();
+      startCenterX = center.x;
+      startCenterY = center.y;
+      viewerCenterX = rect.left + rect.width / 2;
+      viewerCenterY = rect.top + rect.height / 2;
+      dragging = false;
     }
   });
 
@@ -2513,6 +2668,7 @@ function enableMapGestures() {
     }
 
     if (pointers.length === 1 && dragging && mapZoom > 1) {
+      event.preventDefault();
       currentX += event.clientX - lastX;
       currentY += event.clientY - lastY;
       lastX = event.clientX;
@@ -2521,12 +2677,18 @@ function enableMapGestures() {
     }
 
     if (pointers.length === 2 && startDistance) {
+      event.preventDefault();
       var distance = Math.hypot(
         pointers[0].clientX - pointers[1].clientX,
         pointers[0].clientY - pointers[1].clientY
       );
+      var center = pointerCenter();
+      var nextZoom = Math.max(1, Math.min(5, startZoom * (distance / startDistance)));
+      var zoomRatio = nextZoom / startZoom;
 
-      setMapZoom(startZoom * (distance / startDistance));
+      currentX = (zoomRatio * startX) + (center.x - viewerCenterX) - (zoomRatio * (startCenterX - viewerCenterX));
+      currentY = (zoomRatio * startY) + (center.y - viewerCenterY) - (zoomRatio * (startCenterY - viewerCenterY));
+      setMapZoom(nextZoom);
     }
   });
 
@@ -2536,6 +2698,11 @@ function enableMapGestures() {
     });
 
     if (pointers.length < 2) startDistance = 0;
+    if (pointers.length === 1) {
+      dragging = true;
+      lastX = pointers[0].clientX;
+      lastY = pointers[0].clientY;
+    }
     if (pointers.length === 0) dragging = false;
   }
 
@@ -2790,10 +2957,25 @@ function initApp() {
   var closePdfButton = qs("#closePdfButton");
   if (closePdfButton) closePdfButton.addEventListener("click", closePdf);
 
+  var pdfZoomOut = qs("#pdfZoomOut");
+  if (pdfZoomOut) pdfZoomOut.addEventListener("click", function() {
+    adjustPdfZoom(-.25);
+  });
+
+  var pdfZoomIn = qs("#pdfZoomIn");
+  if (pdfZoomIn) pdfZoomIn.addEventListener("click", function() {
+    adjustPdfZoom(.25);
+  });
+
   var closeMediaButton = qs("#closeMediaButton");
   if (closeMediaButton) closeMediaButton.addEventListener("click", closeMediaViewer);
 
   enableMapGestures();
+  enablePdfGestures();
+
+  window.addEventListener("resize", function() {
+    updateMapTransform();
+  });
 
   fetchCampData();
   setInterval(fetchCampData, REFRESH_MS);
