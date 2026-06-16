@@ -2509,6 +2509,88 @@ function adjustPdfZoom(delta) {
   setPdfZoom(pdfZoom + delta, anchor);
 }
 
+function enablePdfGestures() {
+  var viewer = qs("#pdfViewer");
+  if (!viewer) return;
+
+  var pointers = [];
+  var startDistance = 0;
+  var startZoom = 1;
+  var pendingZoom = null;
+  var pendingAnchor = null;
+  var zoomFrame = 0;
+
+  function getMidpoint() {
+    var rect = viewer.getBoundingClientRect();
+    return {
+      x: ((pointers[0].clientX + pointers[1].clientX) / 2) - rect.left,
+      y: ((pointers[0].clientY + pointers[1].clientY) / 2) - rect.top
+    };
+  }
+
+  function schedulePdfZoom(value, anchor) {
+    pendingZoom = value;
+    pendingAnchor = anchor;
+
+    if (zoomFrame) return;
+
+    zoomFrame = requestAnimationFrame(function() {
+      zoomFrame = 0;
+      setPdfZoom(pendingZoom, pendingAnchor);
+    });
+  }
+
+  function removePointer(pointerId) {
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== pointerId;
+    });
+
+    if (pointers.length < 2) startDistance = 0;
+  }
+
+  viewer.addEventListener("pointerdown", function(event) {
+    if (event.pointerType === "mouse") return;
+
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== event.pointerId;
+    });
+    pointers.push(event);
+
+    if (pointers.length === 2) {
+      startDistance = Math.hypot(
+        pointers[0].clientX - pointers[1].clientX,
+        pointers[0].clientY - pointers[1].clientY
+      );
+      startZoom = pdfZoom;
+    }
+  });
+
+  viewer.addEventListener("pointermove", function(event) {
+    for (var i = 0; i < pointers.length; i++) {
+      if (pointers[i].pointerId === event.pointerId) pointers[i] = event;
+    }
+
+    if (pointers.length !== 2 || !startDistance) return;
+
+    event.preventDefault();
+
+    var distance = Math.hypot(
+      pointers[0].clientX - pointers[1].clientX,
+      pointers[0].clientY - pointers[1].clientY
+    );
+
+    schedulePdfZoom(startZoom * (distance / startDistance), getMidpoint());
+  });
+
+  viewer.addEventListener("pointerup", function(event) {
+    removePointer(event.pointerId);
+  });
+
+  viewer.addEventListener("pointercancel", function(event) {
+    removePointer(event.pointerId);
+  });
+}
+
 function setMapZoom(value) {
   mapZoom = Math.max(1, Math.min(5, value));
   updateMapTransform();
@@ -2906,6 +2988,7 @@ function initApp() {
   if (closeMediaButton) closeMediaButton.addEventListener("click", closeMediaViewer);
 
   enableMapGestures();
+  enablePdfGestures();
 
   window.addEventListener("resize", function() {
     updateMapTransform();
