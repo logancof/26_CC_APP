@@ -115,7 +115,12 @@ var defaultResourceLinks = {
   packing_list: "assets/pdfs/CC%20Packing%20List.pdf",
   community_camp_games_guide: "assets/pdfs/Community%20Camp%20Games%20Guide.pdf",
   community_camp_scoring_sheet: "assets/pdfs/Community%20Camp%20Scoring%20Sheet.pdf",
-  community_camp_setup_teardown: "assets/pdfs/Community%20Camp%20SetupTeardown%20List.pdf"
+  community_camp_setup_teardown: "assets/pdfs/Community%20Camp%20SetupTeardown%20List.pdf",
+  role_games_coordinator: "assets/pdfs/CC%20GAMES%20ROLES%20GAMES%20CORDINATOR.pdf",
+  role_team_leader: "assets/pdfs/CC%20GAMES%20ROLES%20TEAM%20LEADER.pdf",
+  role_referee: "assets/pdfs/CC%20GAMES%20ROLES%20REFEREE.pdf",
+  role_free_time: "assets/pdfs/Role%20Descriptions%20FREE%20TIME.pdf",
+  role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf"
 };
 
 try {

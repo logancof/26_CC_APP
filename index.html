@@ -242,6 +242,9 @@
             <button class="leader-category-card" data-page-link="leader-assignments">
               Assignments<span>Groups, teams, dorms, and buses</span>
             </button>
+            <button class="leader-category-card" data-page-link="leader-roles">
+              Role Descriptions<span>Games, free time, dorms, meals, and services</span>
+            </button>
           </div>
         </div>
       </div>
@@ -372,8 +375,47 @@
           <button class="leader-resource" data-resource-key="bus_assignments">
             Bus Assignments<span>Travel groups and bus lists</span>
           </button>
-          <button class="leader-resource" data-resource-key="role_descriptions">
-            Role Descriptions<span>Games, free time, dorms, meals, and services</span>
+        </div>
+      </div>
+
+      <div id="leader-roles" class="page full-screen-page leader-category-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leaders">← Leader Hub</button>
+          <div>
+            <h2>Role Descriptions</h2>
+            <p>Role-specific details for games, free time, dorms, meals, and services.</p>
+          </div>
+        </div>
+        <div class="resource-list">
+          <button class="leader-resource" data-page-link="leader-role-games">
+            Games<span>Games coordinator, team leader, and referee roles</span>
+          </button>
+          <button class="leader-resource" data-resource-key="role_free_time">
+            Free Time<span>Free time role expectations</span>
+          </button>
+          <button class="leader-resource" data-resource-key="role_dorms">
+            Dorms<span>Dorm role expectations</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="leader-role-games" class="page full-screen-page leader-category-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leader-roles">← Role Descriptions</button>
+          <div>
+            <h2>Games Roles</h2>
+            <p>Role descriptions for games leadership and support.</p>
+          </div>
+        </div>
+        <div class="resource-list">
+          <button class="leader-resource" data-resource-key="role_games_coordinator">
+            Games Coordinator<span>Games leadership responsibilities</span>
+          </button>
+          <button class="leader-resource" data-resource-key="role_team_leader">
+            Team Leader<span>Team leader responsibilities during games</span>
+          </button>
+          <button class="leader-resource" data-resource-key="role_referee">
+            Referee<span>Referee responsibilities during games</span>
           </button>
         </div>
       </div>
@@ -563,7 +605,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.18</div>
+    <div class="app-version">v0.8.20</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
