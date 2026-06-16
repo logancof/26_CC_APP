@@ -599,12 +599,6 @@ h1,
     font-size: 12px
 }
 
-.impact-story {
-    border-left: 4px solid var(--cof-blue);
-    padding-left: 12px;
-    margin-top: 12px
-}
-
 .home-prompt-list {
     display: grid;
     gap: 12px;
@@ -2473,11 +2467,6 @@ body.menu-open .hero::after {
 .resource-card,
 .media-card {
     border-bottom: 1px dotted rgba(214, 97, 40, .34) !important;
-}
-
-.impact-story {
-    border-left: 0;
-    padding-left: 0;
 }
 
 .pdf-header,

@@ -23,7 +23,6 @@ var latestScores = [];
 var latestScoreEntries = [];
 var latestAttendancePrompts = [];
 var latestAttendanceRoster = [];
-var latestStoryPrompts = [];
 var activeAttendancePrompt = null;
 var pendingAttendancePayload = null;
 var scoreEntryDirty = false;
@@ -181,7 +180,7 @@ function canUseRolePreview() {
 
 function getPreviewPermissions(role) {
   return role === "admin"
-    ? ["attendance", "scorekeeper", "bonus_points", "score_corrections", "story_admin", "team_name_admin"]
+    ? ["attendance", "scorekeeper", "bonus_points", "score_corrections", "team_name_admin"]
     : [];
 }
 
@@ -303,14 +302,12 @@ function renderCampData(data) {
   latestAttendanceRoster = (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
     ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
     : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
-  latestStoryPrompts = data.STORY_PROMPTS || data.REVIEW_STORY_PROMPTS || [];
 
   updateStatus(data.SCHEDULE || []);
   renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
   renderGames(data.GAMES || [], data.TEAMS || []);
   renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries));
   renderMediaSections(data.CONTENT || []);
-  renderImpactStories(data.IMPACTS || []);
   renderContacts(data.LEADER_CONTACTS || []);
   renderResourceLinks(data.LEADER_RESOURCES || []);
   applyTeamNameSettings(
@@ -1259,18 +1256,6 @@ function closeMediaViewer() {
   document.body.style.overflow = "";
 }
 
-function renderImpactStories(impacts) {
-  var approved = impacts.filter(function(item) {
-    return isTrue(item.approved) && isTrue(item.visible);
-  });
-
-  var card = qs("#home .impact-story p");
-
-  if (card && approved.length) {
-    card.textContent = "“" + approved[approved.length - 1].story + "”";
-  }
-}
-
 function getRowValue(row, keys) {
   if (!row) return "";
 
@@ -1445,17 +1430,6 @@ function getActiveAttendancePrompts() {
   });
 }
 
-function getActiveStoryPrompts() {
-  var prompts = latestStoryPrompts.concat(latestAttendancePrompts.filter(function(prompt) {
-    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "").toLowerCase();
-    return type.indexOf("story") !== -1 || type.indexOf("review") !== -1;
-  }));
-
-  return prompts.filter(function(prompt) {
-    return isPromptForCurrentUser(prompt, "story_admin") && isPromptActiveNow(prompt);
-  });
-}
-
 function getRosterForPrompt(prompt) {
   var promptId = getPromptId(prompt);
   var username = String(currentUser.username || "").toLowerCase().trim();
@@ -1479,9 +1453,8 @@ function renderHomePrompts() {
   if (!list) return;
 
   var attendancePrompts = getActiveAttendancePrompts();
-  var storyPrompts = getActiveStoryPrompts();
 
-  if (!attendancePrompts.length && !storyPrompts.length) {
+  if (!attendancePrompts.length) {
     list.innerHTML = "";
     return;
   }
@@ -1496,17 +1469,7 @@ function renderHomePrompts() {
       '<strong>' + title + '</strong>' +
       '<small>' + message + '</small>' +
     '</button>';
-  }).concat(storyPrompts.map(function(prompt) {
-    var promptId = escapeHtml(getPromptId(prompt));
-    var title = escapeHtml(getPromptTitle(prompt));
-    var message = escapeHtml(getRowValue(prompt, ["message", "description", "note"]) || "Review pending camp stories.");
-
-    return '<button class="home-prompt-card story-prompt-card" type="button" data-story-prompt="' + promptId + '">' +
-      '<span>Review Needed</span>' +
-      '<strong>' + title + '</strong>' +
-      '<small>' + message + '</small>' +
-    '</button>';
-  })).join("");
+  }).join("");
 
   qsa("[data-attendance-prompt]").forEach(function(button) {
     button.addEventListener("click", function() {
@@ -1517,12 +1480,6 @@ function renderHomePrompts() {
       attendanceDirty = false;
       renderAttendancePage();
       activatePage("attendance");
-    });
-  });
-
-  qsa("[data-story-prompt]").forEach(function(button) {
-    button.addEventListener("click", function() {
-      activatePage("storyadmin");
     });
   });
 }
@@ -2594,7 +2551,6 @@ function fetchCampData() {
       TEAMS: demoTeams,
       GAMES: demoGames,
       CONTENT: demoContent,
-      IMPACTS: [],
       LEADER_CONTACTS: demoContacts,
       LEADER_RESOURCES: [],
       TEAM_NAME_SETTINGS: [],
