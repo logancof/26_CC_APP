@@ -2243,6 +2243,17 @@ textarea:focus {
     width: 8px;
 }
 
+.guide-subheading {
+    background: transparent !important;
+    border-left: 0 !important;
+    color: var(--cof-orange) !important;
+    font-family: var(--font-display);
+    font-size: 20px !important;
+    font-weight: 950 !important;
+    padding: 4px 0 0 !important;
+    text-transform: uppercase;
+}
+
 .guide-subpoint {
     background: rgba(245, 244, 235, .48) !important;
     border-left-color: rgba(214, 97, 40, .28) !important;

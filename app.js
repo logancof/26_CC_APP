@@ -2559,6 +2559,30 @@ function guideTextWithPhoneLinks(text) {
   return html;
 }
 
+function getGuideContentOverride(key) {
+  if (!window.GUIDE_CONTENT) return null;
+  return window.GUIDE_CONTENT[key] || null;
+}
+
+function renderGuideContentOverride(guide) {
+  if (!guide || !guide.sections || !guide.sections.length) {
+    return '<div class="doc-empty">This guide does not have any content yet.</div>';
+  }
+
+  return guide.sections.map(function(section, index) {
+    var heading = section.title || (index === 0 ? "Overview" : "Details");
+    var rows = (section.blocks || []).map(function(block) {
+      var type = block.type || "paragraph";
+      return '<p class="guide-' + escapeHtml(type) + '">' + guideTextWithPhoneLinks(block.text || "") + '</p>';
+    }).join("");
+
+    return '<section class="guide-section">' +
+      '<h2>' + escapeHtml(heading) + '</h2>' +
+      '<div class="guide-lines">' + rows + '</div>' +
+    '</section>';
+  }).join("");
+}
+
 function getPdfPageLines(page) {
   return page.getTextContent().then(function(content) {
     var items = content.items.map(function(item) {
@@ -2685,17 +2709,28 @@ function showGuideError(link, title) {
 function openResourceGuide(key, link, title) {
   var content = qs("#resourceGuideContent");
   var token = resourceGuideRenderToken + 1;
+  var guideOverride = getGuideContentOverride(key);
+  var guideTitle = guideOverride && guideOverride.title ? guideOverride.title : title || "Resource";
 
   resourceGuideRenderToken = token;
   resourceGuideBackPage = getActivePageId() || "home";
 
   if (content) {
     content.innerHTML =
-      '<h1>' + escapeHtml(title || "Resource") + '</h1>' +
+      '<h1>' + escapeHtml(guideTitle) + '</h1>' +
       '<div class="doc-loading">Loading guide...</div>';
   }
 
   activatePage("resource-guide");
+
+  if (guideOverride) {
+    if (content) {
+      content.innerHTML =
+        '<h1>' + escapeHtml(guideTitle) + '</h1>' +
+        renderGuideContentOverride(guideOverride);
+    }
+    return;
+  }
 
   if (!window.pdfjsLib) {
     showGuideError(link, title);
