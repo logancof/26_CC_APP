@@ -1183,6 +1183,15 @@ function canOpenMediaInApp(link, type) {
     /\.(mp4|webm|mov)($|[?#])/i.test(value);
 }
 
+function isMediaResourceLink(link) {
+  var value = String(link || "").toLowerCase();
+
+  return value.indexOf("youtube.com") !== -1 ||
+    value.indexOf("youtu.be") !== -1 ||
+    value.indexOf("vimeo.com") !== -1 ||
+    /\.(mp4|webm|mov)($|[?#])/i.test(value);
+}
+
 function getEmbeddedMediaLink(link) {
   var value = String(link || "");
   var youtubeMatch = value.match(/[?&]v=([^&]+)/);
@@ -3145,7 +3154,7 @@ function initApp() {
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
       var imageLinks = imageResourceLinks[key];
 
-      if (link && canOpenMediaInApp(link, "video")) openMediaViewer(link, title, "Leader Video");
+      if (link && isMediaResourceLink(link)) openMediaViewer(link, title, "Leader Video");
       else if (shouldOpenAsGuide(key, link)) openResourceGuide(key, link, title);
       else if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
       else if (link && isPdfLink(link)) openPdf(link, title);
