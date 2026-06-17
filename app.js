@@ -3163,6 +3163,13 @@ function initApp() {
     });
   });
 
+  qsa("[data-external-link]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var link = button.getAttribute("data-external-link");
+      if (link) window.open(link, "_blank");
+    });
+  });
+
   var resourceGuideBackButton = qs("#resourceGuideBackButton");
   if (resourceGuideBackButton) resourceGuideBackButton.addEventListener("click", closeResourceGuide);
 
