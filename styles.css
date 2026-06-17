@@ -2087,6 +2087,120 @@ textarea:focus {
     transform: scale(.98);
 }
 
+.internal-doc-page {
+    background: var(--cof-blue);
+}
+
+.doc-sheet {
+    position: relative;
+    background: #fff;
+    color: #111;
+    border-radius: 6px;
+    padding: 34px 22px 42px;
+    margin-top: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    line-height: 1.35;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .16);
+}
+
+.doc-logo {
+    color: #000;
+    text-align: right;
+    font-size: 18px;
+    font-weight: 950;
+    line-height: .82;
+    letter-spacing: -.5px;
+    margin-bottom: 46px;
+}
+
+.doc-sheet h1 {
+    color: #70abc5;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: 950;
+    letter-spacing: .7px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+}
+
+.doc-schedule {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 28px;
+}
+
+.doc-schedule div {
+    display: grid;
+    grid-template-columns: minmax(118px, .7fr) 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+.doc-schedule strong,
+.doc-schedule span {
+    font-size: 17px;
+    font-weight: 950;
+    line-height: 1.16;
+}
+
+.doc-sheet section {
+    margin-top: 22px;
+}
+
+.doc-sheet h2 {
+    color: #111;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: 950;
+    line-height: 1.18;
+    margin-bottom: 4px;
+}
+
+.doc-sheet ul {
+    display: grid;
+    gap: 6px;
+    list-style: none;
+    margin-left: 18px;
+}
+
+.doc-sheet li {
+    position: relative;
+    font-size: 16px;
+    line-height: 1.28;
+}
+
+.doc-sheet li::before {
+    content: "-";
+    position: absolute;
+    left: -14px;
+}
+
+.doc-sheet a {
+    color: #176dc3;
+    text-decoration: underline;
+}
+
+.doc-chip {
+    display: inline-block;
+    background: #eceff3;
+    border-radius: 7px;
+    color: #111;
+    padding: 0 6px;
+}
+
+.doc-chip::before {
+    content: "";
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    background: #2c8ce9;
+    margin-right: 5px;
+    vertical-align: -1px;
+}
+
 .action-resource {
     border-color: rgba(181, 209, 208, .45);
     background: linear-gradient(135deg, rgba(181, 209, 208, .22), rgba(21, 22, 29, .95));
