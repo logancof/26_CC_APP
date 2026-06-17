@@ -2178,6 +2178,33 @@ textarea:focus {
     list-style: none;
 }
 
+.guide-sheet {
+    min-height: 54dvh;
+}
+
+.guide-lines {
+    display: grid;
+    gap: 10px;
+}
+
+.guide-lines p,
+.doc-loading,
+.doc-empty {
+    background: rgba(245, 244, 235, .74);
+    border-left: 5px solid var(--cof-orange);
+    border-radius: 14px;
+    color: #4f3728;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.35;
+    padding: 12px 12px 12px 18px;
+}
+
+.doc-loading,
+.doc-empty {
+    border-left-color: var(--cof-blue);
+}
+
 .doc-sheet li {
     background: rgba(245, 244, 235, .74);
     border-left: 5px solid var(--cof-orange);
@@ -2245,7 +2272,10 @@ textarea:focus {
     }
 
     .doc-schedule span,
-    .doc-sheet li {
+    .doc-sheet li,
+    .guide-lines p,
+    .doc-loading,
+    .doc-empty {
         font-size: 18px;
     }
 }

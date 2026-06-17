@@ -30,6 +30,8 @@ var pendingAttendancePayload = null;
 var scoreEntryDirty = false;
 var teamNameAdminDirty = false;
 var attendanceDirty = false;
+var resourceGuideBackPage = "leaders";
+var resourceGuideRenderToken = 0;
 
 var PLACEMENT_POINTS = [3000, 2500, 2000, 1500, 1000, 0];
 var ALL_PLAY_POINTS = [4500, 3750, 3000, 2250, 1500, 0];
@@ -125,6 +127,13 @@ var defaultResourceLinks = {
   role_free_time: "assets/pdfs/Role%20Descriptions%20FREE%20TIME.pdf",
   role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf"
 };
+
+var canvaPdfResourceKeys = [
+  "community_camp_schedule",
+  "community_camp_games_guide",
+  "community_camp_scoring_sheet",
+  "community_camp_setup_teardown"
+];
 
 var imageResourceLinks = {
   baptism_testimony_service_details: [
@@ -2349,6 +2358,196 @@ function isPdfLink(link) {
   return /\.pdf($|[?#])/i.test(String(link || ""));
 }
 
+function isCanvaPdfResource(key) {
+  return canvaPdfResourceKeys.indexOf(key) !== -1;
+}
+
+function getActivePageId() {
+  var activePage = qs(".page.active");
+  return activePage ? activePage.id : "home";
+}
+
+function setPdfWorker() {
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+}
+
+function normalizeGuideText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function isGuideHeading(line) {
+  var text = String(line || "").trim();
+  var letters = text.replace(/[^A-Za-z]/g, "");
+
+  if (!text || text.length > 72 || letters.length < 3) return false;
+  if (/:$/.test(text) && text.length < 64) return true;
+  return letters === letters.toUpperCase() && letters.length >= 4;
+}
+
+function getPdfPageLines(page) {
+  return page.getTextContent().then(function(content) {
+    var items = content.items.map(function(item) {
+      return {
+        text: String(item.str || "").trim(),
+        x: item.transform ? item.transform[4] : 0,
+        y: item.transform ? item.transform[5] : 0
+      };
+    }).filter(function(item) {
+      return item.text;
+    });
+
+    items.sort(function(a, b) {
+      if (Math.abs(b.y - a.y) > 3) return b.y - a.y;
+      return a.x - b.x;
+    });
+
+    var lines = [];
+    var current = null;
+
+    items.forEach(function(item) {
+      if (!current || Math.abs(current.y - item.y) > 3) {
+        current = { y: item.y, text: item.text };
+        lines.push(current);
+      } else {
+        current.text += " " + item.text;
+      }
+    });
+
+    return lines.map(function(line) {
+      return line.text.replace(/\s+/g, " ").trim();
+    }).filter(Boolean);
+  });
+}
+
+function getPdfGuideLines(pdf) {
+  var pageNumber = 1;
+  var allLines = [];
+
+  function nextPage() {
+    if (pageNumber > pdf.numPages) return Promise.resolve(allLines);
+
+    var currentPage = pageNumber;
+    pageNumber += 1;
+
+    return pdf.getPage(currentPage)
+      .then(getPdfPageLines)
+      .then(function(lines) {
+        if (pdf.numPages > 1) {
+          allLines.push("PAGE " + currentPage);
+        }
+
+        allLines = allLines.concat(lines);
+        return nextPage();
+      });
+  }
+
+  return nextPage();
+}
+
+function renderGuideLines(title, lines) {
+  var normalizedTitle = normalizeGuideText(title);
+  var sections = [];
+  var currentSection = { title: "", lines: [] };
+
+  lines.forEach(function(rawLine) {
+    var line = String(rawLine || "").trim();
+
+    if (!line || normalizeGuideText(line) === normalizedTitle) return;
+
+    if (isGuideHeading(line)) {
+      if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
+      currentSection = { title: line.replace(/:$/, ""), lines: [] };
+      return;
+    }
+
+    currentSection.lines.push(line);
+  });
+
+  if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
+
+  if (!sections.length) {
+    return '<div class="doc-empty">This guide could not be converted into readable app text.</div>';
+  }
+
+  return sections.map(function(section, index) {
+    var heading = section.title || (index === 0 ? "Overview" : "Details");
+    var rows = section.lines.map(function(line) {
+      return '<p>' + escapeHtml(line) + '</p>';
+    }).join("");
+
+    return '<section class="guide-section">' +
+      '<h2>' + escapeHtml(heading) + '</h2>' +
+      '<div class="guide-lines">' + rows + '</div>' +
+    '</section>';
+  }).join("");
+}
+
+function showGuideError(link, title) {
+  var content = qs("#resourceGuideContent");
+
+  if (!content) return;
+
+  content.innerHTML =
+    '<h1>' + escapeHtml(title || "Resource") + '</h1>' +
+    '<section class="guide-section">' +
+      '<h2>Open PDF</h2>' +
+      '<div class="guide-lines"><p>This file could not be converted into an app guide.</p></div>' +
+      '<button class="doc-resource-link" id="resourceGuideOpenPdf" type="button">Open Original PDF<span>Use the PDF viewer instead</span></button>' +
+    '</section>';
+
+  var fallbackButton = qs("#resourceGuideOpenPdf");
+  if (fallbackButton) fallbackButton.addEventListener("click", function() {
+    openPdf(link, title || "Resource");
+  });
+}
+
+function openResourceGuide(key, link, title) {
+  var content = qs("#resourceGuideContent");
+  var token = resourceGuideRenderToken + 1;
+
+  resourceGuideRenderToken = token;
+  resourceGuideBackPage = getActivePageId() || "home";
+
+  if (content) {
+    content.innerHTML =
+      '<h1>' + escapeHtml(title || "Resource") + '</h1>' +
+      '<div class="doc-loading">Loading guide...</div>';
+  }
+
+  activatePage("resource-guide");
+
+  if (!window.pdfjsLib) {
+    showGuideError(link, title);
+    return;
+  }
+
+  setPdfWorker();
+
+  pdfjsLib.getDocument(link).promise
+    .then(getPdfGuideLines)
+    .then(function(lines) {
+      if (token !== resourceGuideRenderToken || !content) return;
+
+      content.innerHTML =
+        '<h1>' + escapeHtml(title || "Resource") + '</h1>' +
+        renderGuideLines(title, lines);
+    })
+    .catch(function() {
+      if (token === resourceGuideRenderToken) showGuideError(link, title);
+    });
+}
+
+function closeResourceGuide() {
+  resourceGuideRenderToken += 1;
+  activatePage(resourceGuideBackPage || "home");
+}
+
+function shouldOpenAsGuide(key, link) {
+  return isPdfLink(link) && !isCanvaPdfResource(key);
+}
+
 function openPdf(link, title) {
   var modal = qs("#pdfModal");
   var viewer = qs("#pdfViewer");
@@ -2375,7 +2574,7 @@ function openPdf(link, title) {
     return;
   }
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  setPdfWorker();
 
   pdfjsLib.getDocument(link).promise
     .then(function(pdf) {
@@ -2926,12 +3125,16 @@ function initApp() {
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
       var imageLinks = imageResourceLinks[key];
 
-      if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
+      if (shouldOpenAsGuide(key, link)) openResourceGuide(key, link, title);
+      else if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
       else if (link && isPdfLink(link)) openPdf(link, title);
       else if (link) window.open(link, "_blank");
       else alert("Resource link coming soon.");
     });
   });
+
+  var resourceGuideBackButton = qs("#resourceGuideBackButton");
+  if (resourceGuideBackButton) resourceGuideBackButton.addEventListener("click", closeResourceGuide);
 
   var openMapButton = qs("#openMapButton");
   if (openMapButton) openMapButton.addEventListener("click", openMap);
