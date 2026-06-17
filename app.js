@@ -136,6 +136,13 @@ var canvaPdfResourceKeys = [
   "community_camp_setup_teardown"
 ];
 
+var resourceExternalLinks = {
+  medical_procedures_video: {
+    label: "Open Medical Procedures Form",
+    url: "https://docs.google.com/forms/d/e/1FAIpQLSdkkfjqhckGWjhWybtzvdWaGTJC6KD2Ciz-HZMjbyq-pfdXPQ/viewform"
+  }
+};
+
 var imageResourceLinks = {
   baptism_testimony_service_details: [
     "assets/images/Baptism%20%26%20Testimony%20Service%20Details_Page_1.jpg",
@@ -1261,10 +1268,11 @@ function openInlineMedia(card, link) {
   }
 }
 
-function openMediaViewer(link, title, type) {
+function openMediaViewer(link, title, type, externalLink) {
   var modal = qs("#mediaModal");
   var frame = qs("#mediaFrame");
   var video = qs("#mediaVideo");
+  var externalAnchor = qs("#mediaExternalLink");
   var heading = qs("#mediaModalTitle");
   var label = qs("#mediaModalType");
 
@@ -1275,6 +1283,17 @@ function openMediaViewer(link, title, type) {
 
   frame.setAttribute("src", "");
   video.removeAttribute("src");
+
+  if (externalAnchor) {
+    if (externalLink && externalLink.url) {
+      externalAnchor.textContent = externalLink.label || "Open Link";
+      externalAnchor.setAttribute("href", externalLink.url);
+      externalAnchor.classList.remove("hidden");
+    } else {
+      externalAnchor.setAttribute("href", "#");
+      externalAnchor.classList.add("hidden");
+    }
+  }
 
   if (/\.(mp4|webm|mov)($|[?#])/i.test(String(link || ""))) {
     frame.classList.add("hidden");
@@ -1295,6 +1314,7 @@ function closeMediaViewer() {
   var modal = qs("#mediaModal");
   var frame = qs("#mediaFrame");
   var video = qs("#mediaVideo");
+  var externalAnchor = qs("#mediaExternalLink");
 
   if (!modal) return;
 
@@ -1305,6 +1325,10 @@ function closeMediaViewer() {
     video.pause();
     video.removeAttribute("src");
     video.load();
+  }
+  if (externalAnchor) {
+    externalAnchor.setAttribute("href", "#");
+    externalAnchor.classList.add("hidden");
   }
   document.body.style.overflow = "";
 }
@@ -3154,19 +3178,12 @@ function initApp() {
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
       var imageLinks = imageResourceLinks[key];
 
-      if (link && isMediaResourceLink(link)) openMediaViewer(link, title, "Leader Video");
+      if (link && isMediaResourceLink(link)) openMediaViewer(link, title, "Leader Video", resourceExternalLinks[key]);
       else if (shouldOpenAsGuide(key, link)) openResourceGuide(key, link, title);
       else if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
       else if (link && isPdfLink(link)) openPdf(link, title);
       else if (link) window.open(link, "_blank");
       else alert("Resource link coming soon.");
-    });
-  });
-
-  qsa("[data-external-link]").forEach(function(button) {
-    button.addEventListener("click", function() {
-      var link = button.getAttribute("data-external-link");
-      if (link) window.open(link, "_blank");
     });
   });
 
