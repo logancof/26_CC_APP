@@ -64,31 +64,34 @@ window.GUIDE_CONTENT = {
       {
         title: "Concessions",
         blocks: [
-          { type: "paragraph", text: "Megan Carfield" }
+          { type: "paragraph", text: "Megan Carfield (812) 343-7810" }
         ]
       },
       {
         title: "Meals (Allergies)",
         blocks: [
-          { type: "paragraph", text: "Taylor Loranzan, Susan Gunckle" }
+          { type: "paragraph", text: "Taylor Loranzan (937) 336-9005" },
+          { type: "paragraph", text: "Susan Gunckle (937) 621-4903" }
         ]
       },
       {
         title: "Meals (Dining Hall)",
         blocks: [
-          { type: "paragraph", text: "Vickie Woodyard" }
+          { type: "paragraph", text: "Vickie Woodyard (937) 248-3635" }
         ]
       },
       {
         title: "Games",
         blocks: [
-          { type: "paragraph", text: "Isaac Hargis, Matt Hounshell" }
+          { type: "paragraph", text: "Isaac Hargis (937) 470-2586" },
+          { type: "paragraph", text: "Matt Hounshell (937) 423-8560" }
         ]
       },
       {
         title: "Free Time",
         blocks: [
-          { type: "paragraph", text: "Annalise Brubaker (Afternoon), Jake Loranzan (Night)" }
+          { type: "paragraph", text: "Annalise Brubaker (Afternoon) (937) 901-6779" },
+          { type: "paragraph", text: "Jake Loranzan (Night) (937) 336-4909" }
         ]
       }
     ]
