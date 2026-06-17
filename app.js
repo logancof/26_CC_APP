@@ -99,6 +99,7 @@ var defaultResourceLinks = {
   leader_role_description: "assets/pdfs/Community%20Camp%20Leader%20Role%20Description.pdf",
   community_camp_schedule: "assets/pdfs/CC%20Daily%20Schedule.pdf",
   leadership_structure: "assets/pdfs/Leadership%20Structure.pdf",
+  attendance_checkpoints: "assets/pdfs/Attendance%20Checkpoints.pdf",
   code_of_conduct: "assets/pdfs/CC%20Code%20of%20Conduct.pdf",
   tiers_of_communication: "assets/pdfs/Tiers%20of%20Communication.pdf",
   boundaries_redirecting_students: "assets/pdfs/Boundaries%20%2B%20Redirecting%20Students.pdf",
@@ -2374,6 +2375,10 @@ function openPdf(link, title) {
       if (token !== pdfRenderToken) return;
 
       viewer.innerHTML = "";
+      var content = document.createElement("div");
+      content.className = "pdf-content";
+      viewer.appendChild(content);
+
       if (status) status.textContent = pdf.numPages + " pages";
 
       function renderNextPage() {
@@ -2417,7 +2422,7 @@ function openPdf(link, title) {
 
             pageShell.appendChild(canvas);
             pageShell.appendChild(label);
-            viewer.appendChild(pageShell);
+            content.appendChild(pageShell);
 
             return page.render({
               canvasContext: context,
@@ -2516,8 +2521,8 @@ function enablePdfGestures() {
   var pointers = [];
   var startDistance = 0;
   var startZoom = 1;
-  var pendingZoom = null;
-  var pendingAnchor = null;
+  var activeZoom = 1;
+  var activeAnchor = null;
   var zoomFrame = 0;
 
   function getMidpoint() {
@@ -2528,16 +2533,46 @@ function enablePdfGestures() {
     };
   }
 
-  function schedulePdfZoom(value, anchor) {
-    pendingZoom = value;
-    pendingAnchor = anchor;
+  function previewPdfZoom(value, anchor) {
+    var content = qs("#pdfViewer .pdf-content");
+    if (!content) return;
+
+    activeZoom = Math.max(1, Math.min(3.2, value));
+    activeAnchor = anchor;
 
     if (zoomFrame) return;
 
     zoomFrame = requestAnimationFrame(function() {
+      var previewScale = activeZoom / startZoom;
+      var originX = activeAnchor ? activeAnchor.x + viewer.scrollLeft : 0;
+      var originY = activeAnchor ? activeAnchor.y + viewer.scrollTop : 0;
+      var label = qs("#pdfZoomLabel");
+
       zoomFrame = 0;
-      setPdfZoom(pendingZoom, pendingAnchor);
+      content.style.transformOrigin = originX + "px " + originY + "px";
+      content.style.transform = "scale(" + previewScale + ")";
+      if (label) label.textContent = Math.round(activeZoom * 100) + "%";
     });
+  }
+
+  function finishPdfZoom() {
+    var content = qs("#pdfViewer .pdf-content");
+    if (zoomFrame) {
+      cancelAnimationFrame(zoomFrame);
+      zoomFrame = 0;
+    }
+
+    if (content) {
+      content.style.transform = "";
+      content.style.transformOrigin = "";
+    }
+
+    if (startDistance && activeAnchor) {
+      setPdfZoom(activeZoom, activeAnchor);
+    }
+
+    startDistance = 0;
+    activeAnchor = null;
   }
 
   function removePointer(pointerId) {
@@ -2545,7 +2580,7 @@ function enablePdfGestures() {
       return pointer.pointerId !== pointerId;
     });
 
-    if (pointers.length < 2) startDistance = 0;
+    if (pointers.length < 2) finishPdfZoom();
   }
 
   viewer.addEventListener("pointerdown", function(event) {
@@ -2562,6 +2597,9 @@ function enablePdfGestures() {
         pointers[0].clientY - pointers[1].clientY
       );
       startZoom = pdfZoom;
+      activeZoom = pdfZoom;
+      activeAnchor = getMidpoint();
+      viewer.classList.add("is-pinching");
     }
   });
 
@@ -2579,15 +2617,17 @@ function enablePdfGestures() {
       pointers[0].clientY - pointers[1].clientY
     );
 
-    schedulePdfZoom(startZoom * (distance / startDistance), getMidpoint());
+    previewPdfZoom(startZoom * (distance / startDistance), getMidpoint());
   });
 
   viewer.addEventListener("pointerup", function(event) {
     removePointer(event.pointerId);
+    if (pointers.length < 2) viewer.classList.remove("is-pinching");
   });
 
   viewer.addEventListener("pointercancel", function(event) {
     removePointer(event.pointerId);
+    if (pointers.length < 2) viewer.classList.remove("is-pinching");
   });
 }
 
