@@ -1294,18 +1294,24 @@ body.menu-open .hero::after {
 
 .pdf-zoom-controls {
     display: grid;
-    grid-template-columns: 36px 48px 36px;
+    grid-template-columns: auto 36px 48px 36px;
     align-items: center;
     gap: 6px;
 }
 
 .pdf-zoom-controls button {
-    width: 36px;
     height: 36px;
-    padding: 0;
+    min-width: 36px;
+    padding: 0 10px;
     border-radius: 50%;
     font-size: 18px;
     line-height: 1;
+}
+
+.pdf-zoom-controls #openPdfNative {
+    border-radius: 999px;
+    font-size: 11px;
+    text-transform: uppercase;
 }
 
 .pdf-zoom-controls span {
@@ -1324,17 +1330,6 @@ body.menu-open .hero::after {
     background: #242019;
     padding: 14px 12px 28px;
     touch-action: pan-x pan-y;
-}
-
-.pdf-content {
-    width: max-content;
-    min-width: 100%;
-    margin: 0 auto;
-    will-change: transform;
-}
-
-.pdf-viewer.is-pinching {
-    overflow: hidden;
 }
 
 .pdf-page {

@@ -17,6 +17,7 @@ var mapZoom = 1;
 var currentX = 0;
 var currentY = 0;
 var pdfZoom = 1;
+var currentPdfLink = "";
 var pdfRenderToken = 0;
 var lastMediaSignature = "";
 var latestTeams = [];
@@ -2349,6 +2350,7 @@ function openPdf(link, title) {
   var token = pdfRenderToken + 1;
 
   pdfRenderToken = token;
+  currentPdfLink = link;
 
   if (!modal || !viewer) return;
 
@@ -2375,16 +2377,11 @@ function openPdf(link, title) {
       if (token !== pdfRenderToken) return;
 
       viewer.innerHTML = "";
-      var content = document.createElement("div");
-      content.className = "pdf-content";
-      viewer.appendChild(content);
-
       if (status) status.textContent = pdf.numPages + " pages";
 
       function renderNextPage() {
         if (token !== pdfRenderToken || pageNumber > pdf.numPages) {
           if (token === pdfRenderToken) {
-            updatePdfContentBaseSize();
             setPdfZoom(pdfZoom);
             if (status) status.textContent = pdf.numPages + " pages";
           }
@@ -2426,7 +2423,7 @@ function openPdf(link, title) {
 
             pageShell.appendChild(canvas);
             pageShell.appendChild(label);
-            content.appendChild(pageShell);
+            viewer.appendChild(pageShell);
 
             return page.render({
               canvasContext: context,
@@ -2451,6 +2448,7 @@ function closePdf() {
   if (!modal) return;
 
   pdfRenderToken += 1;
+  currentPdfLink = "";
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   if (viewer) viewer.innerHTML = "";
@@ -2488,7 +2486,18 @@ function setPdfZoom(value, anchor) {
   var anchorY = anchor && viewer ? anchor.y + viewer.scrollTop : 0;
 
   pdfZoom = nextZoom;
-  applyPdfZoomTransform();
+
+  qsa("#pdfViewer .pdf-page").forEach(function(pageShell) {
+    var canvas = pageShell.querySelector("canvas");
+    var baseWidth = Number(pageShell.getAttribute("data-base-width") || (canvas ? canvas.getAttribute("data-base-width") : 0));
+    var baseHeight = Number(canvas ? canvas.getAttribute("data-base-height") : 0);
+
+    if (!canvas || !baseWidth || !baseHeight) return;
+
+    pageShell.style.width = (baseWidth * pdfZoom) + "px";
+    canvas.style.width = (baseWidth * pdfZoom) + "px";
+    canvas.style.height = (baseHeight * pdfZoom) + "px";
+  });
 
   if (label) label.textContent = Math.round(pdfZoom * 100) + "%";
 
@@ -2507,133 +2516,8 @@ function adjustPdfZoom(delta) {
   setPdfZoom(pdfZoom + delta, anchor);
 }
 
-function updatePdfContentBaseSize() {
-  var content = qs("#pdfViewer .pdf-content");
-  if (!content) return;
-
-  content.style.width = "";
-  content.style.height = "";
-  content.style.transform = "";
-
-  var maxWidth = 0;
-  qsa("#pdfViewer .pdf-page").forEach(function(pageShell) {
-    maxWidth = Math.max(maxWidth, pageShell.offsetWidth);
-  });
-
-  content.setAttribute("data-base-width", maxWidth || content.scrollWidth || 0);
-  content.setAttribute("data-base-height", content.scrollHeight || 0);
-}
-
-function applyPdfZoomTransform() {
-  var content = qs("#pdfViewer .pdf-content");
-  if (!content) return;
-
-  var baseWidth = Number(content.getAttribute("data-base-width") || content.scrollWidth || 0);
-  var baseHeight = Number(content.getAttribute("data-base-height") || content.scrollHeight || 0);
-
-  if (!baseWidth || !baseHeight) return;
-
-  content.style.width = (baseWidth * pdfZoom) + "px";
-  content.style.height = (baseHeight * pdfZoom) + "px";
-  content.style.transformOrigin = "0 0";
-  content.style.transform = "scale(" + pdfZoom + ")";
-}
-
-function enablePdfGestures() {
-  var viewer = qs("#pdfViewer");
-  if (!viewer) return;
-
-  var pointers = [];
-  var startDistance = 0;
-  var startZoom = 1;
-  var activeZoom = 1;
-  var activeAnchor = null;
-  var zoomFrame = 0;
-
-  function getMidpoint() {
-    var rect = viewer.getBoundingClientRect();
-    return {
-      x: ((pointers[0].clientX + pointers[1].clientX) / 2) - rect.left,
-      y: ((pointers[0].clientY + pointers[1].clientY) / 2) - rect.top
-    };
-  }
-
-  function previewPdfZoom(value, anchor) {
-    activeZoom = Math.max(1, Math.min(3.2, value));
-    activeAnchor = anchor;
-
-    if (zoomFrame) return;
-
-    zoomFrame = requestAnimationFrame(function() {
-      zoomFrame = 0;
-      setPdfZoom(activeZoom, activeAnchor);
-    });
-  }
-
-  function finishPdfZoom() {
-    if (zoomFrame) {
-      cancelAnimationFrame(zoomFrame);
-      zoomFrame = 0;
-    }
-
-    startDistance = 0;
-    activeAnchor = null;
-  }
-
-  function removePointer(pointerId) {
-    pointers = pointers.filter(function(pointer) {
-      return pointer.pointerId !== pointerId;
-    });
-
-    if (pointers.length < 2) finishPdfZoom();
-  }
-
-  viewer.addEventListener("pointerdown", function(event) {
-    if (event.pointerType === "mouse") return;
-
-    pointers = pointers.filter(function(pointer) {
-      return pointer.pointerId !== event.pointerId;
-    });
-    pointers.push(event);
-
-    if (pointers.length === 2) {
-      startDistance = Math.hypot(
-        pointers[0].clientX - pointers[1].clientX,
-        pointers[0].clientY - pointers[1].clientY
-      );
-      startZoom = pdfZoom;
-      activeZoom = pdfZoom;
-      activeAnchor = getMidpoint();
-      viewer.classList.add("is-pinching");
-    }
-  });
-
-  viewer.addEventListener("pointermove", function(event) {
-    for (var i = 0; i < pointers.length; i++) {
-      if (pointers[i].pointerId === event.pointerId) pointers[i] = event;
-    }
-
-    if (pointers.length !== 2 || !startDistance) return;
-
-    event.preventDefault();
-
-    var distance = Math.hypot(
-      pointers[0].clientX - pointers[1].clientX,
-      pointers[0].clientY - pointers[1].clientY
-    );
-
-    previewPdfZoom(startZoom * (distance / startDistance), getMidpoint());
-  });
-
-  viewer.addEventListener("pointerup", function(event) {
-    removePointer(event.pointerId);
-    if (pointers.length < 2) viewer.classList.remove("is-pinching");
-  });
-
-  viewer.addEventListener("pointercancel", function(event) {
-    removePointer(event.pointerId);
-    if (pointers.length < 2) viewer.classList.remove("is-pinching");
-  });
+function openCurrentPdfNative() {
+  if (currentPdfLink) window.open(currentPdfLink, "_blank");
 }
 
 function setMapZoom(value) {
@@ -3019,6 +2903,9 @@ function initApp() {
   var closePdfButton = qs("#closePdfButton");
   if (closePdfButton) closePdfButton.addEventListener("click", closePdf);
 
+  var openPdfNative = qs("#openPdfNative");
+  if (openPdfNative) openPdfNative.addEventListener("click", openCurrentPdfNative);
+
   var pdfZoomOut = qs("#pdfZoomOut");
   if (pdfZoomOut) pdfZoomOut.addEventListener("click", function() {
     adjustPdfZoom(-.25);
@@ -3033,7 +2920,6 @@ function initApp() {
   if (closeMediaButton) closeMediaButton.addEventListener("click", closeMediaViewer);
 
   enableMapGestures();
-  enablePdfGestures();
 
   window.addEventListener("resize", function() {
     updateMapTransform();
