@@ -2573,6 +2573,9 @@ function renderGuideContentOverride(guide) {
     var heading = section.title || (index === 0 ? "Overview" : "Details");
     var rows = (section.blocks || []).map(function(block) {
       var type = block.type || "paragraph";
+      if (block.url) {
+        return '<p class="guide-' + escapeHtml(type) + '"><a href="' + escapeHtml(block.url) + '" target="_blank" rel="noopener">' + escapeHtml(block.text || block.url) + '</a></p>';
+      }
       return '<p class="guide-' + escapeHtml(type) + '">' + guideTextWithPhoneLinks(block.text || "") + '</p>';
     }).join("");
 

@@ -2268,6 +2268,71 @@ textarea:focus {
     text-decoration: underline;
 }
 
+.guide-contact {
+    background: #fffaf0 !important;
+    border-left-color: var(--cof-blue) !important;
+}
+
+.guide-contact a {
+    font-weight: 950;
+}
+
+.guide-link {
+    background: var(--cof-orange) !important;
+    border-left-color: var(--cof-orange) !important;
+    text-align: center;
+}
+
+.guide-link a {
+    color: var(--cream) !important;
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 950;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.guide-do,
+.guide-dont {
+    padding-left: 42px !important;
+    position: relative;
+}
+
+.guide-do {
+    background: rgba(181, 209, 208, .42) !important;
+    border-left-color: var(--cof-blue) !important;
+}
+
+.guide-dont {
+    background: rgba(214, 97, 40, .12) !important;
+}
+
+.guide-do::before,
+.guide-dont::before {
+    border-radius: 50%;
+    color: var(--cream);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 950;
+    height: 22px;
+    left: 12px;
+    line-height: 23px;
+    position: absolute;
+    text-align: center;
+    top: 12px;
+    width: 22px;
+}
+
+.guide-do::before {
+    background: var(--cof-blue);
+    content: "✓";
+}
+
+.guide-dont::before {
+    background: var(--cof-orange);
+    content: "!";
+}
+
 .doc-sheet li {
     background: rgba(245, 244, 235, .74);
     border-left: 5px solid var(--cof-orange);
