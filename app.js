@@ -109,6 +109,7 @@ var defaultResourceLinks = {
   deescalation: "assets/pdfs/De-Escalation.pdf",
   mandatory_reporting: "assets/pdfs/Mandatory%20Reporting.pdf",
   emergency_protocols: "assets/pdfs/CC%20Emergency%20Protocols.pdf",
+  medical_procedures_video: "assets/media/CCamp_%20Emergency%20Training%20Videos%20-%20Presentation%20-%20Screencastify%20-%20May%2017%2C%202026%205_29%20PM.webm",
   leading_breakout_session: "assets/pdfs/Leading%20a%20Breakout%20Session.pdf",
   morning_reflection_time: "assets/pdfs/Morning%20Reflections%20-%20Guiding%20Students.pdf",
   baptism_testimony_service_details: "assets/pdfs/Baptism%20%26%20Testimony%20Service%20Details.pdf",
@@ -1254,15 +1255,28 @@ function openInlineMedia(card, link) {
 function openMediaViewer(link, title, type) {
   var modal = qs("#mediaModal");
   var frame = qs("#mediaFrame");
+  var video = qs("#mediaVideo");
   var heading = qs("#mediaModalTitle");
   var label = qs("#mediaModalType");
 
-  if (!modal || !frame) return;
+  if (!modal || !frame || !video) return;
 
   if (heading) heading.textContent = title || "Camp Media";
   if (label) label.textContent = type || "Camp Media";
 
-  frame.setAttribute("src", getEmbeddedMediaLink(link));
+  frame.setAttribute("src", "");
+  video.removeAttribute("src");
+
+  if (/\.(mp4|webm|mov)($|[?#])/i.test(String(link || ""))) {
+    frame.classList.add("hidden");
+    video.classList.remove("hidden");
+    video.setAttribute("src", link);
+  } else {
+    video.classList.add("hidden");
+    frame.classList.remove("hidden");
+    frame.setAttribute("src", getEmbeddedMediaLink(link));
+  }
+
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -1271,12 +1285,18 @@ function openMediaViewer(link, title, type) {
 function closeMediaViewer() {
   var modal = qs("#mediaModal");
   var frame = qs("#mediaFrame");
+  var video = qs("#mediaVideo");
 
   if (!modal) return;
 
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   if (frame) frame.setAttribute("src", "");
+  if (video) {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+  }
   document.body.style.overflow = "";
 }
 
@@ -3125,7 +3145,8 @@ function initApp() {
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
       var imageLinks = imageResourceLinks[key];
 
-      if (shouldOpenAsGuide(key, link)) openResourceGuide(key, link, title);
+      if (link && canOpenMediaInApp(link, "video")) openMediaViewer(link, title, "Leader Video");
+      else if (shouldOpenAsGuide(key, link)) openResourceGuide(key, link, title);
       else if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
       else if (link && isPdfLink(link)) openPdf(link, title);
       else if (link) window.open(link, "_blank");
