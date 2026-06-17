@@ -2226,6 +2226,23 @@ textarea:focus {
     border-left-color: var(--cof-blue);
 }
 
+.guide-bullet {
+    border-left-color: var(--cof-blue) !important;
+    padding-left: 34px !important;
+    position: relative;
+}
+
+.guide-bullet::before {
+    content: "";
+    background: var(--cof-orange);
+    border-radius: 50%;
+    height: 8px;
+    left: 16px;
+    position: absolute;
+    top: 21px;
+    width: 8px;
+}
+
 .doc-sheet li {
     background: rgba(245, 244, 235, .74);
     border-left: 5px solid var(--cof-orange);

@@ -2434,9 +2434,58 @@ function isGuideHeading(line) {
   var text = String(line || "").trim();
   var letters = text.replace(/[^A-Za-z]/g, "");
 
+  if (/^page\s+\d+$/i.test(text)) return false;
   if (!text || text.length > 72 || letters.length < 3) return false;
   if (/:$/.test(text) && text.length < 64) return true;
   return letters === letters.toUpperCase() && letters.length >= 4;
+}
+
+function isGuidePageMarker(line) {
+  return /^page\s+\d+$/i.test(String(line || "").trim());
+}
+
+function isGuideBullet(line) {
+  return /^([-•*]|\d+[.)])\s+/.test(String(line || "").trim());
+}
+
+function cleanGuideBullet(line) {
+  return String(line || "").trim().replace(/^([-•*]|\d+[.)])\s+/, "");
+}
+
+function shouldMergeGuideLine(previousText, nextLine) {
+  var previous = String(previousText || "").trim();
+  var next = String(nextLine || "").trim();
+
+  if (!previous || !next || isGuideBullet(next) || isGuideHeading(next)) return false;
+  if (/^(and|or|but|so|to|with|who|that|the|a|an|of|in|on|for|from|as|by|while|when|where)\b/i.test(next)) return true;
+  if (/[,;:–-]$/.test(previous)) return true;
+  if (!/[.!?)]$/.test(previous)) return true;
+  return previous.length < 110 && /^[a-z]/.test(next);
+}
+
+function buildGuideBlocks(lines) {
+  var blocks = [];
+
+  lines.forEach(function(rawLine) {
+    var line = String(rawLine || "").replace(/\s+/g, " ").trim();
+    var last = blocks[blocks.length - 1];
+
+    if (!line || isGuidePageMarker(line)) return;
+
+    if (isGuideBullet(line)) {
+      blocks.push({ type: "bullet", text: cleanGuideBullet(line) });
+      return;
+    }
+
+    if (last && shouldMergeGuideLine(last.text, line)) {
+      last.text += " " + line;
+      return;
+    }
+
+    blocks.push({ type: "paragraph", text: line });
+  });
+
+  return blocks;
 }
 
 function getPdfPageLines(page) {
@@ -2507,7 +2556,7 @@ function renderGuideLines(title, lines) {
   lines.forEach(function(rawLine) {
     var line = String(rawLine || "").trim();
 
-    if (!line || normalizeGuideText(line) === normalizedTitle) return;
+    if (!line || isGuidePageMarker(line) || normalizeGuideText(line) === normalizedTitle) return;
 
     if (isGuideHeading(line)) {
       if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
@@ -2526,8 +2575,9 @@ function renderGuideLines(title, lines) {
 
   return sections.map(function(section, index) {
     var heading = section.title || (index === 0 ? "Overview" : "Details");
-    var rows = section.lines.map(function(line) {
-      return '<p>' + escapeHtml(line) + '</p>';
+    var blocks = buildGuideBlocks(section.lines);
+    var rows = blocks.map(function(block) {
+      return '<p class="guide-' + block.type + '">' + escapeHtml(block.text) + '</p>';
     }).join("");
 
     return '<section class="guide-section">' +
