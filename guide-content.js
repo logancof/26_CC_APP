@@ -326,6 +326,87 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  packing_list: {
+    title: "Community Camp Packing List",
+    sections: [
+      {
+        title: "Essentials",
+        blocks: [
+          { type: "bullet", text: "Bible" },
+          { type: "bullet", text: "Pen" },
+          { type: "bullet", text: "Notebook" },
+          { type: "bullet", text: "Watch" },
+          { type: "bullet", text: "Flashlight" }
+        ]
+      },
+      {
+        title: "Clothes",
+        blocks: [
+          { type: "bullet", text: "Athletic clothes (running shorts, t-shirts)" },
+          { type: "bullet", text: "Casual clothes (shorts, t-shirts, hoodies)" },
+          { type: "bullet", text: "Pajamas" },
+          { type: "subheading", text: "Girls" },
+          { type: "bullet", text: "Shorts need to come to the end of your middle finger when your hands are held down at your sides." },
+          { type: "bullet", text: "Tank tops must have straps at least 3 fingers wide. No spaghetti strap tanks or camis worn as stand-alone shirts." },
+          { type: "bullet", text: "No cleavage or bare midriffs." },
+          { type: "subheading", text: "Guys" },
+          { type: "bullet", text: "Shirts must be worn at all times except for in the lake area." }
+        ]
+      },
+      {
+        title: "Shoes",
+        blocks: [
+          { type: "bullet", text: "Tennis shoes" },
+          { type: "bullet", text: "Casual shoes" },
+          { type: "bullet", text: "Shower shoes" }
+        ]
+      },
+      {
+        title: "Bedding",
+        blocks: [
+          { type: "bullet", text: "Twin sheets or sleeping bag" },
+          { type: "bullet", text: "Pillow" }
+        ]
+      },
+      {
+        title: "Toiletries",
+        blocks: [
+          { type: "bullet", text: "Bath towel" },
+          { type: "bullet", text: "Wash cloth" },
+          { type: "bullet", text: "Shampoo" },
+          { type: "bullet", text: "Conditioner" },
+          { type: "bullet", text: "Body wash" },
+          { type: "bullet", text: "Toothpaste" },
+          { type: "bullet", text: "Toothbrush" },
+          { type: "bullet", text: "Deodorant" }
+        ]
+      },
+      {
+        title: "Lake & Outdoor",
+        blocks: [
+          { type: "bullet", text: "Beach towel (lake, water games, baptisms)" },
+          { type: "bullet", text: "Sunscreen" },
+          { type: "bullet", text: "Bug spray" },
+          { type: "bullet", text: "Bathing suit" },
+          { type: "subheading", text: "Girls" },
+          { type: "bullet", text: "One-piece bathing suit only. If you only have a two-piece, a long, dark shirt must fully cover the swimsuit." }
+        ]
+      },
+      {
+        title: "Optional Extras",
+        blocks: [
+          { type: "bullet", text: "Cash for concession stand" },
+          { type: "bullet", text: "Snacks" }
+        ]
+      },
+      {
+        title: "Bus Packing Limit",
+        blocks: [
+          { type: "paragraph", text: "Students are permitted to bring one medium-sized suitcase, one bedding bag, and one personal item on the bus." }
+        ]
+      }
+    ]
+  },
   tiers_of_communication: {
     title: "Community Camp Tiers of Communication",
     sections: [
