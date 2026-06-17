@@ -126,6 +126,13 @@ var defaultResourceLinks = {
   role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf"
 };
 
+var imageResourceLinks = {
+  baptism_testimony_service_details: [
+    "assets/images/Baptism%20%26%20Testimony%20Service%20Details_Page_1.jpg",
+    "assets/images/Baptism%20%26%20Testimony%20Service%20Details_Page_2.jpg"
+  ]
+};
+
 try {
   currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\",\"permissions\":[]}");
   currentUser.permissions = parsePermissions(currentUser.permissions);
@@ -2456,6 +2463,36 @@ function closePdf() {
   document.body.style.overflow = "";
 }
 
+function openImageDocument(images, title) {
+  var modal = qs("#imageDocModal");
+  var viewer = qs("#imageDocViewer");
+  var heading = qs("#imageDocTitle");
+
+  if (!modal || !viewer || !images || !images.length) return;
+
+  if (heading) heading.textContent = title || "Resource";
+
+  viewer.innerHTML = images.map(function(src, index) {
+    return '<img src="' + src + '" alt="' + escapeHtml((title || "Resource") + " page " + (index + 1)) + '" />';
+  }).join("");
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeImageDocument() {
+  var modal = qs("#imageDocModal");
+  var viewer = qs("#imageDocViewer");
+
+  if (!modal) return;
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  if (viewer) viewer.innerHTML = "";
+  document.body.style.overflow = "";
+}
+
 function showPdfError(link) {
   var viewer = qs("#pdfViewer");
   var status = qs("#pdfStatus");
@@ -2887,8 +2924,10 @@ function initApp() {
       var key = button.getAttribute("data-resource-key");
       var link = resourceLinks[key];
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
+      var imageLinks = imageResourceLinks[key];
 
-      if (link && isPdfLink(link)) openPdf(link, title);
+      if (imageLinks && imageLinks.length) openImageDocument(imageLinks, title);
+      else if (link && isPdfLink(link)) openPdf(link, title);
       else if (link) window.open(link, "_blank");
       else alert("Resource link coming soon.");
     });
@@ -2902,6 +2941,9 @@ function initApp() {
 
   var closePdfButton = qs("#closePdfButton");
   if (closePdfButton) closePdfButton.addEventListener("click", closePdf);
+
+  var closeImageDocButton = qs("#closeImageDocButton");
+  if (closeImageDocButton) closeImageDocButton.addEventListener("click", closeImageDocument);
 
   var openPdfNative = qs("#openPdfNative");
   if (openPdfNative) openPdfNative.addEventListener("click", openCurrentPdfNative);
