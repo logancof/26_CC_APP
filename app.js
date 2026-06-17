@@ -2430,6 +2430,14 @@ function normalizeGuideText(value) {
   return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
+function isAttendanceGuide(title) {
+  return normalizeGuideText(title).indexOf("attendancecheckpoints") !== -1;
+}
+
+function isLeadershipGuide(title) {
+  return normalizeGuideText(title).indexOf("leadershipstructure") !== -1;
+}
+
 function isGuideHeading(line) {
   var text = String(line || "").trim();
   var letters = text.replace(/[^A-Za-z]/g, "");
@@ -2452,6 +2460,42 @@ function cleanGuideBullet(line) {
   return String(line || "").trim().replace(/^([-•*]|\d+[.)])\s+/, "");
 }
 
+function isAttendanceSubpoint(line) {
+  var value = normalizeGuideText(line);
+
+  return value === "dormsmorning" ||
+    value === "breakoutsmorning" ||
+    value === "teamgames" ||
+    value === "breakoutsevening";
+}
+
+function leadershipRoleHeading(line) {
+  var value = normalizeGuideText(line);
+
+  if (value === "concessions") return "Concessions";
+  if (value === "mealsallergies") return "Meals (Allergies)";
+  if (value === "mealsdininghall") return "Meals (Dining Hall)";
+  if (value === "games") return "Games";
+  if (value === "freetime") return "Free Time";
+  return "";
+}
+
+function splitLeadershipGuideLine(line) {
+  var text = String(line || "").trim();
+  var matches = text.match(/Concessions|Meals\s*\(?Allergies\)?|Meals\s*(?:\(?Dining\s*Hall\)?|Dining\s*\(?Hall\)?)|Games|Free\s*Time/gi);
+
+  if (!matches || matches.length < 2) return [line];
+
+  var remainder = text.replace(/Concessions|Meals\s*\(?Allergies\)?|Meals\s*(?:\(?Dining\s*Hall\)?|Dining\s*\(?Hall\)?)|Games|Free\s*Time/gi, "")
+    .replace(/[\s,;|/·•-]+/g, "");
+
+  if (remainder) return [line];
+
+  return matches.map(function(match) {
+    return leadershipRoleHeading(match) || match.trim();
+  });
+}
+
 function shouldMergeGuideLine(previousText, nextLine) {
   var previous = String(previousText || "").trim();
   var next = String(nextLine || "").trim();
@@ -2463,7 +2507,7 @@ function shouldMergeGuideLine(previousText, nextLine) {
   return previous.length < 110 && /^[a-z]/.test(next);
 }
 
-function buildGuideBlocks(lines) {
+function buildGuideBlocks(lines, guideTitle) {
   var blocks = [];
 
   lines.forEach(function(rawLine) {
@@ -2471,6 +2515,11 @@ function buildGuideBlocks(lines) {
     var last = blocks[blocks.length - 1];
 
     if (!line || isGuidePageMarker(line)) return;
+
+    if (isAttendanceGuide(guideTitle) && isAttendanceSubpoint(line)) {
+      blocks.push({ type: "subpoint", text: line });
+      return;
+    }
 
     if (isGuideBullet(line)) {
       blocks.push({ type: "bullet", text: cleanGuideBullet(line) });
@@ -2486,6 +2535,28 @@ function buildGuideBlocks(lines) {
   });
 
   return blocks;
+}
+
+function guideTextWithPhoneLinks(text) {
+  var value = String(text || "");
+  var phonePattern = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g;
+  var html = "";
+  var lastIndex = 0;
+  var match;
+
+  while ((match = phonePattern.exec(value)) !== null) {
+    var phoneText = match[0];
+    var phone = phoneText.replace(/[^0-9+]/g, "");
+
+    if (phone.charAt(0) !== "+" && phone.length === 10) phone = "1" + phone;
+
+    html += escapeHtml(value.slice(lastIndex, match.index));
+    html += '<a href="tel:' + escapeHtml(phone) + '">' + escapeHtml(phoneText) + '</a>';
+    lastIndex = match.index + phoneText.length;
+  }
+
+  html += escapeHtml(value.slice(lastIndex));
+  return html;
 }
 
 function getPdfPageLines(page) {
@@ -2554,17 +2625,22 @@ function renderGuideLines(title, lines) {
   var currentSection = { title: "", lines: [] };
 
   lines.forEach(function(rawLine) {
-    var line = String(rawLine || "").trim();
+    var expandedLines = isLeadershipGuide(title) ? splitLeadershipGuideLine(rawLine) : [rawLine];
 
-    if (!line || isGuidePageMarker(line) || normalizeGuideText(line) === normalizedTitle) return;
+    expandedLines.forEach(function(expandedLine) {
+      var line = String(expandedLine || "").trim();
+      var leadershipHeading = isLeadershipGuide(title) ? leadershipRoleHeading(line) : "";
 
-    if (isGuideHeading(line)) {
-      if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
-      currentSection = { title: line.replace(/:$/, ""), lines: [] };
-      return;
-    }
+      if (!line || isGuidePageMarker(line) || normalizeGuideText(line) === normalizedTitle) return;
 
-    currentSection.lines.push(line);
+      if (leadershipHeading || isGuideHeading(line)) {
+        if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
+        currentSection = { title: leadershipHeading || line.replace(/:$/, ""), lines: [] };
+        return;
+      }
+
+      currentSection.lines.push(line);
+    });
   });
 
   if (currentSection.title || currentSection.lines.length) sections.push(currentSection);
@@ -2575,9 +2651,9 @@ function renderGuideLines(title, lines) {
 
   return sections.map(function(section, index) {
     var heading = section.title || (index === 0 ? "Overview" : "Details");
-    var blocks = buildGuideBlocks(section.lines);
+    var blocks = buildGuideBlocks(section.lines, title);
     var rows = blocks.map(function(block) {
-      return '<p class="guide-' + block.type + '">' + escapeHtml(block.text) + '</p>';
+      return '<p class="guide-' + block.type + '">' + guideTextWithPhoneLinks(block.text) + '</p>';
     }).join("");
 
     return '<section class="guide-section">' +
