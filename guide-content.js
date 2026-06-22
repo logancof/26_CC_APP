@@ -326,6 +326,93 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  deescalation: {
+    title: "De-Escalation Training",
+    sections: [
+      {
+        title: "Purpose",
+        blocks: [
+          { type: "paragraph", text: "To equip volunteers to recognize early signs of conflict or emotional distress and respond in ways that restore calm, maintain safety, and protect relationships." }
+        ]
+      },
+      {
+        title: "When De-Escalation May Be Needed",
+        blocks: [
+          { type: "paragraph", text: "Community Camp Leaders help foster a safe atmosphere where students are connected to Jesus and with one another. Use de-escalation when a student:" },
+          { type: "bullet", text: "Is visibly upset, angry, or anxious (crying, yelling, pacing, withdrawn)" },
+          { type: "bullet", text: "Argues with another camper or a leader" },
+          { type: "bullet", text: "Refuses to participate or follow instructions" },
+          { type: "bullet", text: "Is overwhelmed emotionally, socially, or spiritually" },
+          { type: "bullet", text: "Displays attention-seeking or disruptive behavior" },
+          { type: "bullet", text: "Is triggered by correction or discipline" },
+          { type: "bullet", text: "Appears to be isolating or shutting down" },
+          { type: "bullet", text: "Is part of a misunderstanding or conflict between students or volunteers" },
+          { type: "bullet", text: "Is involved in a safety concern that is developing but has not yet escalated" }
+        ]
+      },
+      {
+        title: "Best Practices",
+        blocks: [
+          { type: "subheading", text: "1. Stay Calm and Grounded" },
+          { type: "bullet", text: "Keep your tone low and slow. Your calm helps them regulate." },
+          { type: "bullet", text: "Do not match their energy. Lower yours to lower theirs." },
+          { type: "bullet", text: "Take a deep breath before responding." },
+          { type: "subheading", text: "2. Create Space and Safety" },
+          { type: "bullet", text: "Give physical space. Stand at an angle, not directly in front." },
+          { type: "bullet", text: "Avoid touching the student when they are upset." },
+          { type: "bullet", text: "Remove the audience if possible. Pull them aside to a less crowded, loud, or stimulating environment." },
+          { type: "subheading", text: "3. Listen Before You Speak" },
+          { type: "bullet", text: "Let them talk without interruption." },
+          { type: "bullet", text: "Use active listening. Have genuine desire to understand what the student is experiencing." },
+          { type: "bullet", text: "Validate feelings without excusing behavior." },
+          { type: "subheading", text: "4. Identify the Underlying Need" },
+          { type: "bullet", text: "Ask yourself: Is this about control, attention, fear, or frustration?" },
+          { type: "bullet", text: "Respond to the need, not just the behavior." },
+          { type: "bullet", text: "If they feel unheard, listen. If they need control, offer choices. If they are embarrassed, move the conversation to a less crowded area." },
+          { type: "subheading", text: "5. Offer Simple Choices and Solutions" },
+          { type: "bullet", text: "Give two clear options." },
+          { type: "bullet", text: "Keep directions short and calm." },
+          { type: "bullet", text: "Focus on what can happen, not what cannot happen." },
+          { type: "subheading", text: "6. Use Non-Threatening Language" },
+          { type: "dont", text: "Avoid: Calm down." },
+          { type: "dont", text: "Avoid: You are overreacting." },
+          { type: "dont", text: "Avoid: You need to stop." },
+          { type: "do", text: "Say: Let's take a minute to breathe." },
+          { type: "do", text: "Say: I want to understand what's going on." },
+          { type: "do", text: "Say: I'm here to help, not to argue." },
+          { type: "subheading", text: "7. Know When to Get Help" },
+          { type: "bullet", text: "If a student refuses to de-escalate, walks away, or threatens harm, immediately contact Carson Clark or Brigette Filbrun, who can bring in the Safety team if needed." },
+          { type: "bullet", text: "Never handle a physical confrontation alone." },
+          { type: "bullet", text: "Always document and report any major incident after it is resolved." },
+          { type: "subheading", text: "8. After the Situation" },
+          { type: "bullet", text: "Debrief privately with the student: What could we do differently next time?" },
+          { type: "bullet", text: "Affirm reconciliation and remind them they are cared for." },
+          { type: "bullet", text: "Inform leadership so follow-up can happen if needed." }
+        ]
+      },
+      {
+        title: "De-Escalation Do's",
+        blocks: [
+          { type: "do", text: "Stay calm" },
+          { type: "do", text: "Listen actively" },
+          { type: "do", text: "Speak softly and slowly" },
+          { type: "do", text: "Keep posture open and relaxed" },
+          { type: "do", text: "Offer choices" },
+          { type: "do", text: "Call for support early" }
+        ]
+      },
+      {
+        title: "De-Escalation Don'ts",
+        blocks: [
+          { type: "dont", text: "Yell, argue, or threaten" },
+          { type: "dont", text: "Corner or crowd them" },
+          { type: "dont", text: "Take it personally" },
+          { type: "dont", text: "Make promises you cannot keep" },
+          { type: "dont", text: "Ignore warning signs" }
+        ]
+      }
+    ]
+  },
   packing_list: {
     title: "Community Camp Packing List",
     sections: [
