@@ -3401,6 +3401,11 @@ function initApp() {
 
   qsa("[data-resource-key]").forEach(function(button) {
     button.addEventListener("click", function() {
+      if (!canUseElement(button)) {
+        openAuth("login");
+        return;
+      }
+
       var key = button.getAttribute("data-resource-key");
       var link = resourceLinks[key];
       var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Resource";
