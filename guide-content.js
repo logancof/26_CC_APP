@@ -326,6 +326,224 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  role_hype_team: {
+    title: "Hype Team",
+    sections: [
+      {
+        title: "Point Person",
+        blocks: [
+          { type: "paragraph", text: "Carson Clark" }
+        ]
+      },
+      {
+        title: "Description",
+        blocks: [
+          { type: "paragraph", text: "Community Camp hype team is responsible for interacting with students prior to morning and evening services, creating excitement and expectancy within the students." }
+        ]
+      },
+      {
+        title: "Role Responsibilities",
+        blocks: [
+          { type: "bullet", text: "Interact with students outside the auditorium doors five minutes before doors open for morning and evening services." },
+          { type: "bullet", text: "Talk with students about their camp experience, what they are excited for in service, favorite worship songs, and similar conversation starters." },
+          { type: "bullet", text: "When doors open, hype the students up as they enter." },
+          { type: "bullet", text: "For evening service, point students toward the photobooth and beach balls." },
+          { type: "bullet", text: "When the three minute service countdown is displayed, ensure beach balls are collected and help the creative team move students away from the photobooth and toward the front of the auditorium." }
+        ]
+      }
+    ]
+  },
+  role_prayer_team: {
+    title: "Prayer Team",
+    sections: [
+      {
+        title: "Point Person",
+        blocks: [
+          { type: "paragraph", text: "Carson Clark" }
+        ]
+      },
+      {
+        title: "Description",
+        blocks: [
+          { type: "paragraph", text: "Community Camp prayer team is responsible for covering students in prayer before and during the morning and evening services." }
+        ]
+      },
+      {
+        title: "Role Responsibilities",
+        blocks: [
+          { type: "bullet", text: "Pray in the auditorium five to ten minutes before service doors open, praying for transformation within the students." },
+          { type: "bullet", text: "Once service begins, tend to any students who would like to receive prayer." },
+          { type: "bullet", text: "When the message concludes, if the speaker calls the prayer team up, stand in front of the stage and pray over any students who come forward." }
+        ]
+      }
+    ]
+  },
+  role_site_requirements: {
+    title: "Community Camp Site Requirements Team",
+    sections: [
+      {
+        title: "Point Person",
+        blocks: [
+          { type: "paragraph", text: "Carson Clark" }
+        ]
+      },
+      {
+        title: "Description",
+        blocks: [
+          { type: "paragraph", text: "The Community Camp site requirements team is composed of two positions that help ensure the auditorium space is prepared for morning and evening services." }
+        ]
+      },
+      {
+        title: "Set Up Team",
+        blocks: [
+          { type: "bullet", text: "Straighten chairs, pick up loose trash, and tend to the neatness of the auditorium space fifteen minutes before doors open for morning and evening services each day." }
+        ]
+      },
+      {
+        title: "Site Coordinator",
+        blocks: [
+          { type: "bullet", text: "Provide support to all teams contributing to the service experience." },
+          { type: "bullet", text: "If any team needs assistance, aid them. For complex matters, seek out the Next Gen Director." },
+          { type: "bullet", text: "Once worship concludes and service hosts lead into the message, get the preaching stand and water and place them on the stage behind the service hosts." }
+        ]
+      }
+    ]
+  },
+  handwritten_testimonies: {
+    title: "Handwritten Testimonies",
+    sections: [
+      {
+        title: "Description",
+        blocks: [
+          { type: "paragraph", text: "When leaving camp, each student will be given a pen and paper with testimony prompts to answer. On the drive home, students will have an opportunity to share what God has done in their lives during camp." },
+          { type: "paragraph", text: "Once arriving home, testimonies will be collected before escorting students off the bus." }
+        ]
+      },
+      {
+        title: "Goal",
+        blocks: [
+          { type: "bullet", text: "Provide students with an opportunity to get what they experienced out of their heads and onto paper." },
+          { type: "bullet", text: "Gather a sense of how camp impacted their lives." }
+        ]
+      },
+      {
+        title: "How To Prepare Students",
+        blocks: [
+          { type: "bullet", text: "Assist the bus captain with dispersing and collecting the papers and pens." },
+          { type: "bullet", text: "Help students with questions that arise." },
+          { type: "bullet", text: "Encourage students to answer the prompts honestly and thoroughly." }
+        ]
+      }
+    ]
+  },
+  breakout_eli_more_than_mistakes: {
+    title: "Tuesday Morning Service",
+    sections: [
+      {
+        title: "Eli's Message - More Than Your Mistakes",
+        blocks: [
+          { type: "bullet", text: "Have you ever struggled with believing that one mistake or weakness determined who you are? Why do you think it is so easy to let our failures become our identity?" },
+          { type: "bullet", text: "How does it encourage you to know that God continued to work in David's life even after his failures?" },
+          { type: "bullet", text: "What is the difference between having a struggle and allowing that struggle to define who you are?" },
+          { type: "bullet", text: "What changes have you seen in your life since following Jesus, or what changes would you like God to begin making in your life?" },
+          { type: "bullet", text: "What would change in your daily life if you truly lived from a redeemed identity instead of a mistakes-identity?" },
+          { type: "bullet", text: "What are some practical ways we can partner with God as He continues to transform us?" }
+        ]
+      }
+    ]
+  },
+  breakout_brigette_integrity: {
+    title: "Wednesday Morning Service",
+    sections: [
+      {
+        title: "Brigette's Message - Integrity",
+        blocks: [
+          { type: "bullet", text: "Daniel chose to honor God even when it would have been easier to compromise. What are some situations you face where doing the right thing can be difficult?" },
+          { type: "bullet", text: "The message talked about finding value in popularity, appearance, accomplishments, or approval from others. Why are these things so tempting? How have you seen social media contribute to this struggle?" },
+          { type: "bullet", text: "If your friends, teammates, classmates, or family had to describe your character, what would they say? What is one character trait God is developing in your life right now?" },
+          { type: "bullet", text: "Daniel was consistent. What are practical ways you can build consistency in your relationship with God after camp? Between reading the Bible, prayer, and good friendships, where do you need to grow most right now?" },
+          { type: "bullet", text: "What is one hard-right decision God may be asking you to make?" },
+          { type: "subpoint", text: "Examples: telling the truth, refusing gossip, standing for your faith, honoring your parents, choosing integrity in school." },
+          { type: "bullet", text: "What is one step you can take this week to begin living a life of integrity?" }
+        ]
+      }
+    ]
+  },
+  breakout_eric_lust_eyes: {
+    title: "Thursday Morning Service",
+    sections: [
+      {
+        title: "Eric's Message - Lust of the Eyes",
+        blocks: [
+          { type: "bullet", text: "What are some ways social media or screens can shape what we start to want or think we need to be happy?" },
+          { type: "bullet", text: "Genesis 3 says the fruit looked pleasing to the eye. What are examples of things that look good to the eye but can lead us in the wrong direction?" },
+          { type: "bullet", text: "What does it look like in real life to guard your eyes instead of dwelling on things that tempt you?" },
+          { type: "bullet", text: "How does knowing your identity is in Christ change the way you handle comparison, temptation, or wanting what others have?" },
+          { type: "bullet", text: "What is one practical way we can protect our eyes and hearts from coveting and instead find contentment in Christ?" }
+        ]
+      }
+    ]
+  },
+  breakout_brandon_gospel: {
+    title: "Monday Evening Service",
+    sections: [
+      {
+        title: "Pastor Brandon's Message - The Gospel",
+        blocks: [
+          { type: "bullet", text: "What stood out to you most from tonight's message, and why?" },
+          { type: "bullet", text: "Do you ever find yourself believing you have to earn God's approval or right-standing with Him? Why or why not?" },
+          { type: "bullet", text: "What area of your life have you been wrestling with, trying to be good enough for God, and how did tonight change your perspective?" },
+          { type: "bullet", text: "If Jesus is your Lord and Savior, what is one decision you would like to make differently starting now?" }
+        ]
+      }
+    ]
+  },
+  breakout_carrieann_deny_yourself: {
+    title: "Tuesday Evening Service",
+    sections: [
+      {
+        title: "Carrieann's Message - Deny Yourself",
+        blocks: [
+          { type: "bullet", text: "What are some ways culture wrongfully encourages us to put ourselves first, and how do those messages differ from Jesus' command to deny yourself in Luke 9:23?" },
+          { type: "bullet", text: "The message talked about the striving self and the surrendered self. Which one do you see showing up more in your life right now? Why?" },
+          { type: "bullet", text: "Why do you think comparison is such a powerful trap for students your age? How does comparing ourselves to others keep us from focusing on Jesus?" },
+          { type: "bullet", text: "Where have you been complacent recently? How does connection with Jesus transform your outlook on complacency?" },
+          { type: "bullet", text: "If denying yourself means turning the mirror away from yourself and toward Jesus, what is one practical thing you can do this week to become more surrendered?" },
+          { type: "bullet", text: "What might be difficult about making that change, and how can your group help you follow through?" }
+        ]
+      }
+    ]
+  },
+  breakout_carson_take_cross: {
+    title: "Wednesday Evening Service",
+    sections: [
+      {
+        title: "Carson's Message - Take Up Your Cross Daily",
+        blocks: [
+          { type: "bullet", text: "What is one thing in your life that feels like it competes with Jesus for your commitment? Why?" },
+          { type: "bullet", text: "What did you come to camp carrying that was weighing you down? What have you chosen to do with that thing?" },
+          { type: "bullet", text: "What is a practical step you can take to drop the boxes and pick up your cross daily?" },
+          { type: "bullet", text: "Who do you have around you that can keep you accountable to choosing the cross rather than choosing things with an expiration date?" },
+          { type: "bullet", text: "What decision do you not want to delay when you leave this room?" }
+        ]
+      }
+    ]
+  },
+  breakout_justin_follow_me: {
+    title: "Thursday Evening Service",
+    sections: [
+      {
+        title: "Pastor Justin's Message - Follow Me",
+        blocks: [
+          { type: "bullet", text: "As you reflect on your walk with God, would you say you have been more of a follower of Jesus or a fan of Jesus, and why?" },
+          { type: "bullet", text: "What does it look like for you to be fishers of men, sharing the goodness of God and being a light to others?" },
+          { type: "bullet", text: "How can you influence others in your schools, friend groups, or sports teams to draw nearer to God?" },
+          { type: "bullet", text: "What do you feel like God has for you next? What is He calling you to do? What is your next step?" },
+          { type: "bullet", text: "Leaving camp tomorrow, how has God changed you during your time here?" }
+        ]
+      }
+    ]
+  },
   deescalation: {
     title: "De-Escalation Training",
     sections: [

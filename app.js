@@ -24,6 +24,7 @@ var latestTeams = [];
 var latestScores = [];
 var latestScoreEntries = [];
 var latestAttendancePrompts = [];
+var latestBreakoutPrompts = [];
 var latestAttendanceRoster = [];
 var activeAttendancePrompt = null;
 var pendingAttendancePayload = null;
@@ -125,8 +126,20 @@ var defaultResourceLinks = {
   role_games_coordinator: "assets/pdfs/CC%20GAMES%20ROLES%20GAMES%20CORDINATOR.pdf",
   role_team_leader: "assets/pdfs/CC%20GAMES%20ROLES%20TEAM%20LEADER.pdf",
   role_referee: "assets/pdfs/CC%20GAMES%20ROLES%20REFEREE.pdf",
+  role_hype_team: "assets/pdfs/Hype%20Team%20Role%20Description.pdf",
+  role_prayer_team: "assets/pdfs/Prayer%20Team%20Role%20Description.pdf",
+  role_site_requirements: "assets/pdfs/Site%20Requirements%20Role%20Description%20.pdf",
   role_free_time: "assets/pdfs/Role%20Descriptions%20FREE%20TIME.pdf",
-  role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf"
+  role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf",
+  handwritten_testimonies: "assets/pdfs/Handwritten%20Testimonies%20.pdf",
+  breakout_discussion_prompts: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_eli_more_than_mistakes: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_brigette_integrity: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_eric_lust_eyes: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_brandon_gospel: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_carrieann_deny_yourself: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_carson_take_cross: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
+  breakout_justin_follow_me: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf"
 };
 
 var canvaPdfResourceKeys = [
@@ -331,6 +344,7 @@ function renderCampData(data) {
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
+  latestBreakoutPrompts = data.BREAKOUT_PROMPTS || data.DISCUSSION_PROMPTS || data.STORY_PROMPTS || data.NOTIFICATIONS || [];
   latestAttendanceRoster = (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
     ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
     : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
@@ -1465,6 +1479,7 @@ function isPromptForCurrentUser(prompt, fallbackPermission) {
     "username"
   ]));
 
+  if (!recipients.length && fallbackPermission === "leader") return canAccess("leader");
   if (!recipients.length) return hasPermission(fallbackPermission || "attendance");
   if (recipients.indexOf("all") !== -1) return true;
   if (recipients.indexOf(username) !== -1) return true;
@@ -1507,6 +1522,33 @@ function getActiveAttendancePrompts() {
   });
 }
 
+function getActiveBreakoutPrompts() {
+  return latestAttendancePrompts.concat(latestBreakoutPrompts).filter(function(prompt) {
+    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "").toLowerCase();
+    var resourceKey = getBreakoutPromptResourceKey(prompt);
+
+    return resourceKey &&
+      (type.indexOf("breakout") !== -1 || type.indexOf("discussion") !== -1 || type.indexOf("prompt") !== -1) &&
+      isPromptForCurrentUser(prompt, "leader") &&
+      isPromptActiveNow(prompt);
+  });
+}
+
+function getBreakoutPromptResourceKey(prompt) {
+  var key = String(getRowValue(prompt, ["resource_key", "guide_key", "prompt_resource", "content_key"]) || "").trim();
+  var title = normalizeGuideText(getPromptTitle(prompt));
+
+  if (key) return key;
+  if (title.indexOf("mondayevening") !== -1 || title.indexOf("gospel") !== -1 || title.indexOf("brandon") !== -1) return "breakout_brandon_gospel";
+  if (title.indexOf("tuesdaymorning") !== -1 || title.indexOf("mistakes") !== -1 || title.indexOf("eli") !== -1) return "breakout_eli_more_than_mistakes";
+  if (title.indexOf("tuesdayevening") !== -1 || title.indexOf("deny") !== -1 || title.indexOf("carrieann") !== -1) return "breakout_carrieann_deny_yourself";
+  if (title.indexOf("wednesdaymorning") !== -1 || title.indexOf("integrity") !== -1 || title.indexOf("brigette") !== -1) return "breakout_brigette_integrity";
+  if (title.indexOf("wednesdayevening") !== -1 || title.indexOf("cross") !== -1 || title.indexOf("carson") !== -1) return "breakout_carson_take_cross";
+  if (title.indexOf("thursdaymorning") !== -1 || title.indexOf("lust") !== -1 || title.indexOf("eric") !== -1) return "breakout_eric_lust_eyes";
+  if (title.indexOf("thursdayevening") !== -1 || title.indexOf("follow") !== -1 || title.indexOf("justin") !== -1) return "breakout_justin_follow_me";
+  return "";
+}
+
 function getRosterForPrompt(prompt) {
   var promptId = getPromptId(prompt);
   var username = String(currentUser.username || "").toLowerCase().trim();
@@ -1530,8 +1572,9 @@ function renderHomePrompts() {
   if (!list) return;
 
   var attendancePrompts = getActiveAttendancePrompts();
+  var breakoutPrompts = getActiveBreakoutPrompts();
 
-  if (!attendancePrompts.length) {
+  if (!attendancePrompts.length && !breakoutPrompts.length) {
     list.innerHTML = "";
     return;
   }
@@ -1546,6 +1589,17 @@ function renderHomePrompts() {
       '<strong>' + title + '</strong>' +
       '<small>' + message + '</small>' +
     '</button>';
+  }).join("") + breakoutPrompts.map(function(prompt) {
+    var promptId = escapeHtml(getPromptId(prompt));
+    var title = escapeHtml(getPromptTitle(prompt));
+    var message = escapeHtml(getRowValue(prompt, ["message", "description", "note"]) || "Breakout discussion prompts are ready.");
+    var resourceKey = escapeHtml(getBreakoutPromptResourceKey(prompt));
+
+    return '<button class="home-prompt-card" type="button" data-breakout-prompt="' + promptId + '" data-resource-key="' + resourceKey + '">' +
+      '<span>Discussion Prompt</span>' +
+      '<strong>' + title + '</strong>' +
+      '<small>' + message + '</small>' +
+    '</button>';
   }).join("");
 
   qsa("[data-attendance-prompt]").forEach(function(button) {
@@ -1557,6 +1611,16 @@ function renderHomePrompts() {
       attendanceDirty = false;
       renderAttendancePage();
       activatePage("attendance");
+    });
+  });
+
+  qsa("[data-breakout-prompt]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var key = button.getAttribute("data-resource-key");
+      var title = button.querySelector("strong") ? button.querySelector("strong").textContent : "Breakout Group Discussion Prompts";
+      var link = resourceLinks[key];
+
+      if (key) openResourceGuide(key, link, title);
     });
   });
 }
