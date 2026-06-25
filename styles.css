@@ -768,6 +768,12 @@ textarea:focus {
     font-weight: 900
 }
 
+.team-leaders {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.35
+}
+
 .student-chip-list {
     display: flex;
     flex-wrap: wrap;

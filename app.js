@@ -1071,7 +1071,7 @@ function renderTeams(teams, scores, assignments) {
   if (!page) return;
 
   if (assignments && assignments.length) {
-    renderTeamAssignmentCards(assignments);
+    renderTeamAssignmentCards(assignments, teams);
     return;
   }
 
@@ -1099,9 +1099,10 @@ function renderTeams(teams, scores, assignments) {
   bindTeamSearch();
 }
 
-function renderTeamAssignmentCards(assignments) {
+function renderTeamAssignmentCards(assignments, teams) {
   var page = qs("#teamCards");
   var groups = {};
+  var leaderLookup = buildTeamLeaderLookup(teams || []);
 
   if (!page) return;
 
@@ -1117,6 +1118,7 @@ function renderTeamAssignmentCards(assignments) {
         team_number: teamNumber,
         age_group: ageGroup,
         team_name: row.team_name || "Team " + teamNumber + (ageGroup ? " (" + ageGroup.replace("th", "") + ")" : ""),
+        leaders: (leaderLookup[key] || {}).leaders || "",
         students: [],
         campuses: {}
       };
@@ -1150,7 +1152,7 @@ function renderTeamAssignmentCards(assignments) {
     var campusSummary = Object.keys(team.campuses).sort().map(function(campus) {
       return campus + " " + team.campuses[campus];
     }).join(" • ");
-    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
+    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
 
     return '<div class="parent-team-card assignment-team-card" data-search="' + escapeHtml(search) + '">' +
       '<div class="team-card-body">' +
@@ -1158,6 +1160,7 @@ function renderTeamAssignmentCards(assignments) {
           '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
           '<span class="pill">' + escapeHtml(team.age_group || "Team") + '</span>' +
         '</div>' +
+        (team.leaders ? '<p class="team-leaders"><strong>Leaders:</strong> ' + escapeHtml(team.leaders) + '</p>' : "") +
         '<div class="team-card-meta">' +
           '<span>' + team.students.length + ' students</span>' +
           (campusSummary ? '<span>' + escapeHtml(campusSummary) + '</span>' : "") +
@@ -1174,6 +1177,37 @@ function renderTeamAssignmentCards(assignments) {
   }).join("");
 
   bindTeamSearch();
+}
+
+function buildTeamLeaderLookup(teams) {
+  var lookup = {};
+
+  (teams || []).forEach(function(team) {
+    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
+    var teamNumber = getAssignmentDisplayTeamNumber(team.team_number, ageGroup);
+    var key = ageGroup + "|" + teamNumber;
+    var leaders = team.leaders || team.leader || team.team_leaders || team.leader_names || team.captains || "";
+
+    if (key && leaders) {
+      lookup[key] = {
+        leaders: leaders,
+        team_name: team.team_name || ""
+      };
+    }
+  });
+
+  return lookup;
+}
+
+function getAssignmentDisplayTeamNumber(teamNumber, ageGroup) {
+  var number = Number(teamNumber);
+  var group = getCanonicalAgeGroup(ageGroup);
+
+  if (!number) return String(teamNumber || "").trim();
+  if (group === "8-9th" && number > 10) return String(number - 10);
+  if (group === "10-12th" && number > 20) return String(number - 20);
+
+  return String(number);
 }
 
 function getAgeGroupOrder(ageGroup) {
