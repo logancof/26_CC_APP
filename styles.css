@@ -754,6 +754,45 @@ textarea:focus {
     color: var(--cream)
 }
 
+.assignment-team-card .team-card-body {
+    display: grid;
+    gap: 12px
+}
+
+.team-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 900
+}
+
+.student-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px
+}
+
+.student-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 10px;
+    color: var(--cream);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1
+}
+
+.student-chip small {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase
+}
+
 .resource-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2757,9 +2796,16 @@ h4,
 .team-search-card label,
 .entry-card label,
 .table-header,
+.team-card-meta,
+.student-chip small,
 .vs,
 .same {
     color: rgba(214, 97, 40, .72);
+}
+
+.student-chip {
+    border-color: rgba(214, 97, 40, .28);
+    color: var(--cof-orange);
 }
 
 .pill,
