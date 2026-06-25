@@ -22,6 +22,7 @@ var pdfRenderToken = 0;
 var lastMediaSignature = "";
 var latestTeams = [];
 var latestTeamAssignments = [];
+var latestTeamLeaders = [];
 var latestScores = [];
 var latestScoreEntries = [];
 var latestAttendancePrompts = [];
@@ -343,6 +344,7 @@ function getCampCache() {
 function renderCampData(data) {
   latestTeams = data.TEAMS || [];
   latestTeamAssignments = data.TEAM_ASSIGNMENTS || [];
+  latestTeamLeaders = data.TEAM_LEADERS || [];
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
@@ -354,7 +356,7 @@ function renderCampData(data) {
   updateStatus(data.SCHEDULE || []);
   renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
   renderGames(data.GAMES || [], data.TEAMS || []);
-  renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeamAssignments);
+  renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeamAssignments, latestTeamLeaders);
   renderMediaSections(data.CONTENT || []);
   renderContacts(data.LEADER_CONTACTS || []);
   renderResourceLinks(data.LEADER_RESOURCES || []);
@@ -1065,13 +1067,13 @@ function renderGames(games, teams) {
   }).join("");
 }
 
-function renderTeams(teams, scores, assignments) {
+function renderTeams(teams, scores, assignments, teamLeaders) {
   var page = qs("#teamCards");
 
   if (!page) return;
 
   if (assignments && assignments.length) {
-    renderTeamAssignmentCards(assignments, teams);
+    renderTeamAssignmentCards(assignments, teamLeaders);
     return;
   }
 
@@ -1099,10 +1101,10 @@ function renderTeams(teams, scores, assignments) {
   bindTeamSearch();
 }
 
-function renderTeamAssignmentCards(assignments, teams) {
+function renderTeamAssignmentCards(assignments, teamLeaders) {
   var page = qs("#teamCards");
   var groups = {};
-  var leaderLookup = buildTeamLeaderLookup(teams || []);
+  var leaderLookup = buildTeamLeaderLookup(teamLeaders || []);
 
   if (!page) return;
 
@@ -1183,31 +1185,19 @@ function buildTeamLeaderLookup(teams) {
   var lookup = {};
 
   (teams || []).forEach(function(team) {
-    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
-    var teamNumber = getAssignmentDisplayTeamNumber(team.team_number, ageGroup);
+    var ageGroup = getCanonicalAgeGroup(team.age_group || "");
+    var teamNumber = String(team.team_number || "").trim();
     var key = ageGroup + "|" + teamNumber;
-    var leaders = team.leaders || team.leader || team.team_leaders || team.leader_names || team.captains || "";
+    var leaders = team.leaders || team.leader || team.leader_name || team.team_leaders || team.leader_names || "";
 
     if (key && leaders) {
       lookup[key] = {
-        leaders: leaders,
-        team_name: team.team_name || ""
+        leaders: leaders
       };
     }
   });
 
   return lookup;
-}
-
-function getAssignmentDisplayTeamNumber(teamNumber, ageGroup) {
-  var number = Number(teamNumber);
-  var group = getCanonicalAgeGroup(ageGroup);
-
-  if (!number) return String(teamNumber || "").trim();
-  if (group === "8-9th" && number > 10) return String(number - 10);
-  if (group === "10-12th" && number > 20) return String(number - 20);
-
-  return String(number);
 }
 
 function getAgeGroupOrder(ageGroup) {

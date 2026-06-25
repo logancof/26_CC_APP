@@ -17,6 +17,7 @@ function doGet() {
     "STORY_PROMPTS",
     "ATTENDANCE_GROUPS",
     "TEAM_ASSIGNMENTS",
+    "TEAM_LEADERS",
     "BREAKOUT_GROUP_ASSIGNMENTS"
   ];
 
