@@ -476,10 +476,10 @@
           </div>
         </div>
         <div class="resource-list">
-          <button class="leader-resource" data-resource-key="small_group_assignments">
+          <button class="leader-resource" data-page-link="leader-breakout-assignments">
             Breakout Group Assignments<span>Leader and student breakout groups</span>
           </button>
-          <button class="leader-resource" data-resource-key="team_assignments">
+          <button class="leader-resource" data-page-link="leader-team-assignments">
             Team Assignments<span>Camp team rosters</span>
           </button>
           <button class="leader-resource" data-resource-key="dorm_assignments">
@@ -489,6 +489,28 @@
             Bus Assignments<span>Travel groups and bus lists</span>
           </button>
         </div>
+      </div>
+
+      <div id="leader-breakout-assignments" class="page full-screen-page leader-category-page assignment-doc-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leader-assignments">← Assignments</button>
+          <div>
+            <h2>Breakout Group Assignments</h2>
+            <p>Your groups appear first, followed by all breakout groups.</p>
+          </div>
+        </div>
+        <div id="breakoutAssignmentsDoc" class="assignment-doc-list"></div>
+      </div>
+
+      <div id="leader-team-assignments" class="page full-screen-page leader-category-page assignment-doc-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leader-assignments">← Assignments</button>
+          <div>
+            <h2>Team Assignments</h2>
+            <p>Your teams appear first, followed by all camp teams.</p>
+          </div>
+        </div>
+        <div id="teamAssignmentsDoc" class="assignment-doc-list"></div>
       </div>
 
       <div id="leader-roles" class="page full-screen-page leader-category-page" data-min-role="leader">
@@ -773,7 +795,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.58</div>
+    <div class="app-version">v0.8.59</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

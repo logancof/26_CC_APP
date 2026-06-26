@@ -23,6 +23,7 @@ var lastMediaSignature = "";
 var latestTeams = [];
 var latestTeamAssignments = [];
 var latestTeamLeaders = [];
+var latestBreakoutAssignments = [];
 var latestScores = [];
 var latestScoreEntries = [];
 var latestAttendancePrompts = [];
@@ -345,6 +346,7 @@ function renderCampData(data) {
   latestTeams = data.TEAMS || [];
   latestTeamAssignments = data.TEAM_ASSIGNMENTS || [];
   latestTeamLeaders = data.TEAM_LEADERS || [];
+  latestBreakoutAssignments = data.BREAKOUT_GROUP_ASSIGNMENTS || [];
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
@@ -357,6 +359,7 @@ function renderCampData(data) {
   renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
   renderGames(data.GAMES || [], data.TEAMS || []);
   renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeamAssignments, latestTeamLeaders);
+  renderLeaderAssignmentDocs();
   renderMediaSections(data.CONTENT || []);
   renderContacts(data.LEADER_CONTACTS || []);
   renderResourceLinks(data.LEADER_RESOURCES || []);
@@ -1208,6 +1211,190 @@ function getAgeGroupOrder(ageGroup) {
   if (value === "8-9th") return 2;
   if (value === "10-12th") return 3;
   return 99;
+}
+
+function renderLeaderAssignmentDocs() {
+  renderBreakoutAssignmentsDoc();
+  renderTeamAssignmentsDoc();
+}
+
+function renderBreakoutAssignmentsDoc() {
+  var container = qs("#breakoutAssignmentsDoc");
+  var groups = {};
+
+  if (!container) return;
+
+  (latestBreakoutAssignments || []).forEach(function(row) {
+    var groupName = row.group_name || "";
+    var key = groupName || [row.grade, row.sex, row.leader_name].join("|");
+
+    if (!key) return;
+
+    if (!groups[key]) {
+      groups[key] = {
+        title: groupName || "Breakout Group",
+        meta: [row.grade ? row.grade + "th" : "", row.sex || "", row.leader_name || ""].filter(Boolean).join(" • "),
+        leaders: row.leader_name || "",
+        students: [],
+        campuses: {}
+      };
+    }
+
+    addAssignmentStudent_(groups[key], row);
+  });
+
+  renderAssignmentDocSections(container, Object.keys(groups).map(function(key) {
+    return groups[key];
+  }).sort(sortBreakoutAssignmentGroups_));
+}
+
+function renderTeamAssignmentsDoc() {
+  var container = qs("#teamAssignmentsDoc");
+  var groups = {};
+  var leaderLookup = buildTeamLeaderLookup(latestTeamLeaders || []);
+
+  if (!container) return;
+
+  (latestTeamAssignments || []).forEach(function(row) {
+    var ageGroup = getCanonicalAgeGroup(row.age_group || "");
+    var teamNumber = String(row.team_number || "").trim();
+    var key = ageGroup + "|" + teamNumber;
+
+    if (!teamNumber) return;
+
+    if (!groups[key]) {
+      groups[key] = {
+        title: "Team " + teamNumber,
+        meta: [ageGroup, row.team_name || ""].filter(Boolean).join(" • "),
+        leaders: (leaderLookup[key] || {}).leaders || "",
+        team_number: teamNumber,
+        age_group: ageGroup,
+        students: [],
+        campuses: {}
+      };
+    }
+
+    addAssignmentStudent_(groups[key], row);
+  });
+
+  renderAssignmentDocSections(container, Object.keys(groups).map(function(key) {
+    return groups[key];
+  }).sort(function(a, b) {
+    var ageCompare = getAgeGroupOrder(a.age_group) - getAgeGroupOrder(b.age_group);
+    if (ageCompare) return ageCompare;
+    return Number(a.team_number || 0) - Number(b.team_number || 0);
+  }));
+}
+
+function addAssignmentStudent_(group, row) {
+  var studentName = row.student_name || [row.first_name, row.last_name].filter(Boolean).join(" ");
+  var campus = row.campus || "";
+
+  if (studentName) {
+    group.students.push({
+      name: studentName,
+      campus: campus
+    });
+  }
+
+  if (campus) group.campuses[campus] = (group.campuses[campus] || 0) + 1;
+}
+
+function renderAssignmentDocSections(container, groups) {
+  var mine = groups.filter(isLeaderAssignmentMatch);
+  var other = groups.filter(function(group) {
+    return !isLeaderAssignmentMatch(group);
+  });
+
+  if (!groups.length) {
+    container.innerHTML = '<div class="assignment-empty">Assignments will appear here once the sheet data is loaded.</div>';
+    return;
+  }
+
+  container.innerHTML =
+    renderAssignmentSection("My Assignments", mine, true) +
+    renderAssignmentSection("All Assignments", other, false);
+}
+
+function renderAssignmentSection(title, groups, isMine) {
+  if (!groups.length && isMine) {
+    return '<section class="assignment-section">' +
+      '<h3>' + title + '</h3>' +
+      '<div class="assignment-empty">No assignments matched your login yet.</div>' +
+    '</section>';
+  }
+
+  if (!groups.length) return "";
+
+  return '<section class="assignment-section">' +
+    '<h3>' + title + '</h3>' +
+    groups.map(function(group) {
+      return renderAssignmentGroupCard(group, isMine);
+    }).join("") +
+  '</section>';
+}
+
+function renderAssignmentGroupCard(group, isMine) {
+  var campusSummary = Object.keys(group.campuses).sort().map(function(campus) {
+    return campus + " " + group.campuses[campus];
+  }).join(" • ");
+
+  return '<article class="assignment-group-card' + (isMine ? " mine" : "") + '">' +
+    '<div class="assignment-group-top">' +
+      '<div>' +
+        '<h4>' + escapeHtml(group.title) + '</h4>' +
+        (group.meta ? '<p>' + escapeHtml(group.meta) + '</p>' : "") +
+      '</div>' +
+      '<span class="pill">' + group.students.length + ' students</span>' +
+    '</div>' +
+    (group.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(group.leaders) + '</strong></div>' : "") +
+    (campusSummary ? '<p class="assignment-campus-summary">' + escapeHtml(campusSummary) + '</p>' : "") +
+    '<div class="assignment-student-list">' +
+      group.students.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+      }).map(function(student) {
+        return '<div class="assignment-student-row"><strong>' + escapeHtml(student.name) + '</strong>' +
+          (student.campus ? '<span>' + escapeHtml(student.campus) + '</span>' : "") +
+        '</div>';
+      }).join("") +
+    '</div>' +
+  '</article>';
+}
+
+function isLeaderAssignmentMatch(group) {
+  var leaderValue = normalizeLeaderMatchText(group.leaders || "");
+  var tokens = getCurrentLeaderMatchTokens();
+
+  if (!leaderValue || !tokens.length) return false;
+
+  return tokens.some(function(token) {
+    return token && leaderValue.indexOf(token) !== -1;
+  });
+}
+
+function getCurrentLeaderMatchTokens() {
+  var values = [
+    currentUser.display_name || "",
+    currentUser.username || ""
+  ];
+
+  if (currentUser.username) {
+    values.push(String(currentUser.username).replace(/[._-]+/g, " "));
+  }
+
+  return values.map(normalizeLeaderMatchText).filter(function(value, index, list) {
+    return value && list.indexOf(value) === index;
+  });
+}
+
+function normalizeLeaderMatchText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function sortBreakoutAssignmentGroups_(a, b) {
+  var gradeCompare = Number(String(a.meta).match(/\d+/) || 99) - Number(String(b.meta).match(/\d+/) || 99);
+  if (gradeCompare) return gradeCompare;
+  return String(a.title).localeCompare(String(b.title));
 }
 
 function bindTeamSearch() {

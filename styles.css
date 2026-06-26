@@ -824,6 +824,88 @@ textarea:focus {
     text-transform: uppercase
 }
 
+.assignment-doc-list {
+    display: grid;
+    gap: 18px
+}
+
+.assignment-section {
+    display: grid;
+    gap: 12px
+}
+
+.assignment-section h3 {
+    color: var(--cof-orange);
+    font-size: 18px;
+    font-weight: 950;
+    text-transform: uppercase
+}
+
+.assignment-group-card,
+.assignment-empty {
+    background: var(--cream);
+    border-radius: 24px;
+    color: var(--cof-orange);
+    padding: 16px
+}
+
+.assignment-group-card {
+    display: grid;
+    gap: 12px;
+    border: 1px solid rgba(214, 97, 40, .18)
+}
+
+.assignment-group-card.mine {
+    border-left: 8px solid var(--cof-orange);
+    box-shadow: 0 10px 0 rgba(214, 97, 40, .1)
+}
+
+.assignment-group-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start
+}
+
+.assignment-group-top h4 {
+    color: var(--cof-orange);
+    font-size: 20px;
+    font-weight: 950;
+    line-height: 1.05
+}
+
+.assignment-group-top p,
+.assignment-campus-summary,
+.assignment-empty {
+    color: rgba(214, 97, 40, .72);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.35
+}
+
+.assignment-student-list {
+    display: grid;
+    gap: 7px
+}
+
+.assignment-student-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid rgba(214, 97, 40, .14);
+    padding-top: 7px;
+    color: var(--cof-orange);
+    font-size: 14px;
+    line-height: 1.2
+}
+
+.assignment-student-row span {
+    color: rgba(214, 97, 40, .64);
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase
+}
+
 .resource-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
