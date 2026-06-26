@@ -1164,7 +1164,7 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
           '<span class="pill">' + escapeHtml(team.age_group || "Team") + '</span>' +
         '</div>' +
         (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
-        (team.leaders ? '<p class="team-leaders"><strong>Leaders:</strong> ' + escapeHtml(team.leaders) + '</p>' : "") +
+        (team.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(team.leaders) + '</strong></div>' : "") +
         '<div class="team-card-meta">' +
           '<span>' + team.students.length + ' students</span>' +
           (campusSummary ? '<span>' + escapeHtml(campusSummary) + '</span>' : "") +

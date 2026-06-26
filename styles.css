@@ -768,9 +768,27 @@ textarea:focus {
     font-weight: 900
 }
 
-.team-leaders {
-    margin: 0;
-    font-size: 14px;
+.team-leader-box {
+    border: 1px solid rgba(214, 97, 40, .24);
+    border-left: 6px solid var(--cof-orange);
+    border-radius: 16px;
+    padding: 11px 12px;
+    background: rgba(214, 97, 40, .08);
+    display: grid;
+    gap: 4px
+}
+
+.team-leader-box span {
+    color: rgba(214, 97, 40, .72);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    text-transform: uppercase
+}
+
+.team-leader-box strong {
+    color: var(--cof-orange);
+    font-size: 15px;
     line-height: 1.35
 }
 
