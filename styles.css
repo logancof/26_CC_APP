@@ -774,6 +774,13 @@ textarea:focus {
     line-height: 1.35
 }
 
+.team-original-name {
+    margin: -6px 0 0;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.25
+}
+
 .student-chip-list {
     display: flex;
     flex-wrap: wrap;
@@ -2803,6 +2810,7 @@ h4,
 .entry-card label,
 .table-header,
 .team-card-meta,
+.team-original-name,
 .student-chip small,
 .vs,
 .same {

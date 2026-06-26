@@ -479,18 +479,22 @@ function syncAssignmentExports() {
 function syncTeamAssignmentExport_() {
   const sourceRows = readSheetObjects_("PCO_TEAM_ASSIGNMENTS_RAW");
   const syncedAt = new Date();
+  const teamNumberMap = buildSequentialTeamNumberMap_(sourceRows);
 
   const rows = sourceRows
     .filter(row => getRowValue_(row, "Selection").toLowerCase() === "student")
     .map(row => {
       const assignment = getRowValue_(row, "Assignment");
       const parsed = parseTeamAreaName_(assignment);
+      const teamKey = getTeamAssignmentKey_(parsed.age_group, parsed.team_number);
+      const globalTeamNumber = teamNumberMap[teamKey] || parsed.team_number;
       const firstName = getRowValue_(row, "First Name");
       const lastName = getRowValue_(row, "Last Name");
 
       return [
         getRowValue_(row, "Registration ID"),
         assignment,
+        globalTeamNumber,
         parsed.team_number,
         parsed.age_group,
         firstName,
@@ -506,6 +510,7 @@ function syncTeamAssignmentExport_() {
     "registration_id",
     "team_name",
     "team_number",
+    "source_team_number",
     "age_group",
     "first_name",
     "last_name",
@@ -513,6 +518,40 @@ function syncTeamAssignmentExport_() {
     "campus",
     "synced_at"
   ], rows);
+}
+
+function buildSequentialTeamNumberMap_(sourceRows) {
+  const groupsByAge = {};
+
+  sourceRows
+    .filter(row => getRowValue_(row, "Selection").toLowerCase() === "student")
+    .forEach(row => {
+      const parsed = parseTeamAreaName_(getRowValue_(row, "Assignment"));
+      const ageGroup = parsed.age_group;
+      const sourceTeamNumber = parsed.team_number;
+
+      if (!ageGroup || !sourceTeamNumber) return;
+      if (!groupsByAge[ageGroup]) groupsByAge[ageGroup] = {};
+      groupsByAge[ageGroup][sourceTeamNumber] = true;
+    });
+
+  let nextTeamNumber = 1;
+  const lookup = {};
+
+  ["6-7th", "8-9th", "10-12th"].forEach(ageGroup => {
+    Object.keys(groupsByAge[ageGroup] || {})
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach(sourceTeamNumber => {
+        lookup[getTeamAssignmentKey_(ageGroup, sourceTeamNumber)] = String(nextTeamNumber);
+        nextTeamNumber += 1;
+      });
+  });
+
+  return lookup;
+}
+
+function getTeamAssignmentKey_(ageGroup, sourceTeamNumber) {
+  return `${ageGroup}|${sourceTeamNumber}`;
 }
 
 function syncBreakoutAssignmentExport_() {

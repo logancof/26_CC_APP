@@ -1118,6 +1118,7 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
     if (!groups[key]) {
       groups[key] = {
         team_number: teamNumber,
+        source_team_number: row.source_team_number || "",
         age_group: ageGroup,
         team_name: row.team_name || "Team " + teamNumber + (ageGroup ? " (" + ageGroup.replace("th", "") + ")" : ""),
         leaders: (leaderLookup[key] || {}).leaders || "",
@@ -1162,6 +1163,7 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
           '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
           '<span class="pill">' + escapeHtml(team.age_group || "Team") + '</span>' +
         '</div>' +
+        (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
         (team.leaders ? '<p class="team-leaders"><strong>Leaders:</strong> ' + escapeHtml(team.leaders) + '</p>' : "") +
         '<div class="team-card-meta">' +
           '<span>' + team.students.length + ' students</span>' +
