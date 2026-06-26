@@ -518,6 +518,70 @@ function syncTeamAssignmentExport_() {
     "campus",
     "synced_at"
   ], rows);
+
+  syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt);
+}
+
+function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
+  const leadersByTeam = {};
+
+  sourceRows
+    .filter(row => getRowValue_(row, "Selection").toLowerCase() !== "student")
+    .forEach(row => {
+      const assignment = getRowValue_(row, "Assignment");
+      const parsed = parseTeamAreaName_(assignment);
+      const teamKey = getTeamAssignmentKey_(parsed.age_group, parsed.team_number);
+      const globalTeamNumber = teamNumberMap[teamKey] || parsed.team_number;
+      const firstName = getRowValue_(row, "First Name");
+      const lastName = getRowValue_(row, "Last Name");
+      const leaderName = [firstName, lastName].filter(Boolean).join(" ");
+
+      if (!assignment || !globalTeamNumber || !leaderName) return;
+
+      const outputKey = getTeamAssignmentKey_(parsed.age_group, globalTeamNumber);
+
+      if (!leadersByTeam[outputKey]) {
+        leadersByTeam[outputKey] = {
+          team_name: assignment,
+          team_number: globalTeamNumber,
+          source_team_number: parsed.team_number,
+          age_group: parsed.age_group,
+          leaders: []
+        };
+      }
+
+      leadersByTeam[outputKey].leaders.push(leaderName);
+    });
+
+  const rows = Object.keys(leadersByTeam)
+    .sort((a, b) => {
+      const left = leadersByTeam[a];
+      const right = leadersByTeam[b];
+      const ageCompare = getAppsScriptAgeGroupOrder_(left.age_group) - getAppsScriptAgeGroupOrder_(right.age_group);
+      if (ageCompare) return ageCompare;
+      return Number(left.team_number || 0) - Number(right.team_number || 0);
+    })
+    .map(key => {
+      const team = leadersByTeam[key];
+
+      return [
+        team.team_name,
+        team.team_number,
+        team.source_team_number,
+        team.age_group,
+        team.leaders.join(", "),
+        syncedAt
+      ];
+    });
+
+  writeSheet_("TEAM_LEADERS", [
+    "team_name",
+    "team_number",
+    "source_team_number",
+    "age_group",
+    "leaders",
+    "synced_at"
+  ], rows);
 }
 
 function buildSequentialTeamNumberMap_(sourceRows) {
@@ -552,6 +616,13 @@ function buildSequentialTeamNumberMap_(sourceRows) {
 
 function getTeamAssignmentKey_(ageGroup, sourceTeamNumber) {
   return `${ageGroup}|${sourceTeamNumber}`;
+}
+
+function getAppsScriptAgeGroupOrder_(ageGroup) {
+  if (ageGroup === "6-7th") return 1;
+  if (ageGroup === "8-9th") return 2;
+  if (ageGroup === "10-12th") return 3;
+  return 99;
 }
 
 function syncBreakoutAssignmentExport_() {

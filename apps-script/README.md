@@ -14,7 +14,9 @@ Secrets and API credentials should stay in Apps Script Project Settings as Scrip
 Assignment import notes:
 
 - Paste PCO team export rows into `PCO_TEAM_ASSIGNMENTS_RAW`.
+- Add team leader rows to `PCO_TEAM_ASSIGNMENTS_RAW` using the same team assignment labels. Leave `Registration ID` blank and use a non-`Student` value in `Selection`, such as `Leader`.
 - Paste PCO breakout export rows into `PCO_BREAKOUT_GROUPS_RAW`.
 - Run `syncAssignmentExports()`.
 - `TEAM_ASSIGNMENTS.team_number` is generated sequentially across age groups: all 6-7th teams first, then 8-9th, then 10-12th.
 - `TEAM_ASSIGNMENTS.source_team_number` preserves the original PCO team number from labels like `Team 5 (10-12)`.
+- `TEAM_LEADERS` is generated from non-student rows in `PCO_TEAM_ASSIGNMENTS_RAW`.
