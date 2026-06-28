@@ -19,7 +19,9 @@ function doGet() {
     "ATTENDANCE_GROUPS",
     "TEAM_ASSIGNMENTS",
     "TEAM_LEADERS",
-    "BREAKOUT_GROUP_ASSIGNMENTS"
+    "BREAKOUT_GROUP_ASSIGNMENTS",
+    "BUS_ASSIGNMENTS",
+    "DORM_ASSIGNMENTS"
   ];
 
   const data = {};

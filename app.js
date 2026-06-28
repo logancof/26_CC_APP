@@ -24,6 +24,8 @@ var latestTeams = [];
 var latestTeamAssignments = [];
 var latestTeamLeaders = [];
 var latestBreakoutAssignments = [];
+var latestBusAssignments = [];
+var latestDormAssignments = [];
 var latestScores = [];
 var latestScoreEntries = [];
 var latestAttendancePrompts = [];
@@ -371,6 +373,8 @@ function renderCampData(data) {
   latestTeamAssignments = data.TEAM_ASSIGNMENTS || [];
   latestTeamLeaders = data.TEAM_LEADERS || [];
   latestBreakoutAssignments = data.BREAKOUT_GROUP_ASSIGNMENTS || [];
+  latestBusAssignments = data.BUS_ASSIGNMENTS || [];
+  latestDormAssignments = data.DORM_ASSIGNMENTS || [];
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
@@ -1858,6 +1862,167 @@ function buildRosterFromBreakoutAssignments(assignments) {
   });
 }
 
+function buildRosterFromTeamAssignments(assignments, teamLeaders) {
+  var leaderLookup = buildTeamLeaderLookup(teamLeaders || []);
+
+  return (assignments || []).map(function(row, index) {
+    var teamNumber = String(row.team_number || row.team || "").trim();
+    var ageGroup = getCanonicalAgeGroup(row.age_group || "");
+    var key = ageGroup + "|" + teamNumber;
+    var leaderName = getRowValue(row, ["leader_name", "leaders", "leader", "team_leaders"]) || (leaderLookup[key] || {}).leaders || "";
+    var studentName = getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ");
+    var groupName = row.team_name || (teamNumber ? "Team " + teamNumber : "");
+
+    return {
+      prompt_id: row.prompt_id || row.checkpoint_id || "",
+      leader_name: leaderName,
+      leader_username: String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").trim() || slug(leaderName).replace(/-/g, "."),
+      age_group: ageGroup,
+      sex: normalizeSex(row.sex || row.gender || ""),
+      student_id: row.registration_id || row.student_id || "team_student_" + (index + 1),
+      student_name: studentName,
+      campus: row.campus || "",
+      group_name: groupName,
+      assignment_name: groupName,
+      team_number: teamNumber,
+      source: "team",
+      sort_order: Number(row.sort_order || row.order || index + 1),
+      active: row.active || "TRUE",
+      birthday: row.birthday || "",
+      medical_info: row.medical_info || "",
+      parent_name: row.parent_name || "",
+      parent_contact: row.parent_contact || ""
+    };
+  }).filter(function(row) {
+    return !!row.student_name;
+  });
+}
+
+function buildRosterFromGenericAssignments(assignments, source) {
+  return (assignments || []).map(function(row, index) {
+    var leaderName = getRowValue(row, ["leader_name", "leaders", "leader", "group_leader", "assigned_to_name"]);
+    var studentName = getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ");
+    var assignmentName = getRowValue(row, [
+      "assignment_name",
+      "assignment",
+      "group_name",
+      source + "_name",
+      source + "_number",
+      source,
+      "lodging",
+      "dorm",
+      "bus"
+    ]);
+
+    return {
+      prompt_id: row.prompt_id || row.checkpoint_id || "",
+      leader_name: leaderName,
+      leader_username: String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").trim() || slug(leaderName).replace(/-/g, "."),
+      age_group: getCanonicalAgeGroup(row.age_group || row.grade || ""),
+      sex: normalizeSex(row.sex || row.gender || ""),
+      student_id: row.registration_id || row.student_id || source + "_student_" + (index + 1),
+      student_name: studentName,
+      campus: row.campus || "",
+      group_name: assignmentName,
+      assignment_name: assignmentName,
+      source: source,
+      sort_order: Number(row.sort_order || row.order || index + 1),
+      active: row.active || "TRUE",
+      birthday: row.birthday || "",
+      medical_info: row.medical_info || "",
+      parent_name: row.parent_name || "",
+      parent_contact: row.parent_contact || ""
+    };
+  }).filter(function(row) {
+    return !!row.student_name;
+  });
+}
+
+function buildAllStudentRoster() {
+  var seen = {};
+  var sourceRows = latestBreakoutAssignments.length
+    ? buildRosterFromBreakoutAssignments(latestBreakoutAssignments)
+    : latestAttendanceRoster;
+
+  return sourceRows.filter(function(row) {
+    var key = String(row.student_id || "").trim() || normalizeLeaderMatchText(row.student_name);
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    row.leader_name = "";
+    row.leader_username = "";
+    row.group_name = row.group_name || row.age_group || "Check-In";
+    row.assignment_name = row.group_name;
+    row.source = "all";
+    return true;
+  });
+}
+
+function getAttendanceRosterSource(prompt) {
+  var source = String(getRowValue(prompt, [
+    "roster_source",
+    "source",
+    "assignment_source",
+    "checkpoint_type",
+    "roster"
+  ]) || "").toLowerCase().trim();
+  var title = normalizeGuideText(getPromptTitle(prompt));
+
+  if (!source) {
+    if (title.indexOf("bus") !== -1) return "bus";
+    if (title.indexOf("dorm") !== -1 || title.indexOf("lodging") !== -1) return "dorm";
+    if (title.indexOf("team") !== -1) return "team";
+    if (title.indexOf("checkin") !== -1 || title.indexOf("check-in") !== -1 || title.indexOf("check in") !== -1) return "all";
+    return "breakout";
+  }
+
+  if (source.indexOf("bus") !== -1) return "bus";
+  if (source.indexOf("dorm") !== -1 || source.indexOf("lodging") !== -1) return "dorm";
+  if (source.indexOf("team") !== -1) return "team";
+  if (source.indexOf("all") !== -1 || source.indexOf("check") !== -1) return "all";
+  if (source.indexOf("breakout") !== -1 || source.indexOf("small") !== -1) return "breakout";
+
+  return source;
+}
+
+function getAttendanceRosterBySource(source) {
+  if (source === "team") return buildRosterFromTeamAssignments(latestTeamAssignments, latestTeamLeaders);
+  if (source === "bus") return buildRosterFromGenericAssignments(latestBusAssignments, "bus");
+  if (source === "dorm") return buildRosterFromGenericAssignments(latestDormAssignments, "dorm");
+  if (source === "all") return buildAllStudentRoster();
+  return latestAttendanceRoster;
+}
+
+function rosterRowMatchesCurrentUser(row) {
+  var tokens = getCurrentUserRecipientTokens();
+  var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
+  var rowLeaderName = String(getRowValue(row, ["leader_name", "leader", "group_leader", "leaders"]) || "").toLowerCase().trim();
+  var leaderCandidates = [rowLeader, rowLeaderName].concat(splitList(rowLeaderName));
+
+  return leaderCandidates.some(function(value) {
+    var compact = normalizeLeaderMatchText(value);
+    return value && (tokens.indexOf(value) !== -1 || tokens.indexOf(compact) !== -1);
+  });
+}
+
+function rosterRowMatchesGroupFilter(row, groupFilter) {
+  if (!groupFilter) return true;
+
+  var values = [
+    row.group_name,
+    row.assignment_name,
+    row.team_number ? "Team " + row.team_number : "",
+    row.team_number,
+    row.age_group,
+    row.source
+  ];
+  var compactFilter = normalizeLeaderMatchText(groupFilter);
+
+  return values.some(function(value) {
+    var compact = normalizeLeaderMatchText(value);
+    return compact && (compact.indexOf(compactFilter) !== -1 || compactFilter.indexOf(compact) !== -1);
+  });
+}
+
 function parsePromptDate(dateValue, timeValue) {
   var dateText = String(dateValue || "").trim();
   var timeText = String(timeValue || "").trim();
@@ -2042,21 +2207,27 @@ function getBreakoutPromptResourceKey(prompt) {
 
 function getRosterForPrompt(prompt) {
   var promptId = getPromptId(prompt);
-  var tokens = getCurrentUserRecipientTokens();
+  var source = getAttendanceRosterSource(prompt);
+  var groupFilter = getRowValue(prompt, [
+    "group_filter",
+    "assignment_filter",
+    "assignment",
+    "target_group",
+    "group_name",
+    "roster_filter"
+  ]);
 
-  return latestAttendanceRoster.filter(function(row) {
+  return getAttendanceRosterBySource(source).filter(function(row) {
     if (row.active !== undefined && row.active !== "" && !isTrue(row.active)) return false;
 
     var rowPromptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
-    var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
-    var rowLeaderName = String(getRowValue(row, ["leader_name", "leader", "group_leader"]) || "").toLowerCase().trim();
     var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || "").trim();
-    var leaderMatches = [rowLeader, rowLeaderName, normalizeLeaderMatchText(rowLeader), normalizeLeaderMatchText(rowLeaderName)].some(function(value) {
-      return value && tokens.indexOf(value) !== -1;
-    });
 
     if (rowPromptId && rowPromptId !== promptId) return false;
-    return !!studentName && leaderMatches;
+    if (!rosterRowMatchesGroupFilter(row, groupFilter)) return false;
+    if (source === "all") return !!studentName;
+
+    return !!studentName && rosterRowMatchesCurrentUser(row);
   }).sort(function(a, b) {
     return Number(getRowValue(a, ["sort_order", "order"]) || 999) - Number(getRowValue(b, ["sort_order", "order"]) || 999);
   });
