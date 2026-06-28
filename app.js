@@ -1778,14 +1778,15 @@ function buildRosterFromAttendanceGroups(groups) {
   (groups || []).forEach(function(group, groupIndex) {
     if (group.active !== undefined && group.active !== "" && !isTrue(group.active)) return;
 
-    var leaderUsername = String(getRowValue(group, ["leader_username", "username"]) || "").trim();
     var leaderName = String(getRowValue(group, ["leader_name", "leader", "group_leader"]) || "").trim();
+    var leaderUsername = String(getRowValue(group, ["leader_username", "username"]) || "").trim() || slug(leaderName).replace(/-/g, ".");
     var promptId = String(getRowValue(group, ["prompt_id", "checkpoint_id"]) || "").trim();
     var ageGroup = getRowValue(group, ["age_group", "group", "grade_group"]);
     var sex = normalizeSex(getRowValue(group, ["sex", "gender"]));
     var students = splitStudentNames(getRowValue(group, ["students", "student_names", "student_list"]));
 
-    if (!leaderUsername || !students.length) return;
+    if (!leaderName && !leaderUsername) return;
+    if (!students.length) return;
 
     students.forEach(function(studentName, studentIndex) {
       roster.push({
@@ -1986,17 +1987,21 @@ function getBreakoutPromptResourceKey(prompt) {
 
 function getRosterForPrompt(prompt) {
   var promptId = getPromptId(prompt);
-  var username = String(currentUser.username || "").toLowerCase().trim();
+  var tokens = getCurrentUserRecipientTokens();
 
   return latestAttendanceRoster.filter(function(row) {
     if (row.active !== undefined && row.active !== "" && !isTrue(row.active)) return false;
 
     var rowPromptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
     var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
+    var rowLeaderName = String(getRowValue(row, ["leader_name", "leader", "group_leader"]) || "").toLowerCase().trim();
     var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || "").trim();
+    var leaderMatches = [rowLeader, rowLeaderName, normalizeLeaderMatchText(rowLeader), normalizeLeaderMatchText(rowLeaderName)].some(function(value) {
+      return value && tokens.indexOf(value) !== -1;
+    });
 
     if (rowPromptId && rowPromptId !== promptId) return false;
-    return !!studentName && !!rowLeader && rowLeader === username;
+    return !!studentName && leaderMatches;
   }).sort(function(a, b) {
     return Number(getRowValue(a, ["sort_order", "order"]) || 999) - Number(getRowValue(b, ["sort_order", "order"]) || 999);
   });
@@ -2097,7 +2102,7 @@ function renderAttendancePage() {
     '<small>' + escapeHtml(getRowValue(activeAttendancePrompt, ["message", "description", "note"]) || "Check each student you have eyes on, then submit.") + '</small>';
 
   if (!roster.length) {
-    checklist.innerHTML = '<div class="attendance-empty">No students are assigned to your attendance list yet.</div>';
+    checklist.innerHTML = '<div class="attendance-empty">No students matched this account yet. Matching as: ' + escapeHtml(getCurrentUserRecipientTokens().join(", ")) + '.</div>';
     if (status) status.textContent = "";
     return;
   }
