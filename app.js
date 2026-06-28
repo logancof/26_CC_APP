@@ -31,6 +31,7 @@ var latestBreakoutPrompts = [];
 var latestAttendanceRoster = [];
 var activeAttendancePrompt = null;
 var pendingAttendancePayload = null;
+var submittedAttendancePrompts = getSubmittedAttendancePrompts();
 var scoreEntryDirty = false;
 var teamNameAdminDirty = false;
 var attendanceDirty = false;
@@ -213,6 +214,26 @@ function saveCurrentUser() {
   try {
     localStorage.setItem("campUser", JSON.stringify(currentUser));
   } catch (e) {}
+}
+
+function getSubmittedAttendancePrompts() {
+  try {
+    return JSON.parse(localStorage.getItem("submittedAttendancePrompts") || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveSubmittedAttendancePrompts() {
+  try {
+    localStorage.setItem("submittedAttendancePrompts", JSON.stringify(submittedAttendancePrompts));
+  } catch (e) {}
+}
+
+function markAttendancePromptSubmitted(promptId) {
+  if (!promptId || submittedAttendancePrompts.indexOf(promptId) !== -1) return;
+  submittedAttendancePrompts.push(promptId);
+  saveSubmittedAttendancePrompts();
 }
 
 function getPreviewBaseUser() {
@@ -1982,7 +2003,10 @@ function isPromptActiveNow(prompt) {
 function getActiveAttendancePrompts() {
   return latestAttendancePrompts.filter(function(prompt) {
     var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
-    return type.indexOf("attendance") !== -1 && isPromptForCurrentUser(prompt, "attendance") && isPromptActiveNow(prompt);
+    return submittedAttendancePrompts.indexOf(getPromptId(prompt)) === -1 &&
+      type.indexOf("attendance") !== -1 &&
+      isPromptForCurrentUser(prompt, "attendance") &&
+      isPromptActiveNow(prompt);
   });
 }
 
@@ -2236,8 +2260,12 @@ function sendAttendancePayload(payload) {
       if (!result.ok && result.status !== "ok") throw new Error(result.error || "Attendance was not saved.");
 
       if (status) status.textContent = "Attendance submitted.";
+      markAttendancePromptSubmitted(payload.prompt_id);
+      activeAttendancePrompt = null;
       attendanceDirty = false;
       closeAttendanceMissingModal();
+      renderHomePrompts();
+      renderAttendancePage();
     })
     .catch(function(error) {
       if (status) status.textContent = error.message;
