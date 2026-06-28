@@ -229,6 +229,8 @@ function canUseRolePreview() {
 function getPreviewPermissions(role) {
   return role === "admin"
     ? ["attendance", "scorekeeper", "bonus_points", "score_corrections", "team_name_admin"]
+    : role === "leader"
+      ? ["attendance"]
     : [];
 }
 
@@ -501,6 +503,9 @@ function updateVisibleMenuItems() {
   var testRoleSelect = qs("#testRoleSelect");
   if (testRoleSelect) testRoleSelect.value = currentUser.previewRole || currentUser.role || "guest";
 
+  var previewLeaderName = qs("#previewLeaderName");
+  if (previewLeaderName) previewLeaderName.value = currentUser.previewDisplayName || "";
+
   var authStatus = qs("#authStatus");
   if (authStatus) authStatus.textContent = "Current role: " + currentUser.role;
 
@@ -533,24 +538,30 @@ function updateScoreGameAccess() {
   }
 }
 
-function setTestRole(role) {
+function setTestRole(role, previewName) {
   if (!canUseRolePreview()) return;
 
   var baseUser = getPreviewBaseUser();
+  var displayName = String(previewName || "").trim() || baseUser.display_name || "";
+  var previewUsername = displayName ? slug(displayName).replace(/-/g, ".") : baseUser.username;
+
   currentUser = {
-    username: baseUser.username,
+    username: previewUsername,
     role: role,
-    display_name: baseUser.display_name || "",
+    display_name: displayName,
     permissions: getPreviewPermissions(role),
     token: baseUser.token || "",
     previewActive: true,
     previewRole: role,
+    previewDisplayName: displayName,
     previewOriginal: baseUser
   };
 
   saveCurrentUser();
 
   updateVisibleMenuItems();
+  renderHomePrompts();
+  renderLeaderAssignmentDocs();
 }
 
 function stopRolePreview() {
@@ -560,6 +571,8 @@ function stopRolePreview() {
   currentUser.permissions = parsePermissions(currentUser.permissions);
   saveCurrentUser();
   updateVisibleMenuItems();
+  renderHomePrompts();
+  renderLeaderAssignmentDocs();
 }
 
 function submitAuth() {
@@ -1235,6 +1248,7 @@ function renderBreakoutAssignmentsDoc() {
         title: groupName || "Breakout Group",
         meta: [row.grade ? row.grade + "th" : "", row.sex || "", row.leader_name || ""].filter(Boolean).join(" • "),
         leaders: row.leader_name || "",
+        hasDetails: true,
         students: [],
         campuses: {}
       };
@@ -1293,7 +1307,11 @@ function addAssignmentStudent_(group, row) {
   if (studentName) {
     group.students.push({
       name: studentName,
-      campus: campus
+      campus: campus,
+      birthday: row.birthday || row.birthdate || row.birth_date || "",
+      medical_info: row.medical_info || row.medical || row.health_related_data || "",
+      parent_name: row.parent_name || [row.parent_first_name, row.parent_last_name].filter(Boolean).join(" "),
+      parent_contact: row.parent_contact || row.parent_phone || row.parent_contact_phone || ""
     });
   }
 
@@ -1311,9 +1329,15 @@ function renderAssignmentDocSections(container, groups) {
     return;
   }
 
+  groups.forEach(function(group, index) {
+    group.detail_id = "assignment-detail-" + index + "-" + normalizeLeaderMatchText(group.title);
+  });
+
   container.innerHTML =
     renderAssignmentSection("My Assignments", mine, true) +
     renderAssignmentSection("All Assignments", other, false);
+
+  bindAssignmentGroupToggles(container);
 }
 
 function renderAssignmentSection(title, groups, isMine) {
@@ -1338,14 +1362,18 @@ function renderAssignmentGroupCard(group, isMine) {
   var campusSummary = Object.keys(group.campuses).sort().map(function(campus) {
     return campus + " " + group.campuses[campus];
   }).join(" • ");
+  var detailId = escapeHtml(group.detail_id || "");
 
-  return '<article class="assignment-group-card' + (isMine ? " mine" : "") + '">' +
+  return '<article class="assignment-group-card' + (isMine ? " mine" : "") + (group.hasDetails ? " expandable" : "") + '" data-assignment-card="' + detailId + '">' +
     '<div class="assignment-group-top">' +
       '<div>' +
         '<h4>' + escapeHtml(group.title) + '</h4>' +
         (group.meta ? '<p>' + escapeHtml(group.meta) + '</p>' : "") +
       '</div>' +
-      '<span class="pill">' + group.students.length + ' students</span>' +
+      '<div class="assignment-card-actions">' +
+        '<span class="pill">' + group.students.length + ' students</span>' +
+        (group.hasDetails ? '<button class="assignment-toggle" type="button" data-assignment-toggle="' + detailId + '" aria-expanded="false">Details</button>' : "") +
+      '</div>' +
     '</div>' +
     (group.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(group.leaders) + '</strong></div>' : "") +
     (campusSummary ? '<p class="assignment-campus-summary">' + escapeHtml(campusSummary) + '</p>' : "") +
@@ -1358,7 +1386,64 @@ function renderAssignmentGroupCard(group, isMine) {
         '</div>';
       }).join("") +
     '</div>' +
+    (group.hasDetails ? renderAssignmentDetailPanel(group, detailId) : "") +
   '</article>';
+}
+
+function renderAssignmentDetailPanel(group, detailId) {
+  return '<div class="assignment-detail-panel hidden" id="' + detailId + '">' +
+    group.students.map(function(student) {
+      var parentPhone = formatPhoneLink(student.parent_contact);
+
+      return '<div class="assignment-detail-student">' +
+        '<h5>' + escapeHtml(student.name) + '</h5>' +
+        '<dl>' +
+          renderDetailRow("Birthday", student.birthday) +
+          renderDetailRow("Medical Info", student.medical_info || "None listed") +
+          renderDetailRow("Parent", student.parent_name) +
+          renderDetailRow("Parent Contact", parentPhone ? '<a href="tel:' + escapeHtml(parentPhone) + '">' + escapeHtml(student.parent_contact) + '</a>' : student.parent_contact, !!parentPhone) +
+        '</dl>' +
+      '</div>';
+    }).join("") +
+  '</div>';
+}
+
+function renderDetailRow(label, value, isHtml) {
+  if (!value) return "";
+  return '<div><dt>' + escapeHtml(label) + '</dt><dd>' + (isHtml ? value : escapeHtml(value)) + '</dd></div>';
+}
+
+function formatPhoneLink(value) {
+  var phone = String(value || "").replace(/[^0-9+]/g, "");
+  return phone.length >= 7 ? phone : "";
+}
+
+function bindAssignmentGroupToggles(container) {
+  Array.prototype.slice.call(container.querySelectorAll("[data-assignment-toggle]")).forEach(function(button) {
+    button.addEventListener("click", function(event) {
+      var detailId = button.getAttribute("data-assignment-toggle");
+      var detail = qs("#" + detailId);
+      var card = button.closest(".assignment-group-card");
+      var isOpen;
+
+      event.stopPropagation();
+      if (!detail) return;
+
+      detail.classList.toggle("hidden");
+      isOpen = !detail.classList.contains("hidden");
+      button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      button.textContent = isOpen ? "Hide" : "Details";
+      if (card) card.classList.toggle("open", isOpen);
+    });
+  });
+
+  Array.prototype.slice.call(container.querySelectorAll(".assignment-group-card.expandable")).forEach(function(card) {
+    card.addEventListener("click", function(event) {
+      if (event.target.closest("a")) return;
+      var button = card.querySelector("[data-assignment-toggle]");
+      if (button && event.target !== button) button.click();
+    });
+  });
 }
 
 function isLeaderAssignmentMatch(group) {
@@ -1771,8 +1856,21 @@ function isPromptForCurrentUser(prompt, fallbackPermission) {
   if (!isTrue(prompt.active)) return false;
   if (prompt.visible !== undefined && prompt.visible !== "" && !isTrue(prompt.visible)) return false;
 
+  var identityTokens = getCurrentUserRecipientTokens();
   var username = String(currentUser.username || "").toLowerCase().trim();
-  if (!username || username === "public") return false;
+
+  if (!identityTokens.length || username === "public") return false;
+
+  if (isTrue(getRowValue(prompt, ["test_mode", "testing", "preview_only"]))) {
+    var testRecipients = splitList(getRowValue(prompt, [
+      "test_recipients",
+      "test_recipient",
+      "preview_recipients",
+      "preview_users"
+    ]));
+
+    return recipientsMatchCurrentUser(testRecipients);
+  }
 
   var recipients = splitList(getRowValue(prompt, [
     "target_usernames",
@@ -1787,9 +1885,41 @@ function isPromptForCurrentUser(prompt, fallbackPermission) {
   if (!recipients.length && fallbackPermission === "leader") return canAccess("leader");
   if (!recipients.length) return hasPermission(fallbackPermission || "attendance");
   if (recipients.indexOf("all") !== -1) return true;
-  if (recipients.indexOf(username) !== -1) return true;
+  if (recipientsMatchCurrentUser(recipients)) return true;
 
   return false;
+}
+
+function getCurrentUserRecipientTokens() {
+  var values = [
+    currentUser.username || "",
+    currentUser.display_name || "",
+    currentUser.previewDisplayName || ""
+  ];
+
+  if (currentUser.username) values.push(String(currentUser.username).replace(/[._-]+/g, " "));
+
+  return values.reduce(function(tokens, value) {
+    var lower = String(value || "").toLowerCase().trim();
+    var compact = normalizeLeaderMatchText(value);
+
+    if (lower && tokens.indexOf(lower) === -1) tokens.push(lower);
+    if (compact && tokens.indexOf(compact) === -1) tokens.push(compact);
+
+    return tokens;
+  }, []);
+}
+
+function recipientsMatchCurrentUser(recipients) {
+  var tokens = getCurrentUserRecipientTokens();
+
+  if (!recipients.length) return false;
+  if (recipients.indexOf("all") !== -1) return true;
+
+  return recipients.some(function(recipient) {
+    var compactRecipient = normalizeLeaderMatchText(recipient);
+    return tokens.indexOf(recipient) !== -1 || tokens.indexOf(compactRecipient) !== -1;
+  });
 }
 
 function isPromptActiveNow(prompt) {
@@ -3633,7 +3763,8 @@ function initApp() {
     previewModeToggle.addEventListener("change", function() {
       if (previewModeToggle.checked) {
         var role = qs("#testRoleSelect") ? qs("#testRoleSelect").value : "guest";
-        setTestRole(role);
+        var previewName = qs("#previewLeaderName") ? qs("#previewLeaderName").value : "";
+        setTestRole(role, previewName);
       } else {
         stopRolePreview();
       }
@@ -3644,7 +3775,8 @@ function initApp() {
   if (applyTestRole) {
     applyTestRole.addEventListener("click", function() {
       var role = qs("#testRoleSelect") ? qs("#testRoleSelect").value : "guest";
-      setTestRole(role);
+      var previewName = qs("#previewLeaderName") ? qs("#previewLeaderName").value : "";
+      setTestRole(role, previewName);
       closeCampMenu();
     });
   }

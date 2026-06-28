@@ -636,6 +636,8 @@ function syncBreakoutAssignmentExport_() {
       const parsed = parseBreakoutGroupName_(assignment);
       const firstName = getRowValue_(row, "First Name");
       const lastName = getRowValue_(row, "Last Name");
+      const parentFirstName = getFirstRowValue_(row, ["Parent First Name", "Parent first name", "parent_first_name"]);
+      const parentLastName = getFirstRowValue_(row, ["Parent Last Name", "Parent last name", "parent_last_name"]);
 
       return [
         getRowValue_(row, "Registration ID"),
@@ -647,6 +649,10 @@ function syncBreakoutAssignmentExport_() {
         lastName,
         [firstName, lastName].filter(Boolean).join(" "),
         getRowValue_(row, "Please Select Your Campus"),
+        getFirstRowValue_(row, ["Birthdate", "Birth Date", "birthday", "date_of_birth"]),
+        getFirstRowValue_(row, ["Medical Info", "Medical Information", "Health Related Data", "health_related_data", "medical_info"]),
+        [parentFirstName, parentLastName].filter(Boolean).join(" "),
+        getFirstRowValue_(row, ["Parent Phone", "Parent Contact", "Parent Contact Phone", "parent_phone", "parent_contact"]),
         syncedAt
       ];
     })
@@ -662,6 +668,10 @@ function syncBreakoutAssignmentExport_() {
     "last_name",
     "student_name",
     "campus",
+    "birthday",
+    "medical_info",
+    "parent_name",
+    "parent_contact",
     "synced_at"
   ], rows);
 }
@@ -693,6 +703,15 @@ function readSheetObjects_(sheetName) {
 
 function getRowValue_(row, header) {
   return String(row[header] || "").trim();
+}
+
+function getFirstRowValue_(row, headers) {
+  for (const header of headers) {
+    const value = getRowValue_(row, header);
+    if (value) return value;
+  }
+
+  return "";
 }
 
 function syncPcoAssignments() {

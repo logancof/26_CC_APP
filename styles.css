@@ -855,6 +855,14 @@ textarea:focus {
     border: 1px solid rgba(214, 97, 40, .18)
 }
 
+.assignment-group-card.expandable {
+    cursor: pointer
+}
+
+.assignment-group-card.open {
+    border-color: rgba(214, 97, 40, .42)
+}
+
 .assignment-group-card.mine {
     border-left: 8px solid var(--cof-orange);
     box-shadow: 0 10px 0 rgba(214, 97, 40, .1)
@@ -865,6 +873,24 @@ textarea:focus {
     justify-content: space-between;
     gap: 12px;
     align-items: flex-start
+}
+
+.assignment-card-actions {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    flex: 0 0 auto
+}
+
+.assignment-toggle {
+    border: 1px solid rgba(214, 97, 40, .34);
+    background: rgba(214, 97, 40, .08);
+    color: var(--cof-orange);
+    border-radius: 999px;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase
 }
 
 .assignment-group-top h4 {
@@ -904,6 +930,53 @@ textarea:focus {
     font-size: 11px;
     font-weight: 950;
     text-transform: uppercase
+}
+
+.assignment-detail-panel {
+    display: grid;
+    gap: 10px;
+    border-top: 2px dotted rgba(214, 97, 40, .24);
+    padding-top: 12px
+}
+
+.assignment-detail-student {
+    background: rgba(214, 97, 40, .06);
+    border: 1px solid rgba(214, 97, 40, .16);
+    border-radius: 18px;
+    padding: 12px
+}
+
+.assignment-detail-student h5 {
+    color: var(--cof-orange);
+    font-size: 16px;
+    font-weight: 950;
+    margin-bottom: 8px
+}
+
+.assignment-detail-student dl {
+    display: grid;
+    gap: 7px
+}
+
+.assignment-detail-student dl div {
+    display: grid;
+    gap: 2px
+}
+
+.assignment-detail-student dt {
+    color: rgba(214, 97, 40, .64);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .7px;
+    text-transform: uppercase
+}
+
+.assignment-detail-student dd,
+.assignment-detail-student a {
+    color: var(--cof-orange);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.35
 }
 
 .resource-grid {
@@ -1200,6 +1273,20 @@ body.menu-open .hero::after {
     accent-color: var(--cof-orange);
     height: 18px;
     width: 18px
+}
+
+.preview-leader-label {
+    color: rgba(214, 97, 40, .72);
+    display: block;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    margin-bottom: 7px;
+    text-transform: uppercase
+}
+
+#previewLeaderName {
+    margin-bottom: 12px
 }
 
 .menu-login-main,

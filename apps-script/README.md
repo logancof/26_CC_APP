@@ -20,3 +20,4 @@ Assignment import notes:
 - `TEAM_ASSIGNMENTS.team_number` is generated sequentially across age groups: all 6-7th teams first, then 8-9th, then 10-12th.
 - `TEAM_ASSIGNMENTS.source_team_number` preserves the original PCO team number from labels like `Team 5 (10-12)`.
 - `TEAM_LEADERS` is generated from non-student rows in `PCO_TEAM_ASSIGNMENTS_RAW`.
+- Breakout detail fields are copied from `PCO_BREAKOUT_GROUPS_RAW` when present: `Birthdate`, `Medical Info`, `Parent First Name`, `Parent Last Name`, and `Parent Contact`.
