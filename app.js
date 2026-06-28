@@ -29,6 +29,7 @@ var latestScoreEntries = [];
 var latestAttendancePrompts = [];
 var latestBreakoutPrompts = [];
 var latestAttendanceRoster = [];
+var latestAttendanceSubmissions = [];
 var activeAttendancePrompt = null;
 var pendingAttendancePayload = null;
 var submittedAttendancePrompts = getSubmittedAttendancePrompts();
@@ -249,7 +250,7 @@ function canUseRolePreview() {
 
 function getPreviewPermissions(role) {
   return role === "admin"
-    ? ["attendance", "scorekeeper", "bonus_points", "score_corrections", "team_name_admin"]
+    ? ["attendance", "attendance_monitor", "scorekeeper", "bonus_points", "score_corrections", "team_name_admin"]
     : role === "leader"
       ? ["attendance"]
     : [];
@@ -373,6 +374,7 @@ function renderCampData(data) {
   latestScores = data.SCORES || [];
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
+  latestAttendanceSubmissions = data.ATTENDANCE_SUBMISSIONS || [];
   latestBreakoutPrompts = data.BREAKOUT_PROMPTS || data.DISCUSSION_PROMPTS || data.STORY_PROMPTS || data.NOTIFICATIONS || [];
   latestAttendanceRoster = latestBreakoutAssignments.length
     ? buildRosterFromBreakoutAssignments(latestBreakoutAssignments)
@@ -394,6 +396,7 @@ function renderCampData(data) {
     data.TEAM_NAMES || []
   );
   renderHomePrompts();
+  renderAttendanceMonitor();
   if (!attendanceDirty) renderAttendancePage();
   if (!scoreEntryDirty) renderPlacements();
   renderScoreCorrectionForm();
@@ -2059,6 +2062,88 @@ function getRosterForPrompt(prompt) {
   });
 }
 
+function renderAttendanceMonitor() {
+  var summary = qs("#attendanceMonitorSummary");
+  var list = qs("#attendanceMonitorList");
+
+  if (!summary || !list) return;
+
+  var groups = buildAttendanceSubmissionGroups();
+  var totals = groups.reduce(function(result, group) {
+    result.students += group.rows.length;
+    result.present += group.presentCount;
+    result.missing += group.missingRows.length;
+    return result;
+  }, { students: 0, present: 0, missing: 0 });
+
+  summary.innerHTML = '<div class="monitor-stat"><span>Submissions</span><strong>' + groups.length + '</strong></div>' +
+    '<div class="monitor-stat"><span>Students</span><strong>' + totals.students + '</strong></div>' +
+    '<div class="monitor-stat good"><span>Present</span><strong>' + totals.present + '</strong></div>' +
+    '<div class="monitor-stat alert"><span>Missing</span><strong>' + totals.missing + '</strong></div>';
+
+  if (!groups.length) {
+    list.innerHTML = '<div class="assignment-empty">No attendance submissions have been received yet.</div>';
+    return;
+  }
+
+  list.innerHTML = groups.map(renderAttendanceMonitorCard).join("");
+}
+
+function buildAttendanceSubmissionGroups() {
+  var groups = {};
+
+  (latestAttendanceSubmissions || []).forEach(function(row, index) {
+    var promptId = row.prompt_id || "";
+    var leader = row.leader_username || row.username || "Unknown leader";
+    var timestamp = row.timestamp || "";
+    var key = [promptId, leader, timestamp].join("|");
+    var present = isTrue(row.present);
+
+    if (!groups[key]) {
+      groups[key] = {
+        prompt_id: promptId,
+        prompt_title: row.prompt_title || promptId || "Attendance",
+        leader: leader,
+        timestamp: timestamp,
+        missing_reason: row.missing_reason || "",
+        notes: row.notes || "",
+        rows: [],
+        presentCount: 0,
+        missingRows: []
+      };
+    }
+
+    groups[key].rows.push(Object.assign({ row_index: index, present: present }, row));
+    if (present) groups[key].presentCount += 1;
+    else groups[key].missingRows.push(row);
+  });
+
+  return Object.keys(groups).map(function(key) {
+    return groups[key];
+  }).sort(function(a, b) {
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
+}
+
+function renderAttendanceMonitorCard(group) {
+  var missing = group.missingRows;
+
+  return '<article class="attendance-monitor-card' + (missing.length ? " has-missing" : "") + '">' +
+    '<div class="assignment-group-top">' +
+      '<div>' +
+        '<h4>' + escapeHtml(group.prompt_title) + '</h4>' +
+        '<p>' + escapeHtml(group.leader) + (group.timestamp ? ' • ' + escapeHtml(group.timestamp) : '') + '</p>' +
+      '</div>' +
+      '<span class="pill">' + group.presentCount + '/' + group.rows.length + '</span>' +
+    '</div>' +
+    (missing.length ? '<div class="monitor-missing-box"><span>Missing Students</span>' + missing.map(function(row) {
+      return '<strong>' + escapeHtml(row.student_name || "Unnamed student") + '</strong>';
+    }).join("") + '</div>' : '<div class="monitor-clear-box">All students checked present.</div>') +
+    (group.missing_reason ? '<p class="assignment-campus-summary"><strong>Reason:</strong> ' + escapeHtml(group.missing_reason) + '</p>' : "") +
+    (group.notes ? '<p class="assignment-campus-summary"><strong>Note:</strong> ' + escapeHtml(group.notes) + '</p>' : "") +
+  '</article>';
+}
+
 function renderHomePrompts() {
   var list = qs("#homePromptList");
   if (!list) return;
@@ -2266,6 +2351,7 @@ function sendAttendancePayload(payload) {
       closeAttendanceMissingModal();
       renderHomePrompts();
       renderAttendancePage();
+      fetchCampData();
     })
     .catch(function(error) {
       if (status) status.textContent = error.message;

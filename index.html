@@ -54,6 +54,9 @@
           <button class="role-menu-item" data-permission="team_name_admin" data-role-view="teamnameadmin">
             <div><strong>Team Name Admin</strong><small>Correct team names</small></div>
           </button>
+          <button class="role-menu-item" data-permission="attendance_monitor" data-role-view="attendancemonitor">
+            <div><strong>Attendance Monitor</strong><small>Review submitted attendance</small></div>
+          </button>
 
           <button class="menu-logout" id="logoutButton">Logout</button>
         </div>
@@ -701,6 +704,19 @@
         </div>
       </div>
 
+      <div id="attendancemonitor" class="page full-screen-page scorekeeper-page attendance-monitor-page" data-permission="attendance_monitor">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="home">← Home</button>
+          <div>
+            <h2>Attendance Monitor</h2>
+            <p>Review attendance submissions as leaders check in their groups.</p>
+          </div>
+        </div>
+
+        <div id="attendanceMonitorSummary" class="attendance-monitor-summary"></div>
+        <div id="attendanceMonitorList" class="attendance-monitor-list"></div>
+      </div>
+
       <div id="resource-guide" class="page full-screen-page leader-category-page internal-doc-page">
         <div class="full-page-header">
           <button class="back-button" id="resourceGuideBackButton" type="button">← Back</button>
@@ -797,7 +813,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.8.64</div>
+    <div class="app-version">v0.8.65</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
