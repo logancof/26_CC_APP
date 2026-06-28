@@ -353,9 +353,11 @@ function renderCampData(data) {
   latestScoreEntries = data.SCORE_ENTRIES || data.SCORE_RESULTS || [];
   latestAttendancePrompts = data.ATTENDANCE_PROMPTS || data.ATTENDANCE_SCHEDULE || [];
   latestBreakoutPrompts = data.BREAKOUT_PROMPTS || data.DISCUSSION_PROMPTS || data.STORY_PROMPTS || data.NOTIFICATIONS || [];
-  latestAttendanceRoster = (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
-    ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
-    : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
+  latestAttendanceRoster = latestBreakoutAssignments.length
+    ? buildRosterFromBreakoutAssignments(latestBreakoutAssignments)
+    : (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
+      ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
+      : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
 
   updateStatus(data.SCHEDULE || []);
   renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
@@ -1806,6 +1808,32 @@ function buildRosterFromAttendanceGroups(groups) {
   return roster;
 }
 
+function buildRosterFromBreakoutAssignments(assignments) {
+  return (assignments || []).map(function(row, index) {
+    var leaderName = String(row.leader_name || "").trim();
+
+    return {
+      prompt_id: row.prompt_id || row.checkpoint_id || "",
+      leader_name: leaderName,
+      leader_username: String(row.leader_username || "").trim() || slug(leaderName).replace(/-/g, "."),
+      age_group: row.grade ? row.grade + "th" : row.age_group || "",
+      sex: normalizeSex(row.sex || row.gender || ""),
+      student_id: row.registration_id || row.student_id || "breakout_student_" + (index + 1),
+      student_name: row.student_name || [row.first_name, row.last_name].filter(Boolean).join(" "),
+      campus: row.campus || "",
+      group_name: row.group_name || "",
+      sort_order: index + 1,
+      active: row.active || "TRUE",
+      birthday: row.birthday || "",
+      medical_info: row.medical_info || "",
+      parent_name: row.parent_name || "",
+      parent_contact: row.parent_contact || ""
+    };
+  }).filter(function(row) {
+    return !!row.student_name && (!!row.leader_name || !!row.leader_username);
+  });
+}
+
 function parsePromptDate(dateValue, timeValue) {
   var dateText = String(dateValue || "").trim();
   var timeText = String(timeValue || "").trim();
@@ -2113,7 +2141,8 @@ function renderAttendancePage() {
     var detailParts = [
       getRowValue(student, ["age_group", "group", "grade_group"]),
       normalizeSex(getRowValue(student, ["sex", "gender"])),
-      getRowValue(student, ["team_name", "team_number", "cabin"])
+      getRowValue(student, ["group_name"]),
+      getRowValue(student, ["campus"])
     ].filter(Boolean);
     var detail = escapeHtml(detailParts.join(" • "));
 
