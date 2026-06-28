@@ -268,7 +268,7 @@ function canUseElement(element) {
 }
 
 function isTrue(value) {
-  return String(value).toLowerCase() === "true" || value === true;
+  return String(value).toLowerCase().trim() === "true" || value === true;
 }
 
 function slug(text) {
@@ -1774,7 +1774,23 @@ function getRowValue(row, keys) {
     if (row[keys[i]] !== undefined && row[keys[i]] !== "") return row[keys[i]];
   }
 
+  var normalizedLookup = Object.keys(row).reduce(function(lookup, key) {
+    lookup[normalizeSheetKey(key)] = row[key];
+    return lookup;
+  }, {});
+
+  for (var j = 0; j < keys.length; j++) {
+    var normalizedKey = normalizeSheetKey(keys[j]);
+    if (normalizedLookup[normalizedKey] !== undefined && normalizedLookup[normalizedKey] !== "") {
+      return normalizedLookup[normalizedKey];
+    }
+  }
+
   return "";
+}
+
+function normalizeSheetKey(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 function splitList(value) {
@@ -2177,6 +2193,36 @@ function getActiveAttendancePrompts() {
       isPromptActiveNow(prompt);
   });
 }
+
+function getAttendancePromptDebugRows() {
+  return latestAttendancePrompts.map(function(prompt) {
+    var promptId = getPromptId(prompt);
+    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
+
+    return {
+      prompt_id: promptId,
+      title: getPromptTitle(prompt),
+      type: type,
+      active_value: getRowValue(prompt, ["active"]),
+      active: isTrue(getRowValue(prompt, ["active"])),
+      visible_value: getRowValue(prompt, ["visible"]),
+      submitted: submittedAttendancePrompts.indexOf(promptId) !== -1,
+      for_user: isPromptForCurrentUser(prompt, "attendance"),
+      time_active: isPromptActiveNow(prompt),
+      roster_source: getAttendanceRosterSource(prompt),
+      roster_count: getRosterForPrompt(prompt).length,
+      date: getRowValue(prompt, ["date", "prompt_date", "day"]),
+      start_time: getRowValue(prompt, ["start_time", "send_time", "time"]),
+      end_time: getRowValue(prompt, ["end_time", "expires_at", "close_time"])
+    };
+  });
+}
+
+window.debugAttendancePrompts = function() {
+  var rows = getAttendancePromptDebugRows();
+  if (window.console && console.table) console.table(rows);
+  return rows;
+};
 
 function getActiveBreakoutPrompts() {
   return latestAttendancePrompts.concat(latestBreakoutPrompts).filter(function(prompt) {
