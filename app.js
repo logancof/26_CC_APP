@@ -1131,11 +1131,12 @@ function renderTeams(teams, scores, assignments, teamLeaders) {
 
   page.innerHTML = teams.map(function(team) {
     var search = String(team.team_number + " " + team.team_name + " " + team.age_group + " " + team.leaders + " " + team.students).toLowerCase();
+    var color = getTeamDisplayColor(team);
 
-    return '<div class="parent-team-card" data-search="' + search + '">' +
-      '<div class="team-banner" style="background:' + (team.color || "#69a4c4") + '"></div>' +
+    return '<div class="parent-team-card team-color-card" data-search="' + search + '" style="--team-color:' + escapeHtml(color) + '">' +
+      '<div class="team-banner" style="background:' + escapeHtml(color) + '"></div>' +
       '<div class="team-card-body">' +
-        '<div class="team-card-top"><h3>' + (team.team_name || "Team " + team.team_number) + '</h3><span class="pill team-color-pill" style="--team-color:' + escapeHtml(team.color || "#b5d1d0") + '">Team ' + (team.team_number || "") + '</span></div>' +
+        '<div class="team-card-top"><h3>' + (team.team_name || "Team " + team.team_number) + '</h3><span class="pill team-color-pill" style="--team-color:' + escapeHtml(color) + '">Team ' + (team.team_number || "") + '</span></div>' +
         '<p><strong>Age Group:</strong> ' + (team.age_group || getAgeGroupFromTeamNumber(team.team_number)) + '</p>' +
         '<p><strong>Points:</strong> ' + (scoresByTeam[getTeamId(team)] || 0) + '</p>' +
         '<p><strong>Leaders:</strong> ' + (team.leaders || "") + '</p>' +
@@ -1197,20 +1198,22 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
   });
 
   page.innerHTML = cards.map(function(team) {
+    var color = getTeamDisplayColor(team);
+    var colorName = getTeamDisplayColorName(team);
     var studentNames = team.students.map(function(student) {
       return student.name;
     });
     var campusSummary = Object.keys(team.campuses).sort().map(function(campus) {
       return campus + " " + team.campuses[campus];
     }).join(" • ");
-    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + team.color_name + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
+    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + colorName + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
 
-    return '<div class="parent-team-card assignment-team-card" data-search="' + escapeHtml(search) + '">' +
-      '<div class="team-banner" style="background:' + escapeHtml(team.color || "#b5d1d0") + '"></div>' +
+    return '<div class="parent-team-card assignment-team-card team-color-card" data-search="' + escapeHtml(search) + '" style="--team-color:' + escapeHtml(color) + '">' +
+      '<div class="team-banner" style="background:' + escapeHtml(color) + '"></div>' +
       '<div class="team-card-body">' +
         '<div class="team-card-top">' +
           '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
-          '<span class="pill team-color-pill" style="--team-color:' + escapeHtml(team.color || "#b5d1d0") + '">' + escapeHtml([team.age_group, team.color_name].filter(Boolean).join(" • ") || "Team") + '</span>' +
+          '<span class="pill team-color-pill" style="--team-color:' + escapeHtml(color) + '">' + escapeHtml([team.age_group, colorName].filter(Boolean).join(" • ") || "Team") + '</span>' +
         '</div>' +
         (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
         (team.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(team.leaders) + '</strong></div>' : "") +
@@ -1253,6 +1256,34 @@ function buildTeamLeaderLookup(teams) {
   });
 
   return lookup;
+}
+
+function getTeamColorOverride(teamNumber) {
+  var number = String(teamNumber || "").trim();
+
+  if (number === "1" || number === "9") {
+    return { color_name: "RED", color: "#c62828" };
+  }
+
+  if (number === "2" || number === "10") {
+    return { color_name: "DARK BLUE", color: "#173f73" };
+  }
+
+  if (number === "7" || number === "15") {
+    return { color_name: "GREEN", color: "#3f7f4f" };
+  }
+
+  return { color_name: "", color: "" };
+}
+
+function getTeamDisplayColor(team) {
+  var override = getTeamColorOverride(team && team.team_number);
+  return override.color || (team && team.color) || "#b5d1d0";
+}
+
+function getTeamDisplayColorName(team) {
+  var override = getTeamColorOverride(team && team.team_number);
+  return override.color_name || (team && team.color_name) || "";
 }
 
 function getAgeGroupOrder(ageGroup) {

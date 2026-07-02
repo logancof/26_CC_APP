@@ -491,6 +491,7 @@ function syncTeamAssignmentExport_() {
       const parsed = parseTeamAreaName_(assignment);
       const teamKey = getTeamAssignmentKey_(parsed.age_group, parsed.team_number);
       const globalTeamNumber = teamNumberMap[teamKey] || parsed.team_number;
+      const colorOverride = getTeamColorOverride_(globalTeamNumber);
       const firstName = getRowValue_(row, "First Name");
       const lastName = getRowValue_(row, "Last Name");
 
@@ -500,8 +501,8 @@ function syncTeamAssignmentExport_() {
         globalTeamNumber,
         parsed.team_number,
         parsed.age_group,
-        parsed.color_name,
-        parsed.color,
+        colorOverride.color_name || parsed.color_name,
+        colorOverride.color || parsed.color,
         firstName,
         lastName,
         [firstName, lastName].filter(Boolean).join(" "),
@@ -539,6 +540,7 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
       const parsed = parseTeamAreaName_(assignment);
       const teamKey = getTeamAssignmentKey_(parsed.age_group, parsed.team_number);
       const globalTeamNumber = teamNumberMap[teamKey] || parsed.team_number;
+      const colorOverride = getTeamColorOverride_(globalTeamNumber);
       const firstName = getRowValue_(row, "First Name");
       const lastName = getRowValue_(row, "Last Name");
       const leaderName = [firstName, lastName].filter(Boolean).join(" ");
@@ -553,8 +555,8 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
           team_number: globalTeamNumber,
           source_team_number: parsed.team_number,
           age_group: parsed.age_group,
-          color_name: parsed.color_name,
-          color: parsed.color,
+          color_name: colorOverride.color_name || parsed.color_name,
+          color: colorOverride.color || parsed.color,
           leaders: []
         };
       }
@@ -973,13 +975,14 @@ function parseTeamAreaName_(name) {
 
 function getTeamColorHex_(colorName) {
   const colors = {
-    RED: "#d66128",
+    RED: "#c62828",
     ORANGE: "#d66128",
     BLUE: "#b5d1d0",
+    "DARK BLUE": "#173f73",
     TEAL: "#b5d1d0",
     CREAM: "#f5f4eb",
     PURPLE: "#8f6bb8",
-    GREEN: "#7da66f",
+    GREEN: "#3f7f4f",
     YELLOW: "#f1c85b",
     PINK: "#d98aa6",
     BLACK: "#2b2b2b",
@@ -987,6 +990,24 @@ function getTeamColorHex_(colorName) {
   };
 
   return colors[String(colorName || "").trim().toUpperCase()] || "";
+}
+
+function getTeamColorOverride_(teamNumber) {
+  const number = String(teamNumber || "").trim();
+
+  if (number === "1" || number === "9") {
+    return { color_name: "RED", color: "#c62828" };
+  }
+
+  if (number === "2" || number === "10") {
+    return { color_name: "DARK BLUE", color: "#173f73" };
+  }
+
+  if (number === "7" || number === "15") {
+    return { color_name: "GREEN", color: "#3f7f4f" };
+  }
+
+  return { color_name: "", color: "" };
 }
 
 function parseBreakoutGroupName_(name) {
