@@ -1135,7 +1135,7 @@ function renderTeams(teams, scores, assignments, teamLeaders) {
     return '<div class="parent-team-card" data-search="' + search + '">' +
       '<div class="team-banner" style="background:' + (team.color || "#69a4c4") + '"></div>' +
       '<div class="team-card-body">' +
-        '<div class="team-card-top"><h3>' + (team.team_name || "Team " + team.team_number) + '</h3><span class="pill">Team ' + (team.team_number || "") + '</span></div>' +
+        '<div class="team-card-top"><h3>' + (team.team_name || "Team " + team.team_number) + '</h3><span class="pill team-color-pill" style="--team-color:' + escapeHtml(team.color || "#b5d1d0") + '">Team ' + (team.team_number || "") + '</span></div>' +
         '<p><strong>Age Group:</strong> ' + (team.age_group || getAgeGroupFromTeamNumber(team.team_number)) + '</p>' +
         '<p><strong>Points:</strong> ' + (scoresByTeam[getTeamId(team)] || 0) + '</p>' +
         '<p><strong>Leaders:</strong> ' + (team.leaders || "") + '</p>' +
@@ -1210,7 +1210,7 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
       '<div class="team-card-body">' +
         '<div class="team-card-top">' +
           '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
-          '<span class="pill">' + escapeHtml([team.age_group, team.color_name].filter(Boolean).join(" • ") || "Team") + '</span>' +
+          '<span class="pill team-color-pill" style="--team-color:' + escapeHtml(team.color || "#b5d1d0") + '">' + escapeHtml([team.age_group, team.color_name].filter(Boolean).join(" • ") || "Team") + '</span>' +
         '</div>' +
         (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
         (team.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(team.leaders) + '</strong></div>' : "") +

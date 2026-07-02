@@ -462,6 +462,20 @@ h1,
     letter-spacing: .5px
 }
 
+.team-color-pill {
+    border-color: color-mix(in srgb, var(--team-color, var(--cof-orange)) 72%, transparent);
+}
+
+.team-color-pill::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+    background: var(--team-color, var(--cof-orange));
+    box-shadow: 0 0 0 2px rgba(245, 244, 235, .72);
+}
+
 .updated {
     color: var(--muted);
     font-size: 12px;
