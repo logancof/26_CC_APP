@@ -1266,11 +1266,11 @@ function getTeamColorOverride(teamNumber) {
   }
 
   if (number === "2" || number === "10") {
-    return { color_name: "DARK BLUE", color: "#173f73" };
+    return { color_name: "ROYAL BLUE", color: "#173f73" };
   }
 
   if (number === "7" || number === "15") {
-    return { color_name: "GREEN", color: "#3f7f4f" };
+    return { color_name: "LIGHT BLUE", color: "#4aa8d8" };
   }
 
   return { color_name: "", color: "" };

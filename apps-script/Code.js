@@ -978,7 +978,9 @@ function getTeamColorHex_(colorName) {
     RED: "#c62828",
     ORANGE: "#d66128",
     BLUE: "#b5d1d0",
+    "ROYAL BLUE": "#173f73",
     "DARK BLUE": "#173f73",
+    "LIGHT BLUE": "#4aa8d8",
     TEAL: "#b5d1d0",
     CREAM: "#f5f4eb",
     PURPLE: "#8f6bb8",
@@ -1000,11 +1002,11 @@ function getTeamColorOverride_(teamNumber) {
   }
 
   if (number === "2" || number === "10") {
-    return { color_name: "DARK BLUE", color: "#173f73" };
+    return { color_name: "ROYAL BLUE", color: "#173f73" };
   }
 
   if (number === "7" || number === "15") {
-    return { color_name: "GREEN", color: "#3f7f4f" };
+    return { color_name: "LIGHT BLUE", color: "#4aa8d8" };
   }
 
   return { color_name: "", color: "" };
