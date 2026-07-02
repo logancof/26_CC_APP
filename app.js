@@ -1168,6 +1168,8 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
         age_group: ageGroup,
         team_name: row.team_name || "Team " + teamNumber + (ageGroup ? " (" + ageGroup.replace("th", "") + ")" : ""),
         leaders: (leaderLookup[key] || {}).leaders || "",
+        color: row.color || (leaderLookup[key] || {}).color || "",
+        color_name: row.color_name || (leaderLookup[key] || {}).color_name || "",
         students: [],
         campuses: {}
       };
@@ -1201,13 +1203,14 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
     var campusSummary = Object.keys(team.campuses).sort().map(function(campus) {
       return campus + " " + team.campuses[campus];
     }).join(" • ");
-    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
+    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + team.color_name + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
 
     return '<div class="parent-team-card assignment-team-card" data-search="' + escapeHtml(search) + '">' +
+      '<div class="team-banner" style="background:' + escapeHtml(team.color || "#b5d1d0") + '"></div>' +
       '<div class="team-card-body">' +
         '<div class="team-card-top">' +
           '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
-          '<span class="pill">' + escapeHtml(team.age_group || "Team") + '</span>' +
+          '<span class="pill">' + escapeHtml([team.age_group, team.color_name].filter(Boolean).join(" • ") || "Team") + '</span>' +
         '</div>' +
         (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
         (team.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(team.leaders) + '</strong></div>' : "") +
@@ -1237,10 +1240,14 @@ function buildTeamLeaderLookup(teams) {
     var teamNumber = String(team.team_number || "").trim();
     var key = ageGroup + "|" + teamNumber;
     var leaders = team.leaders || team.leader || team.leader_name || team.team_leaders || team.leader_names || "";
+    var colorName = team.color_name || team.color_label || team.colorName || "";
+    var color = team.color || team.color_hex || team.hex || "";
 
     if (key && leaders) {
       lookup[key] = {
-        leaders: leaders
+        leaders: leaders,
+        color_name: colorName,
+        color: color
       };
     }
   });

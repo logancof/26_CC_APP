@@ -500,6 +500,8 @@ function syncTeamAssignmentExport_() {
         globalTeamNumber,
         parsed.team_number,
         parsed.age_group,
+        parsed.color_name,
+        parsed.color,
         firstName,
         lastName,
         [firstName, lastName].filter(Boolean).join(" "),
@@ -507,7 +509,7 @@ function syncTeamAssignmentExport_() {
         syncedAt
       ];
     })
-    .filter(row => row[1] && row[6]);
+    .filter(row => row[1] && row[9]);
 
   writeSheet_("TEAM_ASSIGNMENTS", [
     "registration_id",
@@ -515,6 +517,8 @@ function syncTeamAssignmentExport_() {
     "team_number",
     "source_team_number",
     "age_group",
+    "color_name",
+    "color",
     "first_name",
     "last_name",
     "student_name",
@@ -549,6 +553,8 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
           team_number: globalTeamNumber,
           source_team_number: parsed.team_number,
           age_group: parsed.age_group,
+          color_name: parsed.color_name,
+          color: parsed.color,
           leaders: []
         };
       }
@@ -572,6 +578,8 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
         team.team_number,
         team.source_team_number,
         team.age_group,
+        team.color_name,
+        team.color,
         team.leaders.join(", "),
         syncedAt
       ];
@@ -582,6 +590,8 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
     "team_number",
     "source_team_number",
     "age_group",
+    "color_name",
+    "color",
     "leaders",
     "synced_at"
   ], rows);
@@ -950,11 +960,33 @@ function parseTeamAreaName_(name) {
   const match = name.match(/Team\s+(\d+)\s*\(([^)]+)\)/i);
   const teamNumber = match ? match[1] : "";
   const ageRaw = match ? match[2] : "";
+  const colorMatch = String(name || "").match(/\)\s*-\s*(.+)$/);
+  const colorName = colorMatch ? colorMatch[1].trim().toUpperCase() : "";
 
   return {
     team_number: teamNumber,
-    age_group: normalizeAgeGroup_(ageRaw)
+    age_group: normalizeAgeGroup_(ageRaw),
+    color_name: colorName,
+    color: getTeamColorHex_(colorName)
   };
+}
+
+function getTeamColorHex_(colorName) {
+  const colors = {
+    RED: "#d66128",
+    ORANGE: "#d66128",
+    BLUE: "#b5d1d0",
+    TEAL: "#b5d1d0",
+    CREAM: "#f5f4eb",
+    PURPLE: "#8f6bb8",
+    GREEN: "#7da66f",
+    YELLOW: "#f1c85b",
+    PINK: "#d98aa6",
+    BLACK: "#2b2b2b",
+    WHITE: "#f5f4eb"
+  };
+
+  return colors[String(colorName || "").trim().toUpperCase()] || "";
 }
 
 function parseBreakoutGroupName_(name) {
