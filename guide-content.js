@@ -456,7 +456,7 @@ window.GUIDE_CONTENT = {
     title: "Wednesday Morning Service",
     sections: [
       {
-        title: "Brigette's Message - Integrity",
+        title: "Brigette's Message - Pride Of Life",
         blocks: [
           { type: "bullet", text: "Daniel chose to honor God even when it would have been easier to compromise. What are some situations you face where doing the right thing can be difficult?" },
           { type: "bullet", text: "The message talked about finding value in popularity, appearance, accomplishments, or approval from others. Why are these things so tempting? How have you seen social media contribute to this struggle?" },
