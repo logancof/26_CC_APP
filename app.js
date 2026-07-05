@@ -1377,7 +1377,8 @@ function renderDormAssignmentsDoc() {
     "#dormAssignmentsDoc",
     latestDormAssignments,
     ["dorm_name", "assignment_name", "assignment", "group_name", "lodging", "dorm"],
-    "Dorm Assignment"
+    "Dorm Assignment",
+    false
   );
 }
 
@@ -1386,11 +1387,12 @@ function renderBusAssignmentsDoc() {
     "#busAssignmentsDoc",
     latestBusAssignments,
     ["bus_name", "assignment_name", "assignment", "group_name", "bus"],
-    "Bus Assignment"
+    "Bus Assignment",
+    false
   );
 }
 
-function renderGenericAssignmentsDoc(selector, rows, assignmentKeys, fallbackTitle) {
+function renderGenericAssignmentsDoc(selector, rows, assignmentKeys, fallbackTitle, hasDetails) {
   var container = qs(selector);
   var groups = {};
 
@@ -1407,7 +1409,7 @@ function renderGenericAssignmentsDoc(selector, rows, assignmentKeys, fallbackTit
         title: assignmentName,
         meta: [row.grade ? row.grade + "th" : "", row.sex || ""].filter(Boolean).join(" • "),
         leaders: getRowValue(row, ["leader_name", "leaders", "leader", "group_leader", "assigned_to_name"]),
-        hasDetails: true,
+        hasDetails: !!hasDetails,
         students: [],
         campuses: {}
       };
@@ -1492,11 +1494,10 @@ function renderAssignmentGroupCard(group, isMine) {
   var detailId = escapeHtml(group.detail_id || "");
   var color = group.color || "";
   var colorName = group.color_name || "";
-  var cardClass = 'assignment-group-card' + (isMine ? " mine" : "") + (group.hasDetails ? " expandable" : "") + (color ? " team-color-card" : "");
+  var cardClass = 'assignment-group-card' + (isMine ? " mine" : "") + (group.hasDetails ? " expandable" : "") + (color ? " assignment-team-color-card" : "");
   var cardStyle = color ? ' style="--team-color:' + escapeHtml(color) + '"' : "";
 
   return '<article class="' + cardClass + '" data-assignment-card="' + detailId + '"' + cardStyle + '>' +
-    (color ? '<div class="team-banner" style="background:' + escapeHtml(color) + '"></div>' : "") +
     '<div class="assignment-group-top">' +
       '<div>' +
         '<h4>' + escapeHtml(group.title) + '</h4>' +

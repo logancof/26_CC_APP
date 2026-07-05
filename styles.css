@@ -898,6 +898,24 @@ textarea:focus {
     box-shadow: 0 10px 0 rgba(214, 97, 40, .1)
 }
 
+.assignment-team-color-card {
+    background:
+        linear-gradient(180deg,
+            color-mix(in srgb, var(--team-color, var(--cof-orange)) 16%, var(--cream)) 0,
+            var(--cream) 42%) !important;
+    border: 2px solid color-mix(in srgb, var(--team-color, var(--cof-orange)) 44%, rgba(214, 97, 40, .16)) !important;
+    border-top-width: 10px !important;
+    box-shadow: 0 10px 0 color-mix(in srgb, var(--team-color, var(--cof-orange)) 16%, transparent);
+}
+
+.assignment-team-color-card.mine {
+    border-left-color: color-mix(in srgb, var(--team-color, var(--cof-orange)) 80%, var(--cof-orange));
+}
+
+.assignment-team-color-card .team-color-pill {
+    background: var(--cream);
+}
+
 .assignment-group-top {
     display: flex;
     justify-content: space-between;
