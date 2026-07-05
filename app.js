@@ -18,6 +18,10 @@ var currentX = 0;
 var currentY = 0;
 var pdfZoom = 1;
 var currentPdfLink = "";
+var currentPdfDoc = null;
+var currentPdfPage = 1;
+var currentPdfTotalPages = 0;
+var currentPdfPagedMode = false;
 var pdfRenderToken = 0;
 var lastMediaSignature = "";
 var latestTeams = [];
@@ -138,6 +142,9 @@ var defaultResourceLinks = {
   role_site_requirements: "assets/pdfs/Site%20Requirements%20Role%20Description%20.pdf",
   role_free_time: "assets/pdfs/Role%20Descriptions%20FREE%20TIME.pdf",
   role_dorms: "assets/pdfs/Role%20Descriptions%20DORMS.pdf",
+  games_schedule_6_7: "assets/pdfs/COMPLETE%206%3A7%20GRADE%20SCHEDULE.pdf",
+  games_schedule_8_9: "assets/pdfs/COMPLETE%208%3A9%20GRADE%20SCHEDULE.pdf",
+  games_schedule_10_12: "assets/pdfs/COMPLETE%2010%3A12%20GRADE%20SCHEDULE%20.pdf",
   handwritten_testimonies: "assets/pdfs/Handwritten%20Testimonies%20.pdf",
   breakout_discussion_prompts: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
   breakout_eli_more_than_mistakes: "assets/pdfs/Breakout%20Group%20Discussion%20Prompts%20.pdf",
@@ -3756,11 +3763,16 @@ function openPdf(link, title) {
 
   pdfRenderToken = token;
   currentPdfLink = link;
+  currentPdfDoc = null;
+  currentPdfPage = 1;
+  currentPdfTotalPages = 0;
+  currentPdfPagedMode = false;
 
   if (!modal || !viewer) return;
 
   if (heading) heading.textContent = title || "Resource";
   if (status) status.textContent = "Loading";
+  setPdfPageControls(false);
 
   setPdfZoom(1);
   viewer.innerHTML = '<div class="pdf-loading">Loading resource...</div>';
@@ -3845,6 +3857,135 @@ function openPdf(link, title) {
     });
 }
 
+function openPagedPdf(link, title) {
+  var modal = qs("#pdfModal");
+  var viewer = qs("#pdfViewer");
+  var heading = qs("#pdfTitle");
+  var status = qs("#pdfStatus");
+  var token = pdfRenderToken + 1;
+
+  pdfRenderToken = token;
+  currentPdfLink = link;
+  currentPdfDoc = null;
+  currentPdfPage = 1;
+  currentPdfTotalPages = 0;
+  currentPdfPagedMode = true;
+
+  if (!modal || !viewer) return;
+
+  if (heading) heading.textContent = title || "Game Schedule";
+  if (status) status.textContent = "Loading";
+
+  setPdfZoom(1);
+  setPdfPageControls(true);
+  viewer.innerHTML = '<div class="pdf-loading">Loading schedule...</div>';
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  if (!window.pdfjsLib) {
+    showPdfError(link);
+    return;
+  }
+
+  setPdfWorker();
+
+  pdfjsLib.getDocument(link).promise
+    .then(function(pdf) {
+      if (token !== pdfRenderToken) return;
+
+      currentPdfDoc = pdf;
+      currentPdfTotalPages = pdf.numPages;
+      currentPdfPage = 1;
+      updatePdfPageControls();
+      return renderPagedPdfPage(token);
+    })
+    .catch(function() {
+      if (token === pdfRenderToken) showPdfError(link);
+    });
+}
+
+function renderPagedPdfPage(token) {
+  var viewer = qs("#pdfViewer");
+  var status = qs("#pdfStatus");
+
+  if (!currentPdfDoc || !viewer) return Promise.resolve();
+
+  if (status) status.textContent = "Day " + currentPdfPage + " of " + currentPdfTotalPages;
+  viewer.innerHTML = '<div class="pdf-loading">Loading day ' + currentPdfPage + '...</div>';
+
+  return currentPdfDoc.getPage(currentPdfPage)
+    .then(function(page) {
+      if (token !== pdfRenderToken) return;
+
+      var baseViewport = page.getViewport({ scale: 1 });
+      var availableWidth = Math.max(280, viewer.clientWidth - 28);
+      var scale = Math.min(2.8, availableWidth / baseViewport.width);
+      var viewport = page.getViewport({ scale: scale });
+      var pixelRatio = window.devicePixelRatio || 1;
+      var pageShell = document.createElement("div");
+      var canvas = document.createElement("canvas");
+      var label = document.createElement("span");
+      var context = canvas.getContext("2d");
+
+      viewer.innerHTML = "";
+      pageShell.className = "pdf-page pdf-page-single";
+      label.className = "pdf-page-label";
+      label.textContent = "Day " + currentPdfPage + " / " + currentPdfTotalPages;
+
+      canvas.width = Math.floor(viewport.width * pixelRatio);
+      canvas.height = Math.floor(viewport.height * pixelRatio);
+      canvas.setAttribute("data-base-width", viewport.width);
+      canvas.setAttribute("data-base-height", viewport.height);
+      canvas.style.width = viewport.width + "px";
+      canvas.style.height = viewport.height + "px";
+      pageShell.setAttribute("data-base-width", viewport.width);
+
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      pageShell.appendChild(canvas);
+      pageShell.appendChild(label);
+      viewer.appendChild(pageShell);
+
+      return page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise;
+    })
+    .then(function() {
+      if (token !== pdfRenderToken) return;
+      updatePdfPageControls();
+      setPdfZoom(pdfZoom);
+      viewer.scrollTop = 0;
+      viewer.scrollLeft = Math.max(0, (viewer.scrollWidth - viewer.clientWidth) / 2);
+    });
+}
+
+function goToPagedPdfPage(delta) {
+  if (!currentPdfPagedMode || !currentPdfDoc) return;
+
+  currentPdfPage = Math.max(1, Math.min(currentPdfTotalPages, currentPdfPage + delta));
+  pdfRenderToken += 1;
+  renderPagedPdfPage(pdfRenderToken);
+}
+
+function setPdfPageControls(show) {
+  var controls = qs("#pdfPageControls");
+
+  if (!controls) return;
+  controls.classList.toggle("hidden", !show);
+}
+
+function updatePdfPageControls() {
+  var label = qs("#pdfPageLabel");
+  var prev = qs("#pdfPrevPage");
+  var next = qs("#pdfNextPage");
+
+  if (label) label.textContent = "Day " + currentPdfPage + " / " + currentPdfTotalPages;
+  if (prev) prev.disabled = currentPdfPage <= 1;
+  if (next) next.disabled = currentPdfPage >= currentPdfTotalPages;
+}
+
 function closePdf() {
   var modal = qs("#pdfModal");
   var viewer = qs("#pdfViewer");
@@ -3854,10 +3995,15 @@ function closePdf() {
 
   pdfRenderToken += 1;
   currentPdfLink = "";
+  currentPdfDoc = null;
+  currentPdfPage = 1;
+  currentPdfTotalPages = 0;
+  currentPdfPagedMode = false;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
   if (viewer) viewer.innerHTML = "";
   if (status) status.textContent = "";
+  setPdfPageControls(false);
   document.body.style.overflow = "";
 }
 
@@ -4340,6 +4486,22 @@ function initApp() {
     });
   });
 
+  qsa("[data-schedule-pdf]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      if (!canUseElement(button)) {
+        openAuth("login");
+        return;
+      }
+
+      var key = button.getAttribute("data-schedule-pdf");
+      var link = resourceLinks[key];
+      var title = button.childNodes.length ? button.childNodes[0].textContent.trim() : "Game Schedule";
+
+      if (link) openPagedPdf(link, title);
+      else alert("Schedule link coming soon.");
+    });
+  });
+
   var resourceGuideBackButton = qs("#resourceGuideBackButton");
   if (resourceGuideBackButton) resourceGuideBackButton.addEventListener("click", closeResourceGuide);
 
@@ -4366,6 +4528,16 @@ function initApp() {
   var pdfZoomIn = qs("#pdfZoomIn");
   if (pdfZoomIn) pdfZoomIn.addEventListener("click", function() {
     adjustPdfZoom(.25);
+  });
+
+  var pdfPrevPage = qs("#pdfPrevPage");
+  if (pdfPrevPage) pdfPrevPage.addEventListener("click", function() {
+    goToPagedPdfPage(-1);
+  });
+
+  var pdfNextPage = qs("#pdfNextPage");
+  if (pdfNextPage) pdfNextPage.addEventListener("click", function() {
+    goToPagedPdfPage(1);
   });
 
   var closeMediaButton = qs("#closeMediaButton");

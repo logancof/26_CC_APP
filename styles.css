@@ -1668,6 +1668,30 @@ body.menu-open .hero::after {
     cursor: pointer;
 }
 
+.pdf-page-controls {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 72px;
+    align-items: center;
+    gap: 10px;
+}
+
+.pdf-page-controls.hidden {
+    display: none;
+}
+
+.pdf-page-controls span {
+    color: var(--cream);
+    font-size: 12px;
+    font-weight: 950;
+    text-align: center;
+    margin: 0;
+}
+
+.pdf-page-controls button:disabled {
+    opacity: .4;
+}
+
 .pdf-zoom-controls {
     display: grid;
     grid-template-columns: 36px 48px 36px;
@@ -1711,6 +1735,10 @@ body.menu-open .hero::after {
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 16px 34px rgba(0, 0, 0, .38);
+}
+
+.pdf-page-single {
+    margin-bottom: 0;
 }
 
 .pdf-page canvas {

@@ -582,6 +582,15 @@
           <button class="leader-resource" data-resource-key="role_referee">
             Referee<span>Referee responsibilities during games</span>
           </button>
+          <button class="leader-resource" data-schedule-pdf="games_schedule_6_7">
+            6-7th Game Schedule<span>Page through each day</span>
+          </button>
+          <button class="leader-resource" data-schedule-pdf="games_schedule_8_9">
+            8-9th Game Schedule<span>Page through each day</span>
+          </button>
+          <button class="leader-resource" data-schedule-pdf="games_schedule_10_12">
+            10-12th Game Schedule<span>Page through each day</span>
+          </button>
         </div>
       </div>
 
@@ -774,6 +783,11 @@
           <span id="pdfZoomLabel">100%</span>
           <button id="pdfZoomIn" type="button" aria-label="Zoom in">+</button>
         </div>
+        <div class="pdf-page-controls hidden" id="pdfPageControls" aria-label="PDF page controls">
+          <button id="pdfPrevPage" type="button">Prev</button>
+          <span id="pdfPageLabel">Page 1 / 1</span>
+          <button id="pdfNextPage" type="button">Next</button>
+        </div>
       </div>
       <div class="pdf-viewer" id="pdfViewer"></div>
     </div>
@@ -835,7 +849,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.9.10</div>
+    <div class="app-version">v0.9.11</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
