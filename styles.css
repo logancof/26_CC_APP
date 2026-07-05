@@ -3363,6 +3363,7 @@ body.menu-open .hero::after {
 }
 
 .app-version {
+    display: none;
     position: fixed;
     right: max(10px, env(safe-area-inset-right));
     bottom: max(8px, env(safe-area-inset-bottom));
@@ -3376,4 +3377,8 @@ body.menu-open .hero::after {
     font-size: 11px;
     font-weight: 950;
     line-height: 1;
+}
+
+.app-version.visible {
+    display: block;
 }

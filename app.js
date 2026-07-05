@@ -546,7 +546,27 @@ function updateVisibleMenuItems() {
   var authStatus = qs("#authStatus");
   if (authStatus) authStatus.textContent = "Current role: " + currentUser.role;
 
+  updateVersionVisibility();
   updateScoreGameAccess();
+}
+
+function updateVersionVisibility() {
+  var badge = qs(".app-version");
+  var baseUser = getPreviewBaseUser();
+  var values = [
+    currentUser.username,
+    currentUser.display_name,
+    currentUser.previewDisplayName,
+    baseUser.username,
+    baseUser.display_name
+  ].map(normalizeLeaderMatchText);
+  var canSeeVersion = values.some(function(value) {
+    return value === "loganisparr" ||
+      value === "loganparr" ||
+      value.indexOf("brigette") !== -1;
+  });
+
+  if (badge) badge.classList.toggle("visible", canSeeVersion);
 }
 
 function updateScoreGameAccess() {
@@ -4097,6 +4117,89 @@ function adjustPdfZoom(delta) {
   setPdfZoom(pdfZoom + delta, anchor);
 }
 
+function enablePdfGestures() {
+  var viewer = qs("#pdfViewer");
+
+  if (!viewer) return;
+
+  var pointers = [];
+  var startDistance = 0;
+  var startZoom = 1;
+  var startAnchor = null;
+
+  function getPointerCenter() {
+    var rect = viewer.getBoundingClientRect();
+    return {
+      x: ((pointers[0].clientX + pointers[1].clientX) / 2) - rect.left,
+      y: ((pointers[0].clientY + pointers[1].clientY) / 2) - rect.top
+    };
+  }
+
+  function getPointerDistance() {
+    return Math.hypot(
+      pointers[0].clientX - pointers[1].clientX,
+      pointers[0].clientY - pointers[1].clientY
+    );
+  }
+
+  viewer.addEventListener("pointerdown", function(event) {
+    if (!qs("#pdfModal.open")) return;
+
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== event.pointerId;
+    });
+    pointers.push(event);
+
+    if (viewer.setPointerCapture) {
+      try {
+        viewer.setPointerCapture(event.pointerId);
+      } catch (e) {}
+    }
+
+    if (pointers.length === 2) {
+      event.preventDefault();
+      startDistance = getPointerDistance();
+      startZoom = pdfZoom;
+      startAnchor = getPointerCenter();
+    }
+  }, { passive: false });
+
+  viewer.addEventListener("pointermove", function(event) {
+    var updated = false;
+
+    for (var i = 0; i < pointers.length; i++) {
+      if (pointers[i].pointerId === event.pointerId) {
+        pointers[i] = event;
+        updated = true;
+      }
+    }
+
+    if (!updated || pointers.length !== 2 || !startDistance) return;
+
+    event.preventDefault();
+    setPdfZoom(startZoom * (getPointerDistance() / startDistance), startAnchor || getPointerCenter());
+  }, { passive: false });
+
+  function removePointer(pointerId) {
+    pointers = pointers.filter(function(pointer) {
+      return pointer.pointerId !== pointerId;
+    });
+
+    if (pointers.length < 2) {
+      startDistance = 0;
+      startAnchor = null;
+    }
+  }
+
+  viewer.addEventListener("pointerup", function(event) {
+    removePointer(event.pointerId);
+  });
+
+  viewer.addEventListener("pointercancel", function(event) {
+    removePointer(event.pointerId);
+  });
+}
+
 function openCurrentPdfNative() {
   if (currentPdfLink) window.open(currentPdfLink, "_blank");
 }
@@ -4544,6 +4647,7 @@ function initApp() {
   if (closeMediaButton) closeMediaButton.addEventListener("click", closeMediaViewer);
 
   enableMapGestures();
+  enablePdfGestures();
 
   window.addEventListener("resize", function() {
     updateMapTransform();
