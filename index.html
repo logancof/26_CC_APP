@@ -487,10 +487,10 @@
           <button class="leader-resource" data-page-link="leader-team-assignments">
             Team Assignments<span>Camp team rosters</span>
           </button>
-          <button class="leader-resource" data-resource-key="dorm_assignments">
+          <button class="leader-resource" data-page-link="leader-dorm-assignments">
             Dorm Assignments<span>Cabin and dorm placements</span>
           </button>
-          <button class="leader-resource" data-resource-key="bus_assignments">
+          <button class="leader-resource" data-page-link="leader-bus-assignments">
             Bus Assignments<span>Travel groups and bus lists</span>
           </button>
         </div>
@@ -516,6 +516,28 @@
           </div>
         </div>
         <div id="teamAssignmentsDoc" class="assignment-doc-list"></div>
+      </div>
+
+      <div id="leader-dorm-assignments" class="page full-screen-page leader-category-page assignment-doc-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leader-assignments">← Assignments</button>
+          <div>
+            <h2>Dorm Assignments</h2>
+            <p>Your lodging groups appear first, followed by all dorm assignments.</p>
+          </div>
+        </div>
+        <div id="dormAssignmentsDoc" class="assignment-doc-list"></div>
+      </div>
+
+      <div id="leader-bus-assignments" class="page full-screen-page leader-category-page assignment-doc-page" data-min-role="leader">
+        <div class="full-page-header">
+          <button class="back-button" data-page-link="leader-assignments">← Assignments</button>
+          <div>
+            <h2>Bus Assignments</h2>
+            <p>Your travel groups appear first, followed by all bus assignments.</p>
+          </div>
+        </div>
+        <div id="busAssignmentsDoc" class="assignment-doc-list"></div>
       </div>
 
       <div id="leader-roles" class="page full-screen-page leader-category-page" data-min-role="leader">
@@ -813,7 +835,7 @@
       </div>
     </div>
 
-    <div class="app-version">v0.9.7</div>
+    <div class="app-version">v0.9.8</div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

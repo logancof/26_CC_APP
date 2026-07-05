@@ -1297,6 +1297,8 @@ function getAgeGroupOrder(ageGroup) {
 function renderLeaderAssignmentDocs() {
   renderBreakoutAssignmentsDoc();
   renderTeamAssignmentsDoc();
+  renderDormAssignmentsDoc();
+  renderBusAssignmentsDoc();
 }
 
 function renderBreakoutAssignmentsDoc() {
@@ -1351,6 +1353,8 @@ function renderTeamAssignmentsDoc() {
         leaders: (leaderLookup[key] || {}).leaders || "",
         team_number: teamNumber,
         age_group: ageGroup,
+        color: getTeamDisplayColor({ team_number: teamNumber, color: row.color || (leaderLookup[key] || {}).color || "" }),
+        color_name: getTeamDisplayColorName({ team_number: teamNumber, color_name: row.color_name || (leaderLookup[key] || {}).color_name || "" }),
         students: [],
         campuses: {}
       };
@@ -1365,6 +1369,57 @@ function renderTeamAssignmentsDoc() {
     var ageCompare = getAgeGroupOrder(a.age_group) - getAgeGroupOrder(b.age_group);
     if (ageCompare) return ageCompare;
     return Number(a.team_number || 0) - Number(b.team_number || 0);
+  }));
+}
+
+function renderDormAssignmentsDoc() {
+  renderGenericAssignmentsDoc(
+    "#dormAssignmentsDoc",
+    latestDormAssignments,
+    ["dorm_name", "assignment_name", "assignment", "group_name", "lodging", "dorm"],
+    "Dorm Assignment"
+  );
+}
+
+function renderBusAssignmentsDoc() {
+  renderGenericAssignmentsDoc(
+    "#busAssignmentsDoc",
+    latestBusAssignments,
+    ["bus_name", "assignment_name", "assignment", "group_name", "bus"],
+    "Bus Assignment"
+  );
+}
+
+function renderGenericAssignmentsDoc(selector, rows, assignmentKeys, fallbackTitle) {
+  var container = qs(selector);
+  var groups = {};
+
+  if (!container) return;
+
+  (rows || []).forEach(function(row) {
+    var assignmentName = getRowValue(row, assignmentKeys);
+    var key = assignmentName || fallbackTitle;
+
+    if (!assignmentName) return;
+
+    if (!groups[key]) {
+      groups[key] = {
+        title: assignmentName,
+        meta: [row.grade ? row.grade + "th" : "", row.sex || ""].filter(Boolean).join(" • "),
+        leaders: getRowValue(row, ["leader_name", "leaders", "leader", "group_leader", "assigned_to_name"]),
+        hasDetails: true,
+        students: [],
+        campuses: {}
+      };
+    }
+
+    addAssignmentStudent_(groups[key], row);
+  });
+
+  renderAssignmentDocSections(container, Object.keys(groups).map(function(key) {
+    return groups[key];
+  }).sort(function(a, b) {
+    return String(a.title).localeCompare(String(b.title), undefined, { numeric: true });
   }));
 }
 
@@ -1387,6 +1442,9 @@ function addAssignmentStudent_(group, row) {
 }
 
 function renderAssignmentDocSections(container, groups) {
+  var openIds = Array.prototype.slice.call(container.querySelectorAll(".assignment-group-card.open")).map(function(card) {
+    return card.getAttribute("data-assignment-card");
+  }).filter(Boolean);
   var mine = groups.filter(isLeaderAssignmentMatch);
   var other = groups.filter(function(group) {
     return !isLeaderAssignmentMatch(group);
@@ -1406,6 +1464,7 @@ function renderAssignmentDocSections(container, groups) {
     renderAssignmentSection("All Assignments", other, false);
 
   bindAssignmentGroupToggles(container);
+  restoreOpenAssignmentCards(container, openIds);
 }
 
 function renderAssignmentSection(title, groups, isMine) {
@@ -1431,15 +1490,20 @@ function renderAssignmentGroupCard(group, isMine) {
     return campus + " " + group.campuses[campus];
   }).join(" • ");
   var detailId = escapeHtml(group.detail_id || "");
+  var color = group.color || "";
+  var colorName = group.color_name || "";
+  var cardClass = 'assignment-group-card' + (isMine ? " mine" : "") + (group.hasDetails ? " expandable" : "") + (color ? " team-color-card" : "");
+  var cardStyle = color ? ' style="--team-color:' + escapeHtml(color) + '"' : "";
 
-  return '<article class="assignment-group-card' + (isMine ? " mine" : "") + (group.hasDetails ? " expandable" : "") + '" data-assignment-card="' + detailId + '">' +
+  return '<article class="' + cardClass + '" data-assignment-card="' + detailId + '"' + cardStyle + '>' +
+    (color ? '<div class="team-banner" style="background:' + escapeHtml(color) + '"></div>' : "") +
     '<div class="assignment-group-top">' +
       '<div>' +
         '<h4>' + escapeHtml(group.title) + '</h4>' +
         (group.meta ? '<p>' + escapeHtml(group.meta) + '</p>' : "") +
       '</div>' +
       '<div class="assignment-card-actions">' +
-        '<span class="pill">' + group.students.length + ' students</span>' +
+        '<span class="pill' + (color ? " team-color-pill" : "") + '"' + (color ? ' style="--team-color:' + escapeHtml(color) + '"' : "") + '>' + group.students.length + ' students' + (colorName ? ' • ' + escapeHtml(colorName) : "") + '</span>' +
         (group.hasDetails ? '<button class="assignment-toggle" type="button" data-assignment-toggle="' + detailId + '" aria-expanded="false">Details</button>' : "") +
       '</div>' +
     '</div>' +
@@ -1456,6 +1520,21 @@ function renderAssignmentGroupCard(group, isMine) {
     '</div>' +
     (group.hasDetails ? renderAssignmentDetailPanel(group, detailId) : "") +
   '</article>';
+}
+
+function restoreOpenAssignmentCards(container, openIds) {
+  openIds.forEach(function(detailId) {
+    var detail = qs("#" + detailId);
+    var button = container.querySelector('[data-assignment-toggle="' + detailId + '"]');
+    var card = container.querySelector('[data-assignment-card="' + detailId + '"]');
+
+    if (!detail || !button || !card) return;
+
+    detail.classList.remove("hidden");
+    button.setAttribute("aria-expanded", "true");
+    button.textContent = "Hide";
+    card.classList.add("open");
+  });
 }
 
 function renderAssignmentDetailPanel(group, detailId) {
