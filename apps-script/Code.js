@@ -477,6 +477,8 @@ function jsonResponse(data) {
 function syncAssignmentExports() {
   syncTeamAssignmentExport_();
   syncBreakoutAssignmentExport_();
+  syncBusAssignmentExport_();
+  syncDormAssignmentExport_();
 }
 
 function syncTeamAssignmentExport_() {
@@ -691,6 +693,106 @@ function syncBreakoutAssignmentExport_() {
   ], rows);
 }
 
+function syncBusAssignmentExport_() {
+  const sourceRows = readOptionalSheetObjects_("PCO_BUS_ASSIGNMENTS_RAW");
+  if (!sourceRows.length) return;
+
+  syncGenericAssignmentExport_(sourceRows, "BUS_ASSIGNMENTS", {
+    assignmentHeader: "bus_name",
+    sourceLabel: "bus"
+  });
+}
+
+function syncDormAssignmentExport_() {
+  const sourceRows = readOptionalSheetObjects_("PCO_LODGING_ASSIGNMENTS_RAW", "PCO_DORM_ASSIGNMENTS_RAW");
+  if (!sourceRows.length) return;
+
+  syncGenericAssignmentExport_(sourceRows, "DORM_ASSIGNMENTS", {
+    assignmentHeader: "dorm_name",
+    sourceLabel: "dorm"
+  });
+}
+
+function syncGenericAssignmentExport_(sourceRows, outputSheetName, options) {
+  const syncedAt = new Date();
+  const leaderLookup = buildLeadersByAssignment_(sourceRows);
+
+  const rows = sourceRows
+    .filter(row => getRowValue_(row, "Selection").toLowerCase() === "student")
+    .map(row => {
+      const assignment = getRowValue_(row, "Assignment");
+      const firstName = getRowValue_(row, "First Name");
+      const lastName = getRowValue_(row, "Last Name");
+      const studentName = [firstName, lastName].filter(Boolean).join(" ");
+      const parentFirstName = getFirstRowValue_(row, ["Parent First Name", "Parent first name", "parent_first_name"]);
+      const parentLastName = getFirstRowValue_(row, ["Parent Last Name", "Parent last name", "parent_last_name"]);
+      const leaders = leaderLookup[assignment] || "";
+
+      return [
+        getRowValue_(row, "Registration ID"),
+        assignment,
+        leaders,
+        slugForAppsScript_(leaders).replace(/-/g, "."),
+        firstName,
+        lastName,
+        studentName,
+        getRowValue_(row, "Please Select Your Campus"),
+        getFirstRowValue_(row, ["Grade", "grade"]),
+        normalizeSex_(getFirstRowValue_(row, ["Sex", "Gender", "sex", "gender"])),
+        getFirstRowValue_(row, ["Birthdate", "Birth Date", "birthday", "date_of_birth"]),
+        getFirstRowValue_(row, ["Medical Info", "Medical Information", "Health Related Data", "health_related_data", "medical_info"]),
+        [parentFirstName, parentLastName].filter(Boolean).join(" "),
+        getFirstRowValue_(row, ["Parent Phone", "Parent Contact", "Parent Contact Phone", "parent_phone", "parent_contact"]),
+        options.sourceLabel,
+        syncedAt
+      ];
+    })
+    .filter(row => row[1] && row[6]);
+
+  writeSheet_(outputSheetName, [
+    "registration_id",
+    options.assignmentHeader,
+    "leader_name",
+    "leader_username",
+    "first_name",
+    "last_name",
+    "student_name",
+    "campus",
+    "grade",
+    "sex",
+    "birthday",
+    "medical_info",
+    "parent_name",
+    "parent_contact",
+    "source",
+    "synced_at"
+  ], rows);
+}
+
+function buildLeadersByAssignment_(sourceRows) {
+  const leadersByAssignment = {};
+
+  sourceRows
+    .filter(row => getRowValue_(row, "Selection").toLowerCase() !== "student")
+    .forEach(row => {
+      const assignment = getRowValue_(row, "Assignment");
+      const firstName = getRowValue_(row, "First Name");
+      const lastName = getRowValue_(row, "Last Name");
+      const leaderName = [firstName, lastName].filter(Boolean).join(" ");
+
+      if (!assignment || !leaderName) return;
+      if (!leadersByAssignment[assignment]) leadersByAssignment[assignment] = [];
+      if (leadersByAssignment[assignment].indexOf(leaderName) === -1) {
+        leadersByAssignment[assignment].push(leaderName);
+      }
+    });
+
+  return Object.keys(leadersByAssignment).reduce((lookup, assignment) => {
+    lookup[assignment] = leadersByAssignment[assignment].join(", ");
+    return lookup;
+  }, {});
+}
+
 function readSheetObjects_(sheetName) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(sheetName);
@@ -714,6 +816,17 @@ function readSheetObjects_(sheetName) {
     });
     return obj;
   });
+}
+
+function readOptionalSheetObjects_(...sheetNames) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+
+  for (const sheetName of sheetNames) {
+    const sheet = ss.getSheetByName(sheetName);
+    if (sheet) return readSheetObjects_(sheetName);
+  }
+
+  return [];
 }
 
 function getRowValue_(row, header) {
@@ -1039,6 +1152,23 @@ function normalizeAgeGroup_(value) {
   if (cleaned === "10-12") return "10-12th";
 
   return cleaned;
+}
+
+function normalizeSex_(value) {
+  const cleaned = String(value || "").trim().toLowerCase();
+
+  if (cleaned === "f" || cleaned === "female") return "Female";
+  if (cleaned === "m" || cleaned === "male") return "Male";
+
+  return String(value || "").trim();
+}
+
+function slugForAppsScript_(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function writeSheet_(sheetName, headers, rows) {
