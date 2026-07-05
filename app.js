@@ -177,6 +177,204 @@ var imageResourceLinks = {
   ]
 };
 
+var activeGameScheduleKey = "middle";
+var activeGameScheduleDay = 0;
+
+var gameScheduleTemplates = {
+  water: {
+    title: "Water Games",
+    blocks: [
+      { type: "attendance", time: "1:00 - 1:10 PM", title: "Attendance", note: "Check in before games begin." },
+      {
+        type: "activity",
+        time: "1:10 - 1:30 PM",
+        title: "Activity #1",
+        games: [
+          { station: "Game 1", name: "Slip and Slide Kickball", matchup: "Team 1 vs Team 2" },
+          { station: "Game 2", name: "Puzzle Pour", matchup: "Team 3 vs Team 4" },
+          { station: "Game 3", name: "Tug Boat", matchup: "Team 5 vs Team 6" }
+        ],
+        off: "Team 7 & Team 8"
+      },
+      { type: "transition", time: "1:30 - 1:34 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "1:34 - 1:54 PM",
+        title: "Activity #2",
+        games: [
+          { station: "Game 1", name: "Slip and Slide Kickball", matchup: "Team 3 vs Team 5" },
+          { station: "Game 2", name: "Puzzle Pour", matchup: "Team 1 vs Team 6" },
+          { station: "Game 3", name: "Tug Boat", matchup: "Team 7 vs Team 8" }
+        ],
+        off: "Team 2 & Team 4"
+      },
+      { type: "transition", time: "1:54 - 1:58 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "1:58 - 2:18 PM",
+        title: "Activity #3",
+        games: [
+          { station: "Game 1", name: "Slip and Slide Kickball", matchup: "Team 4 vs Team 7" },
+          { station: "Game 2", name: "Puzzle Pour", matchup: "Team 2 vs Team 8" },
+          { station: "Game 3", name: "Tug Boat", matchup: "Team 1 vs Team 3" }
+        ],
+        off: "Team 5 & Team 6"
+      },
+      { type: "transition", time: "2:18 - 2:22 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "2:22 - 2:42 PM",
+        title: "Activity #4",
+        games: [
+          { station: "Game 1", name: "Slip and Slide Kickball", matchup: "Team 6 vs Team 8" },
+          { station: "Game 2", name: "Puzzle Pour", matchup: "Team 5 vs Team 7" },
+          { station: "Game 3", name: "Tug Boat", matchup: "Team 2 vs Team 4" }
+        ],
+        off: "Team 1 & Team 3"
+      },
+      { type: "transition", time: "2:42 - 2:45 PM", title: "Transition" },
+      { type: "allplay", time: "2:45 - 3:00 PM", title: "All Teams", name: "All-Play - Beach Ball Bash", note: "All 8 teams compete together." }
+    ]
+  },
+  extreme: {
+    title: "Extreme Sports",
+    blocks: [
+      { type: "attendance", time: "1:00 - 1:10 PM", title: "Attendance", note: "Check in before games begin." },
+      {
+        type: "activity",
+        time: "1:10 - 1:30 PM",
+        title: "Activity #1",
+        games: [
+          { station: "Game 1", name: "Tug of War", matchup: "Team 8 vs Team 1" },
+          { station: "Game 2", name: "Ultimate Frisbee", matchup: "Team 3 vs Team 6" },
+          { station: "Game 3", name: "Capture the Splash", matchup: "Team 2 vs Team 7" }
+        ],
+        off: "Team 4 & Team 5"
+      },
+      { type: "transition", time: "1:30 - 1:34 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "1:34 - 1:54 PM",
+        title: "Activity #2",
+        games: [
+          { station: "Game 1", name: "Tug of War", matchup: "Team 3 vs Team 2" },
+          { station: "Game 2", name: "Ultimate Frisbee", matchup: "Team 8 vs Team 7" },
+          { station: "Game 3", name: "Capture the Splash", matchup: "Team 4 vs Team 5" }
+        ],
+        off: "Team 1 & Team 6"
+      },
+      { type: "transition", time: "1:54 - 1:58 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "1:58 - 2:18 PM",
+        title: "Activity #3",
+        games: [
+          { station: "Game 1", name: "Tug of War", matchup: "Team 6 vs Team 4" },
+          { station: "Game 2", name: "Ultimate Frisbee", matchup: "Team 1 vs Team 5" },
+          { station: "Game 3", name: "Capture the Splash", matchup: "Team 8 vs Team 3" }
+        ],
+        off: "Team 2 & Team 7"
+      },
+      { type: "transition", time: "2:18 - 2:22 PM", title: "Transition" },
+      {
+        type: "activity",
+        time: "2:22 - 2:42 PM",
+        title: "Activity #4",
+        games: [
+          { station: "Game 1", name: "Tug of War", matchup: "Team 7 vs Team 5" },
+          { station: "Game 2", name: "Ultimate Frisbee", matchup: "Team 2 vs Team 4" },
+          { station: "Game 3", name: "Capture the Splash", matchup: "Team 1 vs Team 6" }
+        ],
+        off: "Team 8 & Team 3"
+      },
+      { type: "transition", time: "2:42 - 2:45 PM", title: "Transition" },
+      { type: "allplay", time: "2:45 - 3:00 PM", title: "All Teams", name: "All-Play - Dodgeball", note: "All 8 teams compete together." }
+    ]
+  },
+  team: {
+    title: "Team Building",
+    note: "Both stations run at the same time. Two teams play while two rest, then everyone swaps stations at 1:52 PM.",
+    blocks: [
+      { type: "attendance", time: "1:00 - 1:10 PM", title: "Attendance", note: "Check in before games begin." },
+      {
+        type: "stations",
+        time: "1:10 - 1:48 PM",
+        title: "Activity #1",
+        stations: [
+          {
+            name: "Pipeline Panic",
+            rounds: [
+              { time: "1:10 - 1:29 PM", matchup: "Team 1 vs Team 2", resting: "Teams 3 & 4" },
+              { time: "1:29 - 1:48 PM", matchup: "Team 3 vs Team 4", resting: "Teams 1 & 2" }
+            ]
+          },
+          {
+            name: "Centipede & Spiderweb",
+            rounds: [
+              { time: "1:10 - 1:29 PM", matchup: "Team 5 vs Team 6", resting: "Teams 7 & 8" },
+              { time: "1:29 - 1:48 PM", matchup: "Team 7 vs Team 8", resting: "Teams 5 & 6" }
+            ]
+          }
+        ]
+      },
+      { type: "transition", time: "1:48 - 1:52 PM", title: "Station Swap", note: "Teams 1-4 go to Centipede & Spiderweb. Teams 5-8 go to Pipeline Panic." },
+      {
+        type: "stations",
+        time: "1:52 - 2:30 PM",
+        title: "Activity #2",
+        stations: [
+          {
+            name: "Pipeline Panic",
+            rounds: [
+              { time: "1:52 - 2:11 PM", matchup: "Team 6 vs Team 7", resting: "Teams 5 & 8" },
+              { time: "2:11 - 2:30 PM", matchup: "Team 5 vs Team 8", resting: "Teams 6 & 7" }
+            ]
+          },
+          {
+            name: "Centipede & Spiderweb",
+            rounds: [
+              { time: "1:52 - 2:11 PM", matchup: "Team 2 vs Team 3", resting: "Teams 1 & 4" },
+              { time: "2:11 - 2:30 PM", matchup: "Team 1 vs Team 4", resting: "Teams 2 & 3" }
+            ]
+          }
+        ]
+      },
+      { type: "transition", time: "2:30 - 2:35 PM", title: "Transition" },
+      { type: "allplay", time: "2:35 - 3:00 PM", title: "All Teams", name: "All-Play - Camp-Wide Chaos", note: "All 8 teams compete together to close out the day." }
+    ]
+  }
+};
+
+var gameScheduleGroups = {
+  middle: {
+    title: "6-7th Game Schedule",
+    description: "6th & 7th Grade",
+    days: [
+      { label: "Day 1", template: "team" },
+      { label: "Day 2", template: "water" },
+      { label: "Day 3", template: "extreme" }
+    ]
+  },
+  junior: {
+    title: "8-9th Game Schedule",
+    description: "8th & 9th Grade",
+    days: [
+      { label: "Day 1", template: "water" },
+      { label: "Day 2", template: "extreme" },
+      { label: "Day 3", template: "team" }
+    ]
+  },
+  senior: {
+    title: "10-12th Game Schedule",
+    description: "10th-12th Grade",
+    days: [
+      { label: "Day 1", template: "extreme" },
+      { label: "Day 2", template: "team" },
+      { label: "Day 3", template: "water" }
+    ]
+  }
+};
+
 try {
   currentUser = JSON.parse(localStorage.getItem("campUser") || "{\"username\":\"public\",\"role\":\"public\",\"permissions\":[]}");
   currentUser.permissions = parsePermissions(currentUser.permissions);
@@ -3770,6 +3968,104 @@ function closeResourceGuide() {
   activatePage(resourceGuideBackPage || "home");
 }
 
+function renderScheduleGames(games) {
+  return (games || []).map(function(game) {
+    return '<div class="schedule-game-row">' +
+      '<div>' +
+        '<span class="schedule-game-station">' + escapeHtml(game.station) + '</span>' +
+        '<strong>' + escapeHtml(game.name) + '</strong>' +
+      '</div>' +
+      '<span class="schedule-matchup">' + escapeHtml(game.matchup) + '</span>' +
+    '</div>';
+  }).join("");
+}
+
+function renderScheduleStations(stations) {
+  return '<div class="schedule-stations">' + (stations || []).map(function(station) {
+    var rounds = (station.rounds || []).map(function(round) {
+      return '<div class="schedule-round">' +
+        '<span>' + escapeHtml(round.time) + '</span>' +
+        '<strong>' + escapeHtml(round.matchup) + '</strong>' +
+        '<em>Resting: ' + escapeHtml(round.resting) + '</em>' +
+      '</div>';
+    }).join("");
+
+    return '<section class="schedule-station">' +
+      '<h4>' + escapeHtml(station.name) + '</h4>' +
+      rounds +
+    '</section>';
+  }).join("") + '</div>';
+}
+
+function renderScheduleBlock(block) {
+  var meta = '<div class="schedule-block-meta">' +
+    '<span>' + escapeHtml(block.time || "") + '</span>' +
+    '<strong>' + escapeHtml(block.title || "") + '</strong>' +
+  '</div>';
+  var body = "";
+
+  if (block.type === "activity") {
+    body = renderScheduleGames(block.games) +
+      (block.off ? '<div class="schedule-off"><span>Off</span><strong>' + escapeHtml(block.off) + '</strong></div>' : "");
+  } else if (block.type === "stations") {
+    body = renderScheduleStations(block.stations);
+  } else if (block.type === "allplay") {
+    body = '<div class="schedule-allplay"><strong>' + escapeHtml(block.name) + '</strong>' +
+      '<span>' + escapeHtml(block.note || "") + '</span></div>';
+  } else {
+    body = block.note ? '<p class="schedule-note">' + escapeHtml(block.note) + '</p>' : "";
+  }
+
+  if (block.type === "transition") {
+    return '<section class="schedule-block schedule-transition">' + meta + body + '</section>';
+  }
+
+  return '<section class="schedule-block">' + meta + body + '</section>';
+}
+
+function renderGameSchedule(groupKey, dayIndex) {
+  var group = gameScheduleGroups[groupKey] || gameScheduleGroups.middle;
+  var safeDayIndex = Math.max(0, Math.min(group.days.length - 1, Number(dayIndex) || 0));
+  var day = group.days[safeDayIndex];
+  var template = gameScheduleTemplates[day.template];
+  var title = qs("#gameScheduleTitle");
+  var description = qs("#gameScheduleDescription");
+  var tabs = qs("#gameScheduleTabs");
+  var content = qs("#gameScheduleContent");
+
+  activeGameScheduleKey = groupKey;
+  activeGameScheduleDay = safeDayIndex;
+
+  if (title) title.textContent = group.title;
+  if (description) description.textContent = group.description + " - " + template.title;
+
+  if (tabs) {
+    tabs.innerHTML = group.days.map(function(item, index) {
+      var itemTemplate = gameScheduleTemplates[item.template];
+      return '<button type="button" class="game-day-tab' + (index === safeDayIndex ? " active" : "") + '" data-game-schedule-day="' + index + '">' +
+        '<strong>' + escapeHtml(item.label) + '</strong>' +
+        '<span>' + escapeHtml(itemTemplate.title) + '</span>' +
+      '</button>';
+    }).join("");
+
+    qsa("[data-game-schedule-day]").forEach(function(button) {
+      button.addEventListener("click", function() {
+        renderGameSchedule(activeGameScheduleKey, button.getAttribute("data-game-schedule-day"));
+      });
+    });
+  }
+
+  if (content) {
+    content.innerHTML =
+      '<section class="game-schedule-hero">' +
+        '<span>' + escapeHtml(day.label) + '</span>' +
+        '<h3>' + escapeHtml(template.title) + '</h3>' +
+        (template.note ? '<p>' + escapeHtml(template.note) + '</p>' : '') +
+      '</section>' +
+      template.blocks.map(renderScheduleBlock).join("");
+  }
+}
+
 function shouldOpenAsGuide(key, link) {
   return isPdfLink(link) && !isCanvaPdfResource(key);
 }
@@ -4602,6 +4898,18 @@ function initApp() {
 
       if (link) openPagedPdf(link, title);
       else alert("Schedule link coming soon.");
+    });
+  });
+
+  qsa("[data-game-schedule]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      if (!canUseElement(button)) {
+        openAuth("login");
+        return;
+      }
+
+      renderGameSchedule(button.getAttribute("data-game-schedule"), 0);
+      activatePage("leader-game-schedule");
     });
   });
 
