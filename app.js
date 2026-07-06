@@ -3054,6 +3054,7 @@ function buildAttendancePayload(missingReason) {
   return {
     action: "submit_attendance",
     username: currentUser.username,
+    leader_name: currentUser.display_name || currentUser.previewDisplayName || "",
     token: currentUser.token || "",
     prompt_id: getPromptId(activeAttendancePrompt),
     prompt_title: getPromptTitle(activeAttendancePrompt),

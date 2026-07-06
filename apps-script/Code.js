@@ -429,36 +429,37 @@ function handleAttendanceSubmit(payload) {
   if (!sheet) {
     sheet = ss.insertSheet("ATTENDANCE_SUBMISSIONS");
     sheet.appendRow([
-      "timestamp",
+      "submission_id",
       "prompt_id",
       "prompt_title",
       "leader_username",
+      "leader_name",
       "student_id",
       "student_name",
-      "team_id",
-      "team_number",
       "present",
       "missing_reason",
-      "notes"
+      "notes",
+      "timestamp"
     ]);
   }
 
   const rows = payload.rows || [];
   const now = new Date();
+  const submissionId = payload.submission_id || Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyyMMddHHmmss") + "_" + (payload.username || "unknown");
 
   rows.forEach(row => {
     sheet.appendRow([
-      now,
+      submissionId,
       payload.prompt_id || "",
       payload.prompt_title || "",
       payload.username || "",
+      payload.leader_name || payload.display_name || "",
       row.student_id || "",
       row.student_name || "",
-      row.team_id || "",
-      row.team_number || "",
       row.present ? "TRUE" : "FALSE",
       payload.missing_reason || "",
-      payload.notes || ""
+      payload.notes || "",
+      now
     ]);
   });
 
