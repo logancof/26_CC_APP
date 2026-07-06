@@ -603,11 +603,12 @@ function renderCampData(data) {
     : (data.ATTENDANCE_GROUPS && data.ATTENDANCE_GROUPS.length)
       ? buildRosterFromAttendanceGroups(data.ATTENDANCE_GROUPS)
       : data.ATTENDANCE_ROSTER || data.LEADER_STUDENTS || [];
+  var scoringTeams = getScoringTeams();
 
   updateStatus(data.SCHEDULE || []);
-  renderScores(getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeams);
+  renderScores(getScoreTotals(latestScores, scoringTeams, latestScoreEntries), scoringTeams);
   renderGames(data.GAMES || [], data.TEAMS || []);
-  renderTeams(latestTeams, getScoreTotals(latestScores, latestTeams, latestScoreEntries), latestTeamAssignments, latestTeamLeaders);
+  renderTeams(latestTeams, getScoreTotals(latestScores, scoringTeams, latestScoreEntries), latestTeamAssignments, latestTeamLeaders);
   renderLeaderAssignmentDocs();
   renderMediaSections(data.CONTENT || []);
   renderContacts(data.LEADER_CONTACTS || []);
@@ -1170,9 +1171,94 @@ function buildTeamLookup(teams) {
   return lookup;
 }
 
+function getRawTeamNumber(team) {
+  return String(getRowValue(team, ["team_number", "team", "number"]) || "").trim();
+}
+
 function getTeamId(team) {
   if (!team) return "";
-  return team.team_id || team["1"] || (team.team_number ? "team_" + team.team_number : "");
+  var teamNumber = getRawTeamNumber(team);
+  return getRowValue(team, ["team_id", "id"]) || team["1"] || (teamNumber ? "team_" + teamNumber : "");
+}
+
+function buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers) {
+  var number = String(teamNumber || "").trim();
+  if (!number) return "";
+  if (!duplicateNumbers || !duplicateNumbers[number]) return "team_" + number;
+  return "team_" + normalizeAgeGroup(ageGroup).replace(/[^a-z0-9]/g, "_") + "_" + number;
+}
+
+function getScoringTeams() {
+  var teamsByKey = {};
+  var numberAgeLookup = {};
+  var assignmentRows = latestTeamAssignments || [];
+  var leaderLookup = buildTeamLeaderLookup(latestTeamLeaders || []);
+
+  function trackNumberAge(teamNumber, ageGroup) {
+    if (!teamNumber || !ageGroup) return;
+    if (!numberAgeLookup[teamNumber]) numberAgeLookup[teamNumber] = {};
+    numberAgeLookup[teamNumber][ageGroup] = true;
+  }
+
+  (latestTeams || []).forEach(function(team) {
+    trackNumberAge(getRawTeamNumber(team), getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(getRawTeamNumber(team))));
+  });
+
+  assignmentRows.forEach(function(row) {
+    trackNumberAge(String(row.team_number || row.team || "").trim(), getCanonicalAgeGroup(row.age_group || ""));
+  });
+
+  var duplicateNumbers = Object.keys(numberAgeLookup).reduce(function(lookup, teamNumber) {
+    lookup[teamNumber] = Object.keys(numberAgeLookup[teamNumber]).length > 1;
+    return lookup;
+  }, {});
+
+  function upsertTeam(team) {
+    var teamNumber = getRawTeamNumber(team);
+    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(teamNumber));
+    var teamId = getRowValue(team, ["team_id", "id"]) || buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers);
+    var key = ageGroup + "|" + teamNumber;
+    var existing = teamsByKey[key] || {};
+
+    if (!teamNumber) return;
+
+    teamsByKey[key] = Object.assign({}, existing, team, {
+      team_id: existing.team_id || teamId,
+      team_number: teamNumber,
+      age_group: ageGroup,
+      team_name: team.team_name || existing.team_name || "Team " + teamNumber,
+      color: team.color || existing.color || "",
+      color_name: team.color_name || existing.color_name || "",
+      leaders: team.leaders || existing.leaders || ""
+    });
+  }
+
+  (latestTeams || []).forEach(upsertTeam);
+
+  assignmentRows.forEach(function(row) {
+    var teamNumber = String(row.team_number || row.team || "").trim();
+    var ageGroup = getCanonicalAgeGroup(row.age_group || "");
+    var key = ageGroup + "|" + teamNumber;
+    var leaderData = leaderLookup[key] || {};
+
+    upsertTeam({
+      team_id: row.team_id || buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers),
+      team_number: teamNumber,
+      age_group: ageGroup,
+      team_name: row.team_name || "",
+      color: row.color || leaderData.color || "",
+      color_name: row.color_name || leaderData.color_name || "",
+      leaders: leaderData.leaders || row.leaders || row.leader_name || ""
+    });
+  });
+
+  return Object.keys(teamsByKey).map(function(key) {
+    return teamsByKey[key];
+  }).sort(function(a, b) {
+    var ageCompare = getAgeGroupOrder(a.age_group) - getAgeGroupOrder(b.age_group);
+    if (ageCompare) return ageCompare;
+    return Number(a.team_number || 0) - Number(b.team_number || 0);
+  });
 }
 
 function getScoreTotals(scores, teams, entries) {
@@ -3295,7 +3381,7 @@ function teamMatchesScoreAge(team, ageGroup) {
 
 function getScoreEntryTeams() {
   var ageGroup = getScoreEntryAgeGroup();
-  var teams = (latestTeams || []).filter(function(team) {
+  var teams = getScoringTeams().filter(function(team) {
     return teamMatchesScoreAge(team, ageGroup);
   });
 
@@ -3306,7 +3392,10 @@ function getScoreEntryTeams() {
 
 function getTeamDisplayName(team) {
   if (!team) return "";
-  return "Team " + (team.team_number || "");
+  var number = getRawTeamNumber(team);
+  var colorName = getTeamDisplayColorName(team);
+  var name = team.team_name && team.team_name !== "Team " + number ? team.team_name : "";
+  return ["Team " + (number || ""), name, colorName].filter(Boolean).join(" - ");
 }
 
 function getTeamOptions(teams, selectedIndex) {
@@ -3548,7 +3637,7 @@ function submitScoreResult() {
 }
 
 function getCurrentScoreForTeam(teamId) {
-  var totals = getScoreTotals(latestScores, latestTeams, latestScoreEntries);
+  var totals = getScoreTotals(latestScores, getScoringTeams(), latestScoreEntries);
   var row = totals.find(function(score) {
     return score.team_id === teamId;
   });
@@ -3572,7 +3661,9 @@ function renderScoreCorrectionForm() {
   if (!teamSelect) return;
 
   var currentValue = teamSelect.value;
-  var teams = (latestTeams || []).slice().sort(function(a, b) {
+  var teams = getScoringTeams().slice().sort(function(a, b) {
+    var ageCompare = getAgeGroupOrder(a.age_group) - getAgeGroupOrder(b.age_group);
+    if (ageCompare) return ageCompare;
     return Number(a.team_number || 0) - Number(b.team_number || 0);
   });
 
@@ -3603,7 +3694,7 @@ function buildScoreCorrectionSubmission() {
   var amount = Number(qs("#correctionAmount") ? qs("#correctionAmount").value : 0);
   var reason = qs("#correctionReason") ? qs("#correctionReason").value.trim() : "";
   var teamId = teamSelect ? teamSelect.value : "";
-  var team = (latestTeams || []).find(function(item) {
+  var team = getScoringTeams().find(function(item) {
     return getTeamId(item) === teamId;
   }) || {};
   var currentPoints = getCurrentScoreForTeam(teamId);
