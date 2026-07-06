@@ -38,6 +38,7 @@ var latestAttendanceRoster = [];
 var latestAttendanceSubmissions = [];
 var activeAttendancePrompt = null;
 var activeAttendanceMonitorPromptId = "";
+var openAttendanceMonitorGroups = {};
 var pendingAttendancePayload = null;
 var submittedAttendancePrompts = getSubmittedAttendancePrompts();
 var scoreEntryDirty = false;
@@ -2817,8 +2818,11 @@ function renderAttendanceMonitor() {
       var card = button.closest(".attendance-monitor-card");
       if (!card) return;
 
+      var groupId = button.getAttribute("data-monitor-submission");
       var details = card.querySelector(".attendance-monitor-details");
       var isOpen = card.classList.toggle("open");
+      if (groupId && isOpen) openAttendanceMonitorGroups[groupId] = true;
+      else if (groupId) delete openAttendanceMonitorGroups[groupId];
       if (details) details.classList.toggle("hidden", !isOpen);
       button.textContent = isOpen ? "Hide" : "Details";
     });
@@ -2869,11 +2873,12 @@ function buildAttendanceSubmissionGroups(promptFilter) {
 function renderAttendanceMonitorCard(group) {
   var missing = group.missingRows;
   var timestamp = formatMonitorTimestamp(group.timestamp);
+  var isOpen = !!openAttendanceMonitorGroups[group.group_id];
   var rows = group.rows.slice().sort(function(a, b) {
     return String(a.student_name || "").localeCompare(String(b.student_name || ""));
   });
 
-  return '<article class="attendance-monitor-card' + (missing.length ? " has-missing" : "") + '">' +
+  return '<article class="attendance-monitor-card' + (missing.length ? " has-missing" : "") + (isOpen ? " open" : "") + '">' +
     '<div class="assignment-group-top">' +
       '<div>' +
         '<h4>' + escapeHtml(group.leader) + '</h4>' +
@@ -2881,13 +2886,13 @@ function renderAttendanceMonitorCard(group) {
       '</div>' +
       '<div class="attendance-monitor-actions">' +
         '<span class="pill">' + group.presentCount + '/' + group.rows.length + '</span>' +
-        '<button class="assignment-toggle" type="button" data-monitor-submission="' + escapeHtml(group.group_id) + '">Details</button>' +
+        '<button class="assignment-toggle" type="button" data-monitor-submission="' + escapeHtml(group.group_id) + '">' + (isOpen ? "Hide" : "Details") + '</button>' +
       '</div>' +
     '</div>' +
     '<div class="' + (missing.length ? "monitor-missing-box" : "monitor-clear-box") + '">' +
       (missing.length ? '<span>Needs Follow-Up</span><strong>' + missing.length + ' missing in this submission</strong>' : 'All submitted students checked present.') +
     '</div>' +
-    '<div class="attendance-monitor-details hidden">' +
+    '<div class="attendance-monitor-details' + (isOpen ? "" : " hidden") + '">' +
       (group.missing_reason ? '<p class="assignment-campus-summary"><strong>Reason:</strong> ' + escapeHtml(group.missing_reason) + '</p>' : "") +
       (group.notes ? '<p class="assignment-campus-summary"><strong>Note:</strong> ' + escapeHtml(group.notes) + '</p>' : "") +
       '<div class="attendance-monitor-students">' + rows.map(function(row) {

@@ -425,48 +425,62 @@ function logTeamNameCorrection(ss, payload) {
 function handleAttendanceSubmit(payload) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   let sheet = ss.getSheetByName("ATTENDANCE_SUBMISSIONS");
+  const headers = [
+    "submission_id",
+    "prompt_id",
+    "prompt_title",
+    "leader_username",
+    "leader_name",
+    "student_id",
+    "student_name",
+    "present",
+    "missing_reason",
+    "notes",
+    "timestamp"
+  ];
 
   if (!sheet) {
     sheet = ss.insertSheet("ATTENDANCE_SUBMISSIONS");
-    sheet.appendRow([
-      "submission_id",
-      "prompt_id",
-      "prompt_title",
-      "leader_username",
-      "leader_name",
-      "student_id",
-      "student_name",
-      "present",
-      "missing_reason",
-      "notes",
-      "timestamp"
-    ]);
+    sheet.appendRow(headers);
+  } else if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
   }
 
   const rows = payload.rows || [];
   const now = new Date();
   const submissionId = payload.submission_id || Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyyMMddHHmmss") + "_" + (payload.username || "unknown");
+  const sheetHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  const outputHeaders = sheetHeaders.length ? sheetHeaders : headers;
 
   rows.forEach(row => {
-    sheet.appendRow([
-      submissionId,
-      payload.prompt_id || "",
-      payload.prompt_title || "",
-      payload.username || "",
-      payload.leader_name || payload.display_name || "",
-      row.student_id || "",
-      row.student_name || "",
-      row.present ? "TRUE" : "FALSE",
-      payload.missing_reason || "",
-      payload.notes || "",
-      now
-    ]);
+    const valuesByHeader = {
+      submission_id: submissionId,
+      prompt_id: payload.prompt_id || "",
+      prompt_title: payload.prompt_title || "",
+      leader_username: payload.username || "",
+      leader_name: payload.leader_name || payload.display_name || "",
+      student_id: row.student_id || "",
+      student_name: row.student_name || "",
+      present: row.present ? "TRUE" : "FALSE",
+      missing_reason: payload.missing_reason || "",
+      notes: payload.notes || "",
+      timestamp: now
+    };
+
+    sheet.appendRow(outputHeaders.map(header => valuesByHeader[normalizeSheetHeader_(header)] || ""));
   });
 
   return jsonResponse({
     ok: true,
     message: "Attendance submitted."
   });
+}
+
+function normalizeSheetHeader_(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "_");
 }
 
 function jsonResponse(data) {
