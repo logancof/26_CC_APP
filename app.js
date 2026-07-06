@@ -2695,11 +2695,21 @@ function formatMonitorTimestamp(value) {
 
 function getAttendanceMonitorPrompts() {
   var promptLookup = {};
+  var submittedPromptIds = {};
+
+  latestAttendanceSubmissions.forEach(function(row) {
+    var promptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
+    if (promptId) submittedPromptIds[promptId] = true;
+  });
 
   latestAttendancePrompts.forEach(function(prompt) {
     var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
+    var promptId = getPromptId(prompt);
+
     if (type.indexOf("attendance") === -1) return;
-    promptLookup[getPromptId(prompt)] = prompt;
+    if (!isTrue(getRowValue(prompt, ["active"])) && !submittedPromptIds[promptId]) return;
+
+    promptLookup[promptId] = prompt;
   });
 
   latestAttendanceSubmissions.forEach(function(row) {
