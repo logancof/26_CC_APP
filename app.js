@@ -441,9 +441,19 @@ function saveSubmittedAttendancePrompts() {
   } catch (e) {}
 }
 
-function markAttendancePromptSubmitted(promptId) {
-  if (!promptId || submittedAttendancePrompts.indexOf(promptId) !== -1) return;
-  submittedAttendancePrompts.push(promptId);
+function getAttendanceSubmissionMarker(promptId, username) {
+  return String(promptId || "") + "|" + String(username || currentUser.username || "public").toLowerCase().trim();
+}
+
+function hasSubmittedAttendancePrompt(promptId, username) {
+  if (!promptId) return false;
+  return submittedAttendancePrompts.indexOf(getAttendanceSubmissionMarker(promptId, username)) !== -1;
+}
+
+function markAttendancePromptSubmitted(promptId, username) {
+  var marker = getAttendanceSubmissionMarker(promptId, username);
+  if (!promptId || submittedAttendancePrompts.indexOf(marker) !== -1) return;
+  submittedAttendancePrompts.push(marker);
   saveSubmittedAttendancePrompts();
 }
 
@@ -2532,8 +2542,9 @@ function isPromptActiveNow(prompt) {
 
 function getActiveAttendancePrompts() {
   return latestAttendancePrompts.filter(function(prompt) {
+    var promptId = getPromptId(prompt);
     var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
-    return submittedAttendancePrompts.indexOf(getPromptId(prompt)) === -1 &&
+    return !hasSubmittedAttendancePrompt(promptId) &&
       type.indexOf("attendance") !== -1 &&
       isPromptForCurrentUser(prompt, "attendance") &&
       isPromptActiveNow(prompt);
@@ -2552,7 +2563,7 @@ function getAttendancePromptDebugRows() {
       active_value: getRowValue(prompt, ["active"]),
       active: isTrue(getRowValue(prompt, ["active"])),
       visible_value: getRowValue(prompt, ["visible"]),
-      submitted: submittedAttendancePrompts.indexOf(promptId) !== -1,
+      submitted: hasSubmittedAttendancePrompt(promptId),
       for_user: isPromptForCurrentUser(prompt, "attendance"),
       time_active: isPromptActiveNow(prompt),
       roster_source: getAttendanceRosterSource(prompt),
@@ -2859,7 +2870,7 @@ function buildAttendanceSubmissionGroups(promptFilter) {
       };
     }
 
-    groups[key].rows.push(Object.assign({ row_index: index, present: present }, row));
+    groups[key].rows.push(Object.assign({}, row, { row_index: index, present: present }));
     if (present) groups[key].presentCount += 1;
     else groups[key].missingRows.push(row);
   });
@@ -3122,7 +3133,7 @@ function sendAttendancePayload(payload) {
       if (!result.ok && result.status !== "ok") throw new Error(result.error || "Attendance was not saved.");
 
       if (status) status.textContent = "Attendance submitted.";
-      markAttendancePromptSubmitted(payload.prompt_id);
+      markAttendancePromptSubmitted(payload.prompt_id, payload.username);
       activeAttendancePrompt = null;
       attendanceDirty = false;
       closeAttendanceMissingModal();
