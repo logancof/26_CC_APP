@@ -1034,6 +1034,46 @@ textarea:focus {
     margin-bottom: 14px
 }
 
+.attendance-monitor-controls {
+    background: rgba(245, 244, 235, .92);
+    border: 1px solid rgba(214, 97, 40, .2);
+    border-radius: 22px;
+    color: var(--cof-orange);
+    display: grid;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 14px
+}
+
+.attendance-monitor-controls label {
+    color: rgba(214, 97, 40, .68);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .7px;
+    text-transform: uppercase
+}
+
+.attendance-monitor-controls select {
+    appearance: none;
+    background: var(--cream);
+    border: 1px solid rgba(214, 97, 40, .28);
+    border-radius: 16px;
+    color: var(--cof-orange);
+    font-size: 15px;
+    font-weight: 950;
+    line-height: 1.2;
+    min-height: 46px;
+    padding: 10px 12px;
+    width: 100%
+}
+
+.attendance-monitor-controls p {
+    color: rgba(214, 97, 40, .72);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.3
+}
+
 .monitor-stat {
     background: var(--cream);
     border-radius: 18px;
@@ -1072,8 +1112,19 @@ textarea:focus {
     padding: 16px
 }
 
+.attendance-monitor-card.open {
+    box-shadow: 0 14px 0 rgba(214, 97, 40, .08)
+}
+
 .attendance-monitor-card.has-missing {
     border-left: 8px solid var(--cof-orange)
+}
+
+.attendance-monitor-actions {
+    align-items: flex-end;
+    display: grid;
+    gap: 8px;
+    justify-items: end
 }
 
 .attendance-monitor-card h4 {
@@ -1113,6 +1164,54 @@ textarea:focus {
 
 .monitor-clear-box {
     background: rgba(181, 209, 208, .28);
+    color: var(--cof-orange)
+}
+
+.attendance-monitor-details {
+    border-top: 1px dotted rgba(214, 97, 40, .28);
+    display: grid;
+    gap: 12px;
+    padding-top: 12px
+}
+
+.attendance-monitor-students {
+    display: grid;
+    gap: 7px
+}
+
+.attendance-monitor-student {
+    align-items: center;
+    background: rgba(245, 244, 235, .74);
+    border: 1px solid rgba(214, 97, 40, .14);
+    border-radius: 14px;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 10px 11px
+}
+
+.attendance-monitor-student span {
+    color: var(--cof-orange);
+    font-size: 14px;
+    font-weight: 950;
+    line-height: 1.2
+}
+
+.attendance-monitor-student strong {
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 950;
+    padding: 5px 8px;
+    text-transform: uppercase
+}
+
+.attendance-monitor-student.present strong {
+    background: rgba(181, 209, 208, .38);
+    color: #426d69
+}
+
+.attendance-monitor-student.missing strong {
+    background: rgba(214, 97, 40, .14);
     color: var(--cof-orange)
 }
 

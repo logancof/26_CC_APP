@@ -37,6 +37,7 @@ var latestBreakoutPrompts = [];
 var latestAttendanceRoster = [];
 var latestAttendanceSubmissions = [];
 var activeAttendancePrompt = null;
+var activeAttendanceMonitorPromptId = "";
 var pendingAttendancePayload = null;
 var submittedAttendancePrompts = getSubmittedAttendancePrompts();
 var scoreEntryDirty = false;
@@ -2622,48 +2623,218 @@ function getRosterForPrompt(prompt) {
   });
 }
 
+function getMonitorRosterForPrompt(prompt) {
+  if (!prompt) return getUniqueAttendanceRoster(buildAllStudentRoster());
+
+  var promptId = getPromptId(prompt);
+  var source = getAttendanceRosterSource(prompt);
+  var groupFilter = getRowValue(prompt, [
+    "group_filter",
+    "assignment_filter",
+    "assignment",
+    "target_group",
+    "group_name",
+    "roster_filter"
+  ]);
+
+  var rows = getAttendanceRosterBySource(source).filter(function(row) {
+    if (row.active !== undefined && row.active !== "" && !isTrue(row.active)) return false;
+
+    var rowPromptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
+    var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || "").trim();
+
+    if (rowPromptId && rowPromptId !== promptId) return false;
+    if (!rosterRowMatchesGroupFilter(row, groupFilter)) return false;
+
+    return !!studentName;
+  });
+
+  return getUniqueAttendanceRoster(rows);
+}
+
+function getUniqueAttendanceRoster(rows) {
+  var seen = {};
+
+  return (rows || []).filter(function(row) {
+    var key = getAttendanceStudentKey(row);
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function getAttendanceStudentKey(row) {
+  return String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim() ||
+    normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+}
+
+function getAttendanceSubmissionStudentKey(row) {
+  return String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim() ||
+    normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+}
+
+function getPromptStartDate(prompt) {
+  var dateValue = getRowValue(prompt, ["date", "prompt_date", "day"]);
+  var startValue = getRowValue(prompt, ["start_time", "send_time", "time"]);
+  return parsePromptDate(dateValue, startValue) || new Date(0);
+}
+
+function formatMonitorTimestamp(value) {
+  if (!value) return "";
+
+  var date = new Date(value);
+  if (isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function getAttendanceMonitorPrompts() {
+  var promptLookup = {};
+
+  latestAttendancePrompts.forEach(function(prompt) {
+    var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "attendance").toLowerCase();
+    if (type.indexOf("attendance") === -1) return;
+    promptLookup[getPromptId(prompt)] = prompt;
+  });
+
+  latestAttendanceSubmissions.forEach(function(row) {
+    var promptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
+    if (!promptId || promptLookup[promptId]) return;
+
+    promptLookup[promptId] = {
+      prompt_id: promptId,
+      title: getRowValue(row, ["prompt_title", "checkpoint_title"]) || promptId,
+      date: "",
+      start_time: "",
+      active: "TRUE"
+    };
+  });
+
+  return Object.keys(promptLookup).map(function(key) {
+    return promptLookup[key];
+  }).sort(function(a, b) {
+    return getPromptStartDate(b) - getPromptStartDate(a);
+  });
+}
+
+function getDefaultAttendanceMonitorPromptId(prompts) {
+  if (!prompts.length) return "";
+  if (activeAttendanceMonitorPromptId && prompts.some(function(prompt) {
+    return getPromptId(prompt) === activeAttendanceMonitorPromptId;
+  })) {
+    return activeAttendanceMonitorPromptId;
+  }
+
+  var activePrompt = prompts.find(function(prompt) {
+    return isPromptActiveNow(prompt);
+  });
+
+  return getPromptId(activePrompt || prompts[0]);
+}
+
 function renderAttendanceMonitor() {
   var summary = qs("#attendanceMonitorSummary");
+  var controls = qs("#attendanceMonitorControls");
   var list = qs("#attendanceMonitorList");
 
-  if (!summary || !list) return;
+  if (!summary || !controls || !list) return;
 
-  var groups = buildAttendanceSubmissionGroups();
-  var totals = groups.reduce(function(result, group) {
-    result.students += group.rows.length;
-    result.present += group.presentCount;
-    result.missing += group.missingRows.length;
-    return result;
-  }, { students: 0, present: 0, missing: 0 });
+  var prompts = getAttendanceMonitorPrompts();
+  var selectedPromptId = getDefaultAttendanceMonitorPromptId(prompts);
+  var selectedPrompt = prompts.find(function(prompt) {
+    return getPromptId(prompt) === selectedPromptId;
+  }) || null;
+  var roster = getMonitorRosterForPrompt(selectedPrompt);
+  var groups = buildAttendanceSubmissionGroups(selectedPromptId);
+  var presentKeys = {};
+  var submittedStudentKeys = {};
+
+  activeAttendanceMonitorPromptId = selectedPromptId;
+
+  groups.forEach(function(group) {
+    group.rows.forEach(function(row) {
+      var key = getAttendanceSubmissionStudentKey(row);
+      if (key) submittedStudentKeys[key] = true;
+      if (row.present && key) presentKeys[key] = true;
+    });
+  });
+
+  var presentTotal = Object.keys(presentKeys).length;
+  var submittedTotal = Object.keys(submittedStudentKeys).length;
+  var expectedTotal = roster.length || submittedTotal;
+  var notAccountedFor = Math.max(0, expectedTotal - presentTotal);
 
   summary.innerHTML = '<div class="monitor-stat"><span>Submissions</span><strong>' + groups.length + '</strong></div>' +
-    '<div class="monitor-stat"><span>Students</span><strong>' + totals.students + '</strong></div>' +
-    '<div class="monitor-stat good"><span>Present</span><strong>' + totals.present + '</strong></div>' +
-    '<div class="monitor-stat alert"><span>Missing</span><strong>' + totals.missing + '</strong></div>';
+    '<div class="monitor-stat"><span>Total Students</span><strong>' + expectedTotal + '</strong></div>' +
+    '<div class="monitor-stat good"><span>Present</span><strong>' + presentTotal + '</strong></div>' +
+    '<div class="monitor-stat alert"><span>Not Accounted</span><strong>' + notAccountedFor + '</strong></div>';
+
+  controls.innerHTML = '<label for="attendanceMonitorPromptSelect">Checkpoint</label>' +
+    '<select id="attendanceMonitorPromptSelect">' +
+      (prompts.length ? prompts.map(function(prompt) {
+        var promptId = getPromptId(prompt);
+        var date = getPromptStartDate(prompt);
+        var dateLabel = date.getTime() ? " - " + formatMonitorTimestamp(date.toISOString()) : "";
+        return '<option value="' + escapeHtml(promptId) + '"' + (promptId === selectedPromptId ? " selected" : "") + '>' +
+          escapeHtml(getPromptTitle(prompt) + dateLabel) +
+        '</option>';
+      }).join("") : '<option value="">No checkpoints yet</option>') +
+    '</select>' +
+    '<p>' + escapeHtml(selectedPrompt ? getPromptTitle(selectedPrompt) : "No attendance checkpoint selected") + '</p>';
+
+  var select = qs("#attendanceMonitorPromptSelect");
+  if (select) {
+    select.addEventListener("change", function() {
+      activeAttendanceMonitorPromptId = select.value;
+      renderAttendanceMonitor();
+    });
+  }
 
   if (!groups.length) {
-    list.innerHTML = '<div class="assignment-empty">No attendance submissions have been received yet.</div>';
+    list.innerHTML = '<div class="assignment-empty">No submissions for this checkpoint yet.</div>';
     return;
   }
 
   list.innerHTML = groups.map(renderAttendanceMonitorCard).join("");
+
+  qsa("[data-monitor-submission]").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var card = button.closest(".attendance-monitor-card");
+      if (!card) return;
+
+      var details = card.querySelector(".attendance-monitor-details");
+      var isOpen = card.classList.toggle("open");
+      if (details) details.classList.toggle("hidden", !isOpen);
+      button.textContent = isOpen ? "Hide" : "Details";
+    });
+  });
 }
 
-function buildAttendanceSubmissionGroups() {
+function buildAttendanceSubmissionGroups(promptFilter) {
   var groups = {};
 
   (latestAttendanceSubmissions || []).forEach(function(row, index) {
-    var promptId = row.prompt_id || "";
-    var leader = row.leader_username || row.username || "Unknown leader";
-    var timestamp = row.timestamp || "";
+    var promptId = String(getRowValue(row, ["prompt_id", "checkpoint_id"]) || "").trim();
+    if (promptFilter && promptId !== promptFilter) return;
+
+    var leader = getRowValue(row, ["leader_name", "display_name", "leader_username", "username"]) || "Unknown leader";
+    var leaderUsername = getRowValue(row, ["leader_username", "username"]) || "";
+    var timestamp = getRowValue(row, ["timestamp", "submitted_at", "created_at"]) || "";
     var key = [promptId, leader, timestamp].join("|");
     var present = isTrue(row.present);
 
     if (!groups[key]) {
       groups[key] = {
+        group_id: "attendance_group_" + slug(key).replace(/[^a-z0-9_-]/g, ""),
         prompt_id: promptId,
-        prompt_title: row.prompt_title || promptId || "Attendance",
+        prompt_title: getRowValue(row, ["prompt_title", "checkpoint_title"]) || promptId || "Attendance",
         leader: leader,
+        leader_username: leaderUsername,
         timestamp: timestamp,
         missing_reason: row.missing_reason || "",
         notes: row.notes || "",
@@ -2687,20 +2858,35 @@ function buildAttendanceSubmissionGroups() {
 
 function renderAttendanceMonitorCard(group) {
   var missing = group.missingRows;
+  var timestamp = formatMonitorTimestamp(group.timestamp);
+  var rows = group.rows.slice().sort(function(a, b) {
+    return String(a.student_name || "").localeCompare(String(b.student_name || ""));
+  });
 
   return '<article class="attendance-monitor-card' + (missing.length ? " has-missing" : "") + '">' +
     '<div class="assignment-group-top">' +
       '<div>' +
-        '<h4>' + escapeHtml(group.prompt_title) + '</h4>' +
-        '<p>' + escapeHtml(group.leader) + (group.timestamp ? ' • ' + escapeHtml(group.timestamp) : '') + '</p>' +
+        '<h4>' + escapeHtml(group.leader) + '</h4>' +
+        '<p>' + escapeHtml(group.prompt_title) + (timestamp ? ' • ' + escapeHtml(timestamp) : '') + '</p>' +
       '</div>' +
-      '<span class="pill">' + group.presentCount + '/' + group.rows.length + '</span>' +
+      '<div class="attendance-monitor-actions">' +
+        '<span class="pill">' + group.presentCount + '/' + group.rows.length + '</span>' +
+        '<button class="assignment-toggle" type="button" data-monitor-submission="' + escapeHtml(group.group_id) + '">Details</button>' +
+      '</div>' +
     '</div>' +
-    (missing.length ? '<div class="monitor-missing-box"><span>Missing Students</span>' + missing.map(function(row) {
-      return '<strong>' + escapeHtml(row.student_name || "Unnamed student") + '</strong>';
-    }).join("") + '</div>' : '<div class="monitor-clear-box">All students checked present.</div>') +
-    (group.missing_reason ? '<p class="assignment-campus-summary"><strong>Reason:</strong> ' + escapeHtml(group.missing_reason) + '</p>' : "") +
-    (group.notes ? '<p class="assignment-campus-summary"><strong>Note:</strong> ' + escapeHtml(group.notes) + '</p>' : "") +
+    '<div class="' + (missing.length ? "monitor-missing-box" : "monitor-clear-box") + '">' +
+      (missing.length ? '<span>Needs Follow-Up</span><strong>' + missing.length + ' missing in this submission</strong>' : 'All submitted students checked present.') +
+    '</div>' +
+    '<div class="attendance-monitor-details hidden">' +
+      (group.missing_reason ? '<p class="assignment-campus-summary"><strong>Reason:</strong> ' + escapeHtml(group.missing_reason) + '</p>' : "") +
+      (group.notes ? '<p class="assignment-campus-summary"><strong>Note:</strong> ' + escapeHtml(group.notes) + '</p>' : "") +
+      '<div class="attendance-monitor-students">' + rows.map(function(row) {
+        return '<div class="attendance-monitor-student' + (row.present ? " present" : " missing") + '">' +
+          '<span>' + escapeHtml(row.student_name || "Unnamed student") + '</span>' +
+          '<strong>' + (row.present ? "Present" : "Missing") + '</strong>' +
+        '</div>';
+      }).join("") + '</div>' +
+    '</div>' +
   '</article>';
 }
 
