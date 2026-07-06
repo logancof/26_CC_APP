@@ -40,6 +40,7 @@ var activeAttendancePrompt = null;
 var activeAttendanceMonitorPromptId = "";
 var openAttendanceMonitorGroups = {};
 var pendingAttendancePayload = null;
+var attendanceSubmitting = false;
 var submittedAttendancePrompts = getSubmittedAttendancePrompts();
 var scoreEntryDirty = false;
 var teamNameAdminDirty = false;
@@ -3058,6 +3059,7 @@ function buildAttendancePayload(missingReason) {
 
   return {
     action: "submit_attendance",
+    submission_id: "att_" + getPromptId(activeAttendancePrompt) + "_" + currentUser.username + "_" + Date.now(),
     username: currentUser.username,
     leader_name: currentUser.display_name || currentUser.previewDisplayName || "",
     token: currentUser.token || "",
@@ -3092,6 +3094,16 @@ function closeAttendanceMissingModal() {
   }
 }
 
+function setAttendanceSubmitting(isSubmitting) {
+  var submitButton = qs("#attendanceSubmitButton");
+  var missingSubmitButton = qs("#attendanceMissingSubmit");
+
+  attendanceSubmitting = isSubmitting;
+
+  if (submitButton) submitButton.disabled = isSubmitting;
+  if (missingSubmitButton) missingSubmitButton.disabled = isSubmitting;
+}
+
 function sendAttendancePayload(payload) {
   var status = qs("#attendanceStatus");
 
@@ -3100,6 +3112,9 @@ function sendAttendancePayload(payload) {
     return;
   }
 
+  if (attendanceSubmitting) return;
+
+  setAttendanceSubmitting(true);
   if (status) status.textContent = "Submitting attendance...";
 
   apiRequest(payload)
@@ -3117,10 +3132,15 @@ function sendAttendancePayload(payload) {
     })
     .catch(function(error) {
       if (status) status.textContent = error.message;
+    })
+    .finally(function() {
+      setAttendanceSubmitting(false);
     });
 }
 
 function submitAttendance() {
+  if (attendanceSubmitting) return;
+
   if (currentUser.username === "public") {
     openAuth("login");
     return;
@@ -3145,6 +3165,8 @@ function submitAttendance() {
 }
 
 function submitAttendanceWithMissingReason() {
+  if (attendanceSubmitting) return;
+
   var reason = qs("#attendanceMissingReason") ? qs("#attendanceMissingReason").value.trim() : "";
   var status = qs("#attendanceStatus");
 
