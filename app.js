@@ -504,9 +504,9 @@ function escapeHtml(value) {
 
 function getAgeGroupFromTeamNumber(teamNumber) {
   var number = Number(teamNumber);
-  if (number >= 1 && number <= 10) return "6-7th";
-  if (number >= 11 && number <= 20) return "8-9th";
-  if (number >= 21 && number <= 30) return "10-12th";
+  if (number >= 1 && number <= 8) return "6-7th";
+  if (number >= 9 && number <= 16) return "8-9th";
+  if (number >= 17 && number <= 24) return "10-12th";
   return "";
 }
 
@@ -1175,55 +1175,50 @@ function getRawTeamNumber(team) {
   return String(getRowValue(team, ["team_number", "team", "number"]) || "").trim();
 }
 
+function normalizeCampTeamNumber(teamNumber, ageGroup) {
+  var number = Number(teamNumber);
+  var group = getCanonicalAgeGroup(ageGroup);
+
+  if (!number) return "";
+  if (number >= 1 && number <= 24) {
+    if (group === "8-9th" && number <= 8) return String(number + 8);
+    if (group === "10-12th" && number <= 8) return String(number + 16);
+    return String(number);
+  }
+
+  return "";
+}
+
 function getTeamId(team) {
   if (!team) return "";
-  var teamNumber = getRawTeamNumber(team);
+  var rawTeamNumber = getRawTeamNumber(team);
+  var teamNumber = normalizeCampTeamNumber(rawTeamNumber, team.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
   return getRowValue(team, ["team_id", "id"]) || team["1"] || (teamNumber ? "team_" + teamNumber : "");
 }
 
-function buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers) {
+function buildScoringTeamId(teamNumber) {
   var number = String(teamNumber || "").trim();
   if (!number) return "";
-  if (!duplicateNumbers || !duplicateNumbers[number]) return "team_" + number;
-  return "team_" + normalizeAgeGroup(ageGroup).replace(/[^a-z0-9]/g, "_") + "_" + number;
+  return "team_" + number;
 }
 
 function getScoringTeams() {
   var teamsByKey = {};
-  var numberAgeLookup = {};
   var assignmentRows = latestTeamAssignments || [];
   var leaderLookup = buildTeamLeaderLookup(latestTeamLeaders || []);
 
-  function trackNumberAge(teamNumber, ageGroup) {
-    if (!teamNumber || !ageGroup) return;
-    if (!numberAgeLookup[teamNumber]) numberAgeLookup[teamNumber] = {};
-    numberAgeLookup[teamNumber][ageGroup] = true;
-  }
-
-  (latestTeams || []).forEach(function(team) {
-    trackNumberAge(getRawTeamNumber(team), getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(getRawTeamNumber(team))));
-  });
-
-  assignmentRows.forEach(function(row) {
-    trackNumberAge(String(row.team_number || row.team || "").trim(), getCanonicalAgeGroup(row.age_group || ""));
-  });
-
-  var duplicateNumbers = Object.keys(numberAgeLookup).reduce(function(lookup, teamNumber) {
-    lookup[teamNumber] = Object.keys(numberAgeLookup[teamNumber]).length > 1;
-    return lookup;
-  }, {});
-
   function upsertTeam(team) {
-    var teamNumber = getRawTeamNumber(team);
-    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(teamNumber));
-    var teamId = getRowValue(team, ["team_id", "id"]) || buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers);
-    var key = ageGroup + "|" + teamNumber;
+    var rawTeamNumber = getRawTeamNumber(team);
+    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
+    var teamNumber = normalizeCampTeamNumber(rawTeamNumber, ageGroup);
+    var teamId = buildScoringTeamId(teamNumber);
+    var key = teamNumber;
     var existing = teamsByKey[key] || {};
 
     if (!teamNumber) return;
 
     teamsByKey[key] = Object.assign({}, existing, team, {
-      team_id: existing.team_id || teamId,
+      team_id: teamId,
       team_number: teamNumber,
       age_group: ageGroup,
       team_name: team.team_name || existing.team_name || "Team " + teamNumber,
@@ -1236,13 +1231,13 @@ function getScoringTeams() {
   (latestTeams || []).forEach(upsertTeam);
 
   assignmentRows.forEach(function(row) {
-    var teamNumber = String(row.team_number || row.team || "").trim();
     var ageGroup = getCanonicalAgeGroup(row.age_group || "");
-    var key = ageGroup + "|" + teamNumber;
+    var teamNumber = normalizeCampTeamNumber(String(row.team_number || row.team || "").trim(), ageGroup);
+    var key = ageGroup + "|" + String(row.team_number || row.team || "").trim();
     var leaderData = leaderLookup[key] || {};
 
     upsertTeam({
-      team_id: row.team_id || buildScoringTeamId(teamNumber, ageGroup, duplicateNumbers),
+      team_id: buildScoringTeamId(teamNumber),
       team_number: teamNumber,
       age_group: ageGroup,
       team_name: row.team_name || "",
@@ -1279,6 +1274,7 @@ function getScoreTotals(scores, teams, entries) {
   (scores || []).forEach(function(score) {
     var teamId = score.team_id || "";
     if (!teamId) return;
+    if (!teamLookup[teamId]) return;
 
     if (!totals[teamId]) {
       totals[teamId] = {
@@ -1307,6 +1303,7 @@ function getScoreTotals(scores, teams, entries) {
 
   getScoreAwardsFromEntries(entries).forEach(function(award) {
     if (!award.team_id) return;
+    if (!teamLookup[award.team_id]) return;
 
     if (!totals[award.team_id]) {
       totals[award.team_id] = {
@@ -1381,10 +1378,11 @@ function renderScores(scores, teams) {
     var teamRows = rows.map(function(score, i) {
       var team = teamLookup[score.team_id] || {};
       var currentRank = i + 1;
+      var color = getTeamDisplayColor(team);
 
-      return '<div class="team-row ' + (i === 0 ? "top" : "") + '">' +
+      return '<div class="team-row ' + (i === 0 ? "top" : "") + '" style="--team-color:' + escapeHtml(color) + '">' +
         '<div class="pos">' + currentRank + '</div>' +
-        '<div class="team-name">' + (team.team_name || score.team_id) + '</div>' +
+        '<div class="team-name"><i class="score-team-swatch"></i>' + escapeHtml(getTeamDisplayName(team) || score.team_id) + '</div>' +
         '<div class="score">' + (score.points || 0) + '</div>' +
       '</div>';
     }).join("");
@@ -3339,8 +3337,9 @@ function renderPlacements() {
   }
 
   placementEntry.innerHTML = teams.map(function(team) {
-    return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(getTeamId(team)) + '">' +
-      '<span>' + escapeHtml(getTeamDisplayName(team)) + '</span>' +
+    var color = getTeamDisplayColor(team);
+    return '<div class="placement-row score-team-placement" data-team-id="' + escapeHtml(getTeamId(team)) + '" style="--team-color:' + escapeHtml(color) + '">' +
+      '<span><i class="score-team-swatch"></i>' + escapeHtml(getTeamDisplayName(team)) + '</span>' +
       '<select data-placement-select>' + getPlaceOptions(0) + '</select>' +
       '<strong data-placement-points>0</strong>' +
     '</div>';
@@ -3372,9 +3371,9 @@ function teamMatchesScoreAge(team, ageGroup) {
   if (teamAge && normalizedAge && normalizedAge.indexOf(teamAge) !== -1) return true;
 
   var number = Number(team.team_number);
-  if (normalizedAge.indexOf("6-7") !== -1) return number >= 1 && number <= 10;
-  if (normalizedAge.indexOf("8-9") !== -1) return number >= 11 && number <= 20;
-  if (normalizedAge.indexOf("10-12") !== -1) return number >= 21 && number <= 30;
+  if (normalizedAge.indexOf("6-7") !== -1) return number >= 1 && number <= 8;
+  if (normalizedAge.indexOf("8-9") !== -1) return number >= 9 && number <= 16;
+  if (normalizedAge.indexOf("10-12") !== -1) return number >= 17 && number <= 24;
 
   return false;
 }
@@ -3393,9 +3392,7 @@ function getScoreEntryTeams() {
 function getTeamDisplayName(team) {
   if (!team) return "";
   var number = getRawTeamNumber(team);
-  var colorName = getTeamDisplayColorName(team);
-  var name = team.team_name && team.team_name !== "Team " + number ? team.team_name : "";
-  return ["Team " + (number || ""), name, colorName].filter(Boolean).join(" - ");
+  return "Team " + (number || "");
 }
 
 function getTeamOptions(teams, selectedIndex) {
@@ -3648,10 +3645,9 @@ function getCurrentScoreForTeam(teamId) {
 function getCorrectionTeamOptions(teams) {
   return teams.map(function(team) {
     var teamId = getTeamId(team);
-    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
 
     return '<option value="' + escapeHtml(teamId) + '">' +
-      escapeHtml(getTeamDisplayName(team) + (ageGroup ? " • " + ageGroup : "")) +
+      escapeHtml(getTeamDisplayName(team)) +
     '</option>';
   }).join("");
 }
@@ -3762,7 +3758,7 @@ function submitScoreCorrection() {
 }
 
 function getTeamById(teamId) {
-  return (latestTeams || []).find(function(team) {
+  return getScoringTeams().find(function(team) {
     return getTeamId(team) === teamId;
   }) || {};
 }
@@ -3772,17 +3768,16 @@ function renderTeamNameAdminForm() {
   if (!teamSelect) return;
 
   var currentValue = teamSelect.value;
-  var teams = (latestTeams || []).slice().sort(function(a, b) {
+  var teams = getScoringTeams().slice().sort(function(a, b) {
     return Number(a.team_number || 0) - Number(b.team_number || 0);
   });
 
   teamSelect.innerHTML = teams.map(function(team) {
     var teamId = getTeamId(team);
-    var ageGroup = getCanonicalAgeGroup(team.age_group || getAgeGroupFromTeamNumber(team.team_number));
     var currentName = team.team_name ? " - " + team.team_name : "";
 
     return '<option value="' + escapeHtml(teamId) + '">' +
-      escapeHtml(getTeamDisplayName(team) + (ageGroup ? " • " + ageGroup : "") + currentName) +
+      escapeHtml(getTeamDisplayName(team) + currentName) +
     '</option>';
   }).join("");
 
@@ -3899,10 +3894,12 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
     var canChoose = String(row.can_choose || "TRUE").toLowerCase() === "true";
 
     if (assignedUsername === currentUsername && canChoose) {
+      var ageGroup = getCanonicalAgeGroup(row.age_group || getAgeGroupFromTeamNumber(row.team_number));
+      var teamNumber = normalizeCampTeamNumber(row.team_number, ageGroup);
       teamNameAssignment = {
-        team_id: row.team_id || "team_" + row.team_number,
-        team_number: row.team_number,
-        age_group: row.age_group || getAgeGroupFromTeamNumber(row.team_number)
+        team_id: buildScoringTeamId(teamNumber),
+        team_number: teamNumber,
+        age_group: ageGroup
       };
     }
   });

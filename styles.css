@@ -1352,11 +1352,32 @@ textarea:focus {
 
 .placement-row span,
 .placement-row strong {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
     font-size: 14px;
     font-weight: 950
 }
 
+.team-row .team-name {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px
+}
+
+.score-team-swatch {
+    background: var(--team-color, var(--cof-blue));
+    border: 2px solid rgba(245, 244, 235, .86);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px rgba(214, 97, 40, .24);
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 16px;
+    width: 16px
+}
+
 .placement-row strong {
+    display: block;
     text-align: right;
     color: var(--cof-blue)
 }

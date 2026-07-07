@@ -496,6 +496,87 @@ function syncAssignmentExports() {
   syncDormAssignmentExport_();
 }
 
+function resetScoresForCamp() {
+  const scoreTeams = buildScoreResetTeams_();
+  const now = new Date();
+
+  writeSheet_("SCORE_ENTRIES", [
+    "timestamp",
+    "username",
+    "age_group",
+    "game_id",
+    "game_title",
+    "scoring_mode",
+    "team_id",
+    "points",
+    "result",
+    "place",
+    "awards",
+    "details"
+  ], []);
+
+  writeSheet_("SCORE_CORRECTIONS", [
+    "timestamp",
+    "username",
+    "team_id",
+    "team_number",
+    "age_group",
+    "correction_mode",
+    "current_points",
+    "amount",
+    "adjustment",
+    "new_total",
+    "reason"
+  ], []);
+
+  writeSheet_("SCORES", [
+    "team_id",
+    "age_group",
+    "points",
+    "previous_rank",
+    "last_updated"
+  ], scoreTeams.map(team => [
+    team.team_id,
+    team.age_group,
+    0,
+    "",
+    now
+  ]));
+}
+
+function buildScoreResetTeams_() {
+  const teamRows = []
+    .concat(readOptionalSheetObjects_("TEAM_LEADERS"))
+    .concat(readOptionalSheetObjects_("TEAM_ASSIGNMENTS"))
+    .concat(readOptionalSheetObjects_("TEAMS"));
+  const teams = {};
+
+  teamRows.forEach(row => {
+    const teamNumber = getFirstRowValue_(row, ["team_number", "team", "number"]);
+    const ageGroup = getFirstRowValue_(row, ["age_group", "grade_group", "group"]) || getAgeGroupFromGlobalTeamNumber_(teamNumber);
+
+    if (!teamNumber || Number(teamNumber) < 1 || Number(teamNumber) > 24) return;
+
+    teams[teamNumber] = {
+      team_id: `team_${teamNumber}`,
+      team_number: teamNumber,
+      age_group: ageGroup || getAgeGroupFromGlobalTeamNumber_(teamNumber)
+    };
+  });
+
+  return Object.keys(teams)
+    .sort((a, b) => Number(a) - Number(b))
+    .map(teamNumber => teams[teamNumber]);
+}
+
+function getAgeGroupFromGlobalTeamNumber_(teamNumber) {
+  const number = Number(teamNumber);
+  if (number >= 1 && number <= 8) return "6-7th";
+  if (number >= 9 && number <= 16) return "8-9th";
+  if (number >= 17 && number <= 24) return "10-12th";
+  return "";
+}
+
 function syncTeamAssignmentExport_() {
   const sourceRows = readSheetObjects_("PCO_TEAM_ASSIGNMENTS_RAW");
   const syncedAt = new Date();
