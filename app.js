@@ -1193,7 +1193,7 @@ function getTeamId(team) {
   if (!team) return "";
   var rawTeamNumber = getRawTeamNumber(team);
   var teamNumber = normalizeCampTeamNumber(rawTeamNumber, team.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
-  return getRowValue(team, ["team_id", "id"]) || team["1"] || (teamNumber ? "team_" + teamNumber : "");
+  return teamNumber ? buildScoringTeamId(teamNumber) : getRowValue(team, ["team_id", "id"]) || team["1"] || "";
 }
 
 function buildScoringTeamId(teamNumber) {
@@ -1216,6 +1216,7 @@ function getScoringTeams() {
     var existing = teamsByKey[key] || {};
 
     if (!teamNumber) return;
+    ageGroup = getAgeGroupFromTeamNumber(teamNumber);
 
     teamsByKey[key] = Object.assign({}, existing, team, {
       team_id: teamId,
@@ -1285,10 +1286,7 @@ function getScoreTotals(scores, teams, entries) {
     }
 
     totals[teamId].points = Number(score.points || 0);
-
-    if (score.age_group) {
-      totals[teamId].age_group = getCanonicalAgeGroup(score.age_group);
-    }
+    totals[teamId].age_group = getCanonicalAgeGroup((teamLookup[teamId] || {}).age_group || getAgeGroupFromTeamNumber((teamLookup[teamId] || {}).team_number));
   });
 
   if (scores && scores.length) {
@@ -1357,6 +1355,8 @@ function renderScores(scores, teams) {
 
   var teamLookup = buildTeamLookup(teams);
   var groups = [];
+  var activeButton = selector.querySelector(".age-pill.active");
+  var activeGroupSlug = activeButton ? activeButton.getAttribute("data-age") : "";
 
   scores.forEach(function(score) {
     if (score.age_group && groups.indexOf(score.age_group) === -1) {
@@ -1364,11 +1364,21 @@ function renderScores(scores, teams) {
     }
   });
 
+  groups.sort(function(a, b) {
+    return getAgeGroupOrder(a) - getAgeGroupOrder(b);
+  });
+
+  if (!activeGroupSlug || groups.map(slug).indexOf(activeGroupSlug) === -1) {
+    activeGroupSlug = groups.length ? slug(groups[0]) : "";
+  }
+
   selector.innerHTML = groups.map(function(group, index) {
-    return '<button type="button" class="age-pill ' + (index === 0 ? "active" : "") + '" data-age="' + slug(group) + '">' + group + '</button>';
+    var groupSlug = slug(group);
+    return '<button type="button" class="age-pill ' + (groupSlug === activeGroupSlug ? "active" : "") + '" data-age="' + groupSlug + '">' + group + '</button>';
   }).join("");
 
   boards.innerHTML = groups.map(function(group, index) {
+    var groupSlug = slug(group);
     var rows = scores.filter(function(score) {
       return score.age_group === group;
     }).sort(function(a, b) {
@@ -1387,7 +1397,7 @@ function renderScores(scores, teams) {
       '</div>';
     }).join("");
 
-    return '<div id="' + slug(group) + '" class="score-board ' + (index === 0 ? "active" : "hidden") + '">' +
+    return '<div id="' + groupSlug + '" class="score-board ' + (groupSlug === activeGroupSlug ? "active" : "hidden") + '">' +
       '<div class="table-header"><div>Pos.</div><div>Team</div><div style="text-align:right">Pts.</div></div>' +
       teamRows +
     '</div>';

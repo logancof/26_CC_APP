@@ -553,7 +553,7 @@ function buildScoreResetTeams_() {
 
   teamRows.forEach(row => {
     const teamNumber = getFirstRowValue_(row, ["team_number", "team", "number"]);
-    const ageGroup = getFirstRowValue_(row, ["age_group", "grade_group", "group"]) || getAgeGroupFromGlobalTeamNumber_(teamNumber);
+    const ageGroup = getAgeGroupFromGlobalTeamNumber_(teamNumber);
 
     if (!teamNumber || Number(teamNumber) < 1 || Number(teamNumber) > 24) return;
 
