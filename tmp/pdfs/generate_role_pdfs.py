@@ -73,9 +73,9 @@ SMALL_STYLE = ParagraphStyle(
 TIME_STYLE = ParagraphStyle(
     "Time",
     fontName="Helvetica-Bold",
-    fontSize=9.6,
+    fontSize=10.2,
     leading=12,
-    textColor=ORANGE,
+    textColor=CREAM,
 )
 
 TASK_STYLE = ParagraphStyle(
@@ -106,23 +106,40 @@ def bullet(text):
 def build_checklist(rows):
     table_data = []
     for time, items in rows:
-        item_flow = [Paragraph(item, TASK_STYLE) for item in items]
-        table_data.append([Paragraph(time, TIME_STYLE), item_flow])
+        item_flow = [Paragraph("- " + item, TASK_STYLE) for item in items]
+        table_data.append([Paragraph(time, TIME_STYLE)])
+        table_data.append([item_flow])
 
-    table = Table(table_data, colWidths=[1.48 * inch, 4.52 * inch], hAlign="LEFT")
+    table = Table(table_data, colWidths=[6 * inch], hAlign="LEFT")
+    style = [
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#e8c9b4")),
+    ]
+
+    for row_index in range(len(table_data)):
+        if row_index % 2 == 0:
+            style.extend(
+                [
+                    ("BACKGROUND", (0, row_index), (-1, row_index), ORANGE),
+                    ("BOTTOMPADDING", (0, row_index), (-1, row_index), 5),
+                ]
+            )
+        else:
+            style.extend(
+                [
+                    ("BACKGROUND", (0, row_index), (-1, row_index), colors.HexColor("#fffaf1")),
+                    ("LINEBELOW", (0, row_index), (-1, row_index), 0.5, colors.HexColor("#ead8ca")),
+                    ("TOPPADDING", (0, row_index), (-1, row_index), 8),
+                    ("BOTTOMPADDING", (0, row_index), (-1, row_index), 9),
+                ]
+            )
+
     table.setStyle(
-        TableStyle(
-            [
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-                ("TOPPADDING", (0, 0), (-1, -1), 7),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-                ("LINEBELOW", (0, 0), (-1, -2), 0.5, colors.HexColor("#ead8ca")),
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fffaf1")),
-                ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#e8c9b4")),
-            ]
-        )
+        TableStyle(style)
     )
     return table
 
