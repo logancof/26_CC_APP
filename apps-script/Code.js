@@ -976,17 +976,10 @@ function getFirstRowValue_(row, headers) {
 }
 
 function syncPcoAssignments() {
-  const props = PropertiesService.getScriptProperties();
-  const eventId = String(props.getProperty("PCO_EVENT_ID") || "").trim();
-  const teamTypeId = String(props.getProperty("PCO_TEAM_ASSIGNMENT_TYPE_ID") || "").trim();
-  const breakoutTypeId = String(props.getProperty("PCO_BREAKOUT_ASSIGNMENT_TYPE_ID") || "").trim();
-
-  if (!eventId || !teamTypeId || !breakoutTypeId) {
-    throw new Error("Missing one or more PCO Script Properties.");
-  }
-
-  syncPcoTeamAssignments_(eventId, teamTypeId);
-  syncPcoBreakoutAssignments_(eventId, breakoutTypeId);
+  syncTeamAssignmentExport_();
+  syncBreakoutAssignmentExport_();
+  syncBusAssignmentExport_();
+  syncDormAssignmentExport_();
 }
 
 function syncPcoTeamAssignments_(eventId, assignmentTypeId) {
