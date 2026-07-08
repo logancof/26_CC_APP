@@ -27,6 +27,7 @@ var lastMediaSignature = "";
 var latestTeams = [];
 var latestTeamAssignments = [];
 var latestTeamLeaders = [];
+var latestTeamNames = [];
 var latestBreakoutAssignments = [];
 var latestBusAssignments = [];
 var latestDormAssignments = [];
@@ -590,6 +591,7 @@ function renderCampData(data) {
   latestTeams = data.TEAMS || [];
   latestTeamAssignments = data.TEAM_ASSIGNMENTS || [];
   latestTeamLeaders = data.TEAM_LEADERS || [];
+  latestTeamNames = data.TEAM_NAMES || [];
   latestBreakoutAssignments = data.BREAKOUT_GROUP_ASSIGNMENTS || [];
   latestBusAssignments = data.BUS_ASSIGNMENTS || [];
   latestDormAssignments = data.DORM_ASSIGNMENTS || [];
@@ -1206,6 +1208,7 @@ function getScoringTeams() {
   var teamsByKey = {};
   var assignmentRows = latestTeamAssignments || [];
   var leaderLookup = buildTeamLeaderLookup(latestTeamLeaders || []);
+  var teamNameLookup = buildTeamNameLookup(latestTeamNames || []);
 
   function upsertTeam(team) {
     var rawTeamNumber = getRawTeamNumber(team);
@@ -1222,7 +1225,7 @@ function getScoringTeams() {
       team_id: teamId,
       team_number: teamNumber,
       age_group: ageGroup,
-      team_name: team.team_name || existing.team_name || "Team " + teamNumber,
+      team_name: teamNameLookup[teamId] || team.team_name || existing.team_name || "",
       color: team.color || existing.color || "",
       color_name: team.color_name || existing.color_name || "",
       leaders: team.leaders || existing.leaders || ""
@@ -1484,12 +1487,15 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
   var page = qs("#teamCards");
   var groups = {};
   var leaderLookup = buildTeamLeaderLookup(teamLeaders || []);
+  var teamNameLookup = buildTeamNameLookup(latestTeamNames || []);
 
   if (!page) return;
 
   (assignments || []).forEach(function(row) {
     var teamNumber = String(row.team_number || "").trim();
     var ageGroup = getCanonicalAgeGroup(row.age_group || "");
+    var globalAgeGroup = getAgeGroupFromTeamNumber(teamNumber) || ageGroup;
+    var teamId = buildScoringTeamId(teamNumber);
     var key = ageGroup + "|" + teamNumber;
 
     if (!teamNumber) return;
@@ -1498,8 +1504,9 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
       groups[key] = {
         team_number: teamNumber,
         source_team_number: row.source_team_number || "",
-        age_group: ageGroup,
+        age_group: globalAgeGroup,
         team_name: row.team_name || "Team " + teamNumber + (ageGroup ? " (" + ageGroup.replace("th", "") + ")" : ""),
+        chosen_team_name: teamNameLookup[teamId] || "",
         leaders: (leaderLookup[key] || {}).leaders || "",
         color: row.color || (leaderLookup[key] || {}).color || "",
         color_name: row.color_name || (leaderLookup[key] || {}).color_name || "",
@@ -1538,16 +1545,17 @@ function renderTeamAssignmentCards(assignments, teamLeaders) {
     var campusSummary = Object.keys(team.campuses).sort().map(function(campus) {
       return campus + " " + team.campuses[campus];
     }).join(" • ");
-    var search = String(team.team_name + " " + team.team_number + " " + team.age_group + " " + colorName + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
+    var displayName = team.chosen_team_name || "Team " + team.team_number;
+    var search = String(displayName + " " + team.team_name + " " + team.team_number + " " + team.age_group + " " + colorName + " " + team.leaders + " " + studentNames.join(" ") + " " + campusSummary).toLowerCase();
 
     return '<div class="parent-team-card assignment-team-card team-color-card" data-search="' + escapeHtml(search) + '" style="--team-color:' + escapeHtml(color) + '">' +
       '<div class="team-banner" style="background:' + escapeHtml(color) + '"></div>' +
       '<div class="team-card-body">' +
         '<div class="team-card-top">' +
-          '<h3>' + escapeHtml("Team " + team.team_number) + '</h3>' +
+          '<h3>' + escapeHtml(displayName) + '</h3>' +
           '<span class="pill team-color-pill" style="--team-color:' + escapeHtml(color) + '">' + escapeHtml([team.age_group, colorName].filter(Boolean).join(" • ") || "Team") + '</span>' +
         '</div>' +
-        (team.team_name ? '<p class="team-original-name">' + escapeHtml(team.team_name) + '</p>' : "") +
+        (team.chosen_team_name ? '<p class="team-original-name">' + escapeHtml("Team " + team.team_number) + '</p>' : "") +
         (team.leaders ? '<div class="team-leader-box"><span>Leaders</span><strong>' + escapeHtml(team.leaders) + '</strong></div>' : "") +
         '<div class="team-card-meta">' +
           '<span>' + team.students.length + ' students</span>' +
@@ -3885,6 +3893,22 @@ function renderResourceLinks(resources) {
   });
 }
 
+function buildTeamNameLookup(teamNames) {
+  var lookup = {};
+
+  (teamNames || []).forEach(function(row) {
+    var rawTeamNumber = String(row.team_number || row.team || "").trim();
+    var ageGroup = getCanonicalAgeGroup(row.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
+    var teamNumber = normalizeCampTeamNumber(rawTeamNumber, ageGroup);
+    var teamId = teamNumber ? buildScoringTeamId(teamNumber) : String(row.team_id || "").trim();
+    var name = String(row.team_name || "").trim();
+
+    if (teamId && name) lookup[teamId] = name;
+  });
+
+  return lookup;
+}
+
 function applyTeamNameSettings(settings, assignments, teamNames) {
   var now = new Date();
   var setting = settings && settings.length ? settings[0] : {};
@@ -3914,13 +3938,28 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
     }
   });
 
+  var assignmentHasName = false;
+
   (teamNames || []).forEach(function(row) {
-    if (teamNameAssignment && row.team_id === teamNameAssignment.team_id && row.team_name) {
+    var rawTeamNumber = String(row.team_number || row.team || "").trim();
+    var ageGroup = getCanonicalAgeGroup(row.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
+    var teamNumber = normalizeCampTeamNumber(rawTeamNumber, ageGroup);
+    var rowTeamId = teamNumber ? buildScoringTeamId(teamNumber) : String(row.team_id || "").trim();
+
+    if (teamNameAssignment && rowTeamId === teamNameAssignment.team_id && row.team_name) {
+      assignmentHasName = true;
+
       try {
         localStorage.setItem("lockedTeamName", row.team_name);
       } catch (e) {}
     }
   });
+
+  if (teamNameAssignment && !assignmentHasName) {
+    try {
+      localStorage.removeItem("lockedTeamName");
+    } catch (e) {}
+  }
 
   updateTeamNameVisibility();
 }

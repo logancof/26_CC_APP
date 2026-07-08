@@ -19,6 +19,9 @@ function doGet() {
     "ATTENDANCE_GROUPS",
     "TEAM_ASSIGNMENTS",
     "TEAM_LEADERS",
+    "TEAM_NAMES",
+    "TEAM_NAME_SETTINGS",
+    "TEAM_NAME_ASSIGNMENTS",
     "BREAKOUT_GROUP_ASSIGNMENTS",
     "BUS_ASSIGNMENTS",
     "DORM_ASSIGNMENTS"
@@ -72,6 +75,10 @@ function doPost(e) {
 
   if (payload.action === "admin_update_team_name") {
     return handleAdminUpdateTeamName(payload);
+  }
+
+  if (payload.action === "lock_team_name") {
+    return handleTeamNameSave(payload);
   }
 
   if (payload.action === "submit_attendance") {
@@ -340,30 +347,40 @@ function applyScoreCorrectionToScores(ss, payload) {
 }
 
 function handleAdminUpdateTeamName(payload) {
+  return handleTeamNameSave(payload);
+}
+
+function handleTeamNameSave(payload) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName("TEAMS");
-
-  if (!sheet) {
-    return jsonResponse({
-      ok: false,
-      message: "TEAMS sheet not found."
-    });
-  }
-
+  const headers = [
+    "team_id",
+    "team_number",
+    "age_group",
+    "team_name",
+    "updated_by",
+    "updated_at"
+  ];
+  const sheet = ensureSheetWithHeaders_("TEAM_NAMES", headers);
   const values = sheet.getDataRange().getValues();
-  const headers = values.shift();
+  const existingHeaders = values.shift().map(header => String(header).trim());
 
-  const teamIdIndex = headers.indexOf("team_id");
-  const teamNameIndex = headers.indexOf("team_name");
-  const teamNumberIndex = headers.indexOf("team_number");
+  const teamIdIndex = existingHeaders.indexOf("team_id");
+  const teamNumberIndex = existingHeaders.indexOf("team_number");
+  const ageGroupIndex = existingHeaders.indexOf("age_group");
+  const teamNameIndex = existingHeaders.indexOf("team_name");
+  const updatedByIndex = getHeaderIndex_(existingHeaders, ["updated_by", "update_by"]);
+  const updatedAtIndex = getHeaderIndex_(existingHeaders, ["updated_at", "update_at"]);
 
   if (teamIdIndex === -1 || teamNameIndex === -1) {
     return jsonResponse({
       ok: false,
-      message: "TEAMS needs team_id and team_name columns."
+      message: "TEAM_NAMES needs team_id and team_name columns."
     });
   }
 
+  const teamId = String(payload.team_id || "").trim();
+  const teamNumber = String(payload.team_number || "").trim();
+  const ageGroup = payload.age_group || getAgeGroupFromGlobalTeamNumber_(teamNumber);
   let targetRow = -1;
 
   values.forEach((row, index) => {
@@ -371,21 +388,30 @@ function handleAdminUpdateTeamName(payload) {
     const rowTeamNumber = teamNumberIndex === -1 ? "" : String(row[teamNumberIndex] || "").trim();
 
     if (
-      rowTeamId === String(payload.team_id || "").trim() ||
-      rowTeamNumber === String(payload.team_number || "").trim()
+      rowTeamId === teamId ||
+      (teamNumber && rowTeamNumber === teamNumber)
     ) {
       targetRow = index + 2;
     }
   });
 
   if (targetRow === -1) {
-    return jsonResponse({
-      ok: false,
-      message: "Team not found."
-    });
+    const row = new Array(existingHeaders.length).fill("");
+    row[teamIdIndex] = teamId || `team_${teamNumber}`;
+    if (teamNumberIndex !== -1) row[teamNumberIndex] = teamNumber;
+    if (ageGroupIndex !== -1) row[ageGroupIndex] = ageGroup;
+    row[teamNameIndex] = payload.team_name || "";
+    if (updatedByIndex !== -1) row[updatedByIndex] = payload.username || "";
+    if (updatedAtIndex !== -1) row[updatedAtIndex] = new Date();
+    sheet.appendRow(row);
+  } else {
+    sheet.getRange(targetRow, teamNameIndex + 1).setValue(payload.team_name || "");
+    if (teamIdIndex !== -1) sheet.getRange(targetRow, teamIdIndex + 1).setValue(teamId || `team_${teamNumber}`);
+    if (teamNumberIndex !== -1) sheet.getRange(targetRow, teamNumberIndex + 1).setValue(teamNumber);
+    if (ageGroupIndex !== -1) sheet.getRange(targetRow, ageGroupIndex + 1).setValue(ageGroup);
+    if (updatedByIndex !== -1) sheet.getRange(targetRow, updatedByIndex + 1).setValue(payload.username || "");
+    if (updatedAtIndex !== -1) sheet.getRange(targetRow, updatedAtIndex + 1).setValue(new Date());
   }
-
-  sheet.getRange(targetRow, teamNameIndex + 1).setValue(payload.team_name || "");
 
   logTeamNameCorrection(ss, payload);
 
@@ -393,6 +419,17 @@ function handleAdminUpdateTeamName(payload) {
     ok: true,
     message: "Team name updated."
   });
+}
+
+function resetTeamNamesForCamp() {
+  writeSheet_("TEAM_NAMES", [
+    "team_id",
+    "team_number",
+    "age_group",
+    "team_name",
+    "updated_by",
+    "updated_at"
+  ], []);
 }
 
 function logTeamNameCorrection(ss, payload) {
@@ -1284,4 +1321,37 @@ function writeSheet_(sheetName, headers, rows) {
   }
 
   sheet.setFrozenRows(1);
+}
+
+function ensureSheetWithHeaders_(sheetName, headers) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+
+  const values = sheet.getDataRange().getDisplayValues();
+
+  if (!values.length || values[0].every(cell => String(cell || "").trim() === "")) {
+    sheet.clearContents();
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+  }
+
+  return sheet;
+}
+
+function getHeaderIndex_(headers, names) {
+  const normalizedHeaders = headers.map(header => String(header || "").trim().toLowerCase());
+
+  for (const name of names) {
+    const index = normalizedHeaders.indexOf(String(name || "").trim().toLowerCase());
+    if (index !== -1) return index;
+  }
+
+  return -1;
 }
