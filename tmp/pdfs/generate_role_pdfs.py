@@ -70,6 +70,22 @@ SMALL_STYLE = ParagraphStyle(
     textColor=MUTED,
 )
 
+CONTACT_LABEL_STYLE = ParagraphStyle(
+    "ContactLabel",
+    fontName="Helvetica-Bold",
+    fontSize=10,
+    leading=13,
+    textColor=ORANGE,
+)
+
+CONTACT_STYLE = ParagraphStyle(
+    "Contact",
+    fontName="Helvetica",
+    fontSize=10,
+    leading=13,
+    textColor=INK,
+)
+
 TIME_STYLE = ParagraphStyle(
     "Time",
     fontName="Helvetica-Bold",
@@ -101,6 +117,26 @@ def draw_background(canvas, doc):
 
 def bullet(text):
     return Paragraph("- " + text, BODY_STYLE)
+
+
+def build_contact_box(rows):
+    table_data = [[Paragraph(label, CONTACT_LABEL_STYLE), Paragraph(value, CONTACT_STYLE)] for label, value in rows]
+    table = Table(table_data, colWidths=[1.28 * inch, 4.72 * inch], hAlign="LEFT")
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fffaf1")),
+                ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#e8c9b4")),
+                ("LINEBELOW", (0, 0), (-1, -2), 0.5, colors.HexColor("#ead8ca")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]
+        )
+    )
+    return table
 
 
 def build_checklist(rows):
@@ -144,7 +180,7 @@ def build_checklist(rows):
     return table
 
 
-def build_pdf(filename, title, description, checklist=None, sections=None, point_person=None):
+def build_pdf(filename, title, description, checklist=None, sections=None, point_person=None, contacts=None):
     path = PDF_DIR / filename
     doc = BaseDocTemplate(
         str(path),
@@ -161,6 +197,9 @@ def build_pdf(filename, title, description, checklist=None, sections=None, point
     if point_person:
         story.append(Paragraph("<b>Point Person:</b> " + point_person, BODY_STYLE))
         story.append(Spacer(1, 6))
+    if contacts:
+        story.append(build_contact_box(contacts))
+        story.append(Spacer(1, 7))
     story.append(Paragraph("DESCRIPTION", SECTION_STYLE))
     story.append(Paragraph(description, BODY_STYLE))
 
@@ -241,7 +280,10 @@ build_pdf(
     "Role Descriptions FREE TIME.pdf",
     "FREE TIME RESPONSIBILITIES",
     "Free Time leaders help create a relationally warm, physically safe, and easy-to-enter environment for students during afternoon and night Free Time.",
-    point_person="Annalise Brubaker (Afternoon), Jake Loranzan (Night)",
+    contacts=[
+        ("Afternoon", "Annalise Brubaker (937) 901-6779"),
+        ("Night", "Jake Loranzan (937) 336-4909"),
+    ],
     sections=[
         ("AFTERNOON & NIGHT", [
             "Connect relationally with the students and leaders you get to interact with.",
@@ -261,6 +303,33 @@ build_pdf(
             "Ensure leaders are present in their assigned areas. See PCO Services for serving assignments.",
             "Throughout Free Time, check in with the leaders to see how they are doing, supporting them in any way they may need.",
             "Answer any questions leaders have regarding Free Time.",
+        ]),
+    ],
+)
+
+build_pdf(
+    "Role Descriptions DORMS.pdf",
+    "DORM RESPONSIBILITIES",
+    "Community Camp Leaders are responsible for ensuring a safe space is created in the dorms for students to grow in their relationship with Jesus and to experience connection with other students and leaders.",
+    contacts=[
+        ("Guys", "Matt Hounshell (937) 423-8560"),
+        ("Girls", "Bri Baker (937) 733-2505"),
+    ],
+    sections=[
+        ("COMMUNICATION", [
+            "Follow Tiers of Communication as needs arise with students.",
+        ]),
+        ("ALL DORM LEADERS", [
+            "Keep the dorm space relatively clean and tidy throughout the week.",
+            "Students are responsible for tidying their own space, but they may need guidance.",
+            "Be intentional with morning and evening clean-up times.",
+        ]),
+        ("IF ASSIGNED AS DORM LEADER", [
+            ("Daily Rhythm:", "Lights on at 7:00 AM each morning. Lights out at 11:30 PM each night."),
+            ("Exceptions:", "Friday morning wake-up is 7:30 AM. Follow anything communicated by the Next Gen Director."),
+            ("Clean-Up:", "Facilitate morning and evening clean-up."),
+            ("Meals:", "Ensure dorms are clear for each meal. All students MUST attend Breakfast, Lunch, and Dinner. This does not have to be you specifically, but ensure at least one leader checks the dorm during each meal. Example: assign each leader in your dorm to a meal for the week."),
+            ("Attendance:", "Take attendance in your dorm each night. Submit attendance through the COF app."),
         ]),
     ],
 )
