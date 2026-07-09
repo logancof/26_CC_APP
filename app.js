@@ -4353,25 +4353,49 @@ function closeResourceGuide() {
   activatePage(resourceGuideBackPage || "home");
 }
 
-function renderScheduleGames(games) {
+function getGameScheduleTeamOffset(groupKey) {
+  if (groupKey === "junior") return 8;
+  if (groupKey === "senior") return 16;
+  return 0;
+}
+
+function translateGameScheduleTeams(text, groupKey) {
+  var offset = getGameScheduleTeamOffset(groupKey);
+  var value = String(text || "");
+
+  if (!offset || !/\bTeams?\b/.test(value)) return value;
+
+  return value
+    .replace(/\b(Teams?\s+)([1-8])(?!\d)(\s*-\s*)([1-8])(?!\d)/g, function(match, label, start, dash, end) {
+      return label + String(Number(start) + offset) + dash + String(Number(end) + offset);
+    })
+    .replace(/\b(Teams?\s+)([1-8])(?!\d)/g, function(match, label, number) {
+      return label + String(Number(number) + offset);
+    })
+    .replace(/(&\s*)([1-8])\b/g, function(match, label, number) {
+      return label + String(Number(number) + offset);
+    });
+}
+
+function renderScheduleGames(games, groupKey) {
   return (games || []).map(function(game) {
     return '<div class="schedule-game-row">' +
       '<div>' +
         '<span class="schedule-game-station">' + escapeHtml(game.station) + '</span>' +
         '<strong>' + escapeHtml(game.name) + '</strong>' +
       '</div>' +
-      '<span class="schedule-matchup">' + escapeHtml(game.matchup) + '</span>' +
+      '<span class="schedule-matchup">' + escapeHtml(translateGameScheduleTeams(game.matchup, groupKey)) + '</span>' +
     '</div>';
   }).join("");
 }
 
-function renderScheduleStations(stations) {
+function renderScheduleStations(stations, groupKey) {
   return '<div class="schedule-stations">' + (stations || []).map(function(station) {
     var rounds = (station.rounds || []).map(function(round) {
       return '<div class="schedule-round">' +
         '<span>' + escapeHtml(round.time) + '</span>' +
-        '<strong>' + escapeHtml(round.matchup) + '</strong>' +
-        '<em>Resting: ' + escapeHtml(round.resting) + '</em>' +
+        '<strong>' + escapeHtml(translateGameScheduleTeams(round.matchup, groupKey)) + '</strong>' +
+        '<em>Resting: ' + escapeHtml(translateGameScheduleTeams(round.resting, groupKey)) + '</em>' +
       '</div>';
     }).join("");
 
@@ -4382,7 +4406,7 @@ function renderScheduleStations(stations) {
   }).join("") + '</div>';
 }
 
-function renderScheduleBlock(block) {
+function renderScheduleBlock(block, groupKey) {
   var meta = '<div class="schedule-block-meta">' +
     '<span>' + escapeHtml(block.time || "") + '</span>' +
     '<strong>' + escapeHtml(block.title || "") + '</strong>' +
@@ -4390,15 +4414,15 @@ function renderScheduleBlock(block) {
   var body = "";
 
   if (block.type === "activity") {
-    body = renderScheduleGames(block.games) +
-      (block.off ? '<div class="schedule-off"><span>Off</span><strong>' + escapeHtml(block.off) + '</strong></div>' : "");
+    body = renderScheduleGames(block.games, groupKey) +
+      (block.off ? '<div class="schedule-off"><span>Off</span><strong>' + escapeHtml(translateGameScheduleTeams(block.off, groupKey)) + '</strong></div>' : "");
   } else if (block.type === "stations") {
-    body = renderScheduleStations(block.stations);
+    body = renderScheduleStations(block.stations, groupKey);
   } else if (block.type === "allplay") {
     body = '<div class="schedule-allplay"><strong>' + escapeHtml(block.name) + '</strong>' +
       '<span>' + escapeHtml(block.note || "") + '</span></div>';
   } else {
-    body = block.note ? '<p class="schedule-note">' + escapeHtml(block.note) + '</p>' : "";
+    body = block.note ? '<p class="schedule-note">' + escapeHtml(translateGameScheduleTeams(block.note, groupKey)) + '</p>' : "";
   }
 
   if (block.type === "transition") {
@@ -4447,7 +4471,9 @@ function renderGameSchedule(groupKey, dayIndex) {
         '<h3>' + escapeHtml(template.title) + '</h3>' +
         (template.note ? '<p>' + escapeHtml(template.note) + '</p>' : '') +
       '</section>' +
-      template.blocks.map(renderScheduleBlock).join("");
+      template.blocks.map(function(block) {
+        return renderScheduleBlock(block, groupKey);
+      }).join("");
   }
 }
 
