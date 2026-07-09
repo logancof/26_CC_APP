@@ -1676,20 +1676,23 @@ function renderTeamAssignmentsDoc() {
   var container = qs("#teamAssignmentsDoc");
   var groups = {};
   var leaderLookup = buildTeamLeaderLookup(latestTeamLeaders || []);
+  var teamNameLookup = buildTeamNameLookup(latestTeamNames || []);
 
   if (!container) return;
 
   (latestTeamAssignments || []).forEach(function(row) {
     var ageGroup = getCanonicalAgeGroup(row.age_group || "");
     var teamNumber = String(row.team_number || "").trim();
+    var teamId = buildScoringTeamId(teamNumber);
+    var chosenTeamName = teamNameLookup[teamId] || "";
     var key = ageGroup + "|" + teamNumber;
 
     if (!teamNumber) return;
 
     if (!groups[key]) {
       groups[key] = {
-        title: "Team " + teamNumber,
-        meta: [ageGroup, row.team_name || ""].filter(Boolean).join(" • "),
+        title: chosenTeamName || "Team " + teamNumber,
+        meta: [ageGroup, chosenTeamName ? "Team " + teamNumber : row.team_name || ""].filter(Boolean).join(" • "),
         leaders: (leaderLookup[key] || {}).leaders || "",
         team_number: teamNumber,
         age_group: ageGroup,
@@ -2338,14 +2341,16 @@ function buildRosterFromBreakoutAssignments(assignments) {
 
 function buildRosterFromTeamAssignments(assignments, teamLeaders) {
   var leaderLookup = buildTeamLeaderLookup(teamLeaders || []);
+  var teamNameLookup = buildTeamNameLookup(latestTeamNames || []);
 
   return (assignments || []).map(function(row, index) {
     var teamNumber = String(row.team_number || row.team || "").trim();
     var ageGroup = getCanonicalAgeGroup(row.age_group || "");
     var key = ageGroup + "|" + teamNumber;
+    var teamId = buildScoringTeamId(teamNumber);
     var leaderName = getRowValue(row, ["leader_name", "leaders", "leader", "team_leaders"]) || (leaderLookup[key] || {}).leaders || "";
     var studentName = getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ");
-    var groupName = row.team_name || (teamNumber ? "Team " + teamNumber : "");
+    var groupName = teamNameLookup[teamId] || row.team_name || (teamNumber ? "Team " + teamNumber : "");
 
     return {
       prompt_id: row.prompt_id || row.checkpoint_id || "",
@@ -3410,7 +3415,14 @@ function getScoreEntryTeams() {
 function getTeamDisplayName(team) {
   if (!team) return "";
   var number = getRawTeamNumber(team);
-  return "Team " + (number || "");
+  var name = String(team.team_name || team.chosen_team_name || "").trim();
+  return name || "Team " + (number || "");
+}
+
+function getTeamNumberLabel(team) {
+  if (!team) return "";
+  var number = getRawTeamNumber(team);
+  return number ? "Team " + number : "";
 }
 
 function getTeamOptions(teams, selectedIndex) {
@@ -3792,10 +3804,11 @@ function renderTeamNameAdminForm() {
 
   teamSelect.innerHTML = teams.map(function(team) {
     var teamId = getTeamId(team);
+    var numberLabel = getTeamNumberLabel(team) || getTeamDisplayName(team);
     var currentName = team.team_name ? " - " + team.team_name : "";
 
     return '<option value="' + escapeHtml(teamId) + '">' +
-      escapeHtml(getTeamDisplayName(team) + currentName) +
+      escapeHtml(numberLabel + currentName) +
     '</option>';
   }).join("");
 
