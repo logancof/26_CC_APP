@@ -727,6 +727,170 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  departure_lewisburg_to_cotubic: {
+    title: "From Lewisburg to Cotubic",
+    sections: [
+      {
+        title: "Departure From Lewisburg - July 13, 2026",
+        blocks: [
+          { type: "subheading", text: "Preparation" },
+          { type: "paragraph", text: "Each of the following items need to be completed by 8:15 AM." },
+          { type: "bullet", text: "Provide coffee in the TCN parking lot for all volunteers. Lisa Clark and Brett Woodyard." },
+          { type: "bullet", text: "Set up 3 tables with 2 chairs each, leaving space between each table, for student check-in in the northeast corner of the upper parking lot. Braden Smith, Alex Meyer, and Jake Loranzan." },
+          { type: "bullet", text: "Display signs for each group of last names. Abby Ditmer." },
+          { type: "bullet", text: "Set up 2 tables about 20 feet behind the check-in tables: one table for students with medication forms and one table for all other students to check in with the Medical Crew." },
+          { type: "bullet", text: "Display signs to designate the purpose of each table." },
+          { type: "bullet", text: "Set up cones at each entrance to ensure no one parks in the upper parking lot. Braden Smith, Alex Meyer, and Jake Loranzan." }
+        ]
+      },
+      {
+        title: "Leaders",
+        blocks: [
+          { type: "bullet", text: "All CC volunteers will attend Crew Rally at 8:20 AM." },
+          { type: "bullet", text: "Volunteers will park in the TCN lower parking lot, nearest to the district office building on the west side." },
+          { type: "bullet", text: "Crew Rally will be held in the TCN upper parking lot." },
+          { type: "bullet", text: "All CC volunteers will be in their spots with their signs, expectant of students' arrival, at 8:45 AM." },
+          { type: "bullet", text: "Signs will be handed out by Matt Hounshell for high school guys, Alex Meyer for middle school guys, Olivia Wilson for high school girls, and Bri Baker for middle school girls." }
+        ]
+      },
+      {
+        title: "Students & Buses",
+        blocks: [
+          { type: "bullet", text: "All students are to arrive at 9:00 AM. Families will park in the lower parking lot." },
+          { type: "bullet", text: "Catch Transportation buses will arrive at 9:45 AM in the upper parking lot." },
+          { type: "bullet", text: "At 9:45 AM, shift groups over to clear a path for the buses." },
+          { type: "bullet", text: "We will load buses and take a group photo at 9:45 AM and depart by 10:00 AM." },
+          { type: "bullet", text: "Ensure the cones are moved when buses arrive. Isaac Shepherd, Steve Lair, and Mark Spanier." }
+        ]
+      },
+      {
+        title: "Check-In",
+        blocks: [
+          { type: "bullet", text: "There will be six volunteers at the check-in tables as families enter the upper parking lot." },
+          { type: "bullet", text: "Ensure check-in sheets, highlighters, and extra medication forms get to the upper parking lot. Brigette Filbrun and Angie Filbrun." },
+          { type: "bullet", text: "Students will check in according to last name." },
+          { type: "subpoint", text: "A-B: Lisa Clark" },
+          { type: "subpoint", text: "C-D: Liz Wilson" },
+          { type: "subpoint", text: "E-G: Heidi Wolf" },
+          { type: "subpoint", text: "H-K: Valerie Simon" },
+          { type: "subpoint", text: "L-P: Jody Bauman" },
+          { type: "subpoint", text: "Q-Z: Julie Bell" },
+          { type: "bullet", text: "At the check-in table, check off or highlight the name of the student." },
+          { type: "bullet", text: "Ensure there are no electronics." },
+          { type: "bullet", text: "Send students to the medical check-in tables if they have medication or need to connect with the Medical Crew regarding a medical diagnosis." }
+        ]
+      },
+      {
+        title: "Medical Crew",
+        blocks: [
+          { type: "paragraph", text: "The Medical Crew will facilitate the medical check-in table, collecting all medications and connecting with any parents of students with severe medical diagnoses." }
+        ]
+      },
+      {
+        title: "Leaders & Buses",
+        blocks: [
+          { type: "bullet", text: "Once students check in, they will find their CC Leader." },
+          { type: "bullet", text: "CC Leaders will hold the sign with their name on it high and visibly for students and parents to identify them." },
+          { type: "bullet", text: "Each CC Leader will have a designated spot for their group and should keep their group within this area until instructed otherwise." },
+          { type: "bullet", text: "Buses will be parked in chronological order, 1-6." },
+          { type: "bullet", text: "Leaders will begin loading their group's luggage into their assigned bus once buses arrive around 9:45 AM and once instructed to do so." },
+          { type: "bullet", text: "Bus assignments are on the app." },
+          { type: "bullet", text: "Leader signs will be kept and used when releasing students on Friday." },
+          { type: "bullet", text: "Liz Wilson will collect each leader sign once all students are present in the group and give them to Angie Filbrun, who will separate them according to bus assignment for Friday." }
+        ]
+      },
+      {
+        title: "Departure",
+        blocks: [
+          { type: "bullet", text: "We will aim to take a whole group photo, students and leaders, at 9:50 AM. Tim Clopp." },
+          { type: "bullet", text: "We will load the buses at 9:55 AM." },
+          { type: "bullet", text: "The Safety Crew will help load the buses for the younger grades. Isaac Shepherd on Bus 2, Steve Lair on Bus 3, and Mark Spanier on Bus 4." },
+          { type: "bullet", text: "Bus 1: Keith and Matt help load the bus." },
+          { type: "bullet", text: "Bus 5: Cole and Jake help load the bus." },
+          { type: "bullet", text: "Bus 6: Ashton and Jordan help load the bus." },
+          { type: "bullet", text: "Bus captains will take attendance in their assigned bus through the COF app." },
+          { type: "bullet", text: "We will leave promptly at 10:00 AM." },
+          { type: "bullet", text: "Upon arriving at camp, all leaders and students must stay on the bus until given the green light." },
+          { type: "bullet", text: "Leaders will get off the bus first and unload luggage while students remain on the bus." },
+          { type: "bullet", text: "Once luggage is all set out, students will be released to grab their luggage and stand by their leader." },
+          { type: "bullet", text: "Students and leaders will be guided to their lodging areas." }
+        ]
+      },
+      {
+        title: "Arrival To Camp Cotubic - July 13, 2026",
+        blocks: [
+          { type: "bullet", text: "Once students and leaders reach their lodging areas, they will set up their area and get situated." },
+          { type: "subpoint", text: "A-Frames: Valerie Simon for Girls 1-2, Jody Bauman for Girls 3-4, and Isaac Back for Guys 5-6." },
+          { type: "subpoint", text: "Cabins: Angie Filbrun." },
+          { type: "subpoint", text: "Dorms: Luke Maiden." },
+          { type: "subpoint", text: "Log Building: Heidi Wolf." },
+          { type: "bullet", text: "Dorm Leaders will go through dorm expectations for the week and explain what the afternoon will look like." },
+          { type: "bullet", text: "CC Leaders will pass out student bundles and let students know about the tubs with extra supplies in case there is a need." },
+          { type: "bullet", text: "Dorm Leaders will show students the Daily Schedule and encourage them to ask questions." },
+          { type: "bullet", text: "Dorm Leaders will walk students through what their afternoon will look like, especially until student tours happen." },
+          { type: "bullet", text: "Once everyone is situated and expectations are clear, everyone will head to lunch no earlier than 12:15 PM." }
+        ]
+      },
+      {
+        title: "Day #1 Leaders Tour - July 13, 2026",
+        blocks: [
+          { type: "bullet", text: "The tour for Community Camp Leaders will begin promptly at 1:15 PM." },
+          { type: "bullet", text: "Please arrive outside the auditorium by 1:10 PM." },
+          { type: "subheading", text: "Tour Guides" },
+          { type: "subpoint", text: "CarrieAnn Helvey: 6th-8th Grade Group Leaders." },
+          { type: "subpoint", text: "Liz Wilson: 9th-12th Grade Group Leaders." },
+          { type: "bullet", text: "Team Leaders and Assistant Team Leaders will head to the Blue Game Field following the tour." },
+          { type: "bullet", text: "Refs and Games Coordinators will head to the Auditorium following the tour." },
+          { type: "bullet", text: "Team Leaders and Assistant Team Leaders will locate their team flag and be expectant of students to arrive at the Games Field for the first Team Gathering." },
+          { type: "bullet", text: "Refs and Games Coordinators will connect with the Games Leads to walk through anything that needs to be shared for the week, as well as for a Q&A." }
+        ]
+      }
+    ]
+  },
+  departure_cotubic_to_lewisburg: {
+    title: "From Cotubic to Lewisburg",
+    sections: [
+      {
+        title: "Departure From Camp Cotubic - July 17, 2026",
+        blocks: [
+          { type: "subheading", text: "Friday Morning" },
+          { type: "bullet", text: "All students need to have their items packed up before leaving for breakfast." },
+          { type: "bullet", text: "Lodging areas must be left better than we found them, so any cleaning or tidying needs to happen before breakfast." },
+          { type: "bullet", text: "Dorm Leaders will remove all signage from lodging areas, inside and outside, and return it to the Office before Friday Morning Service." },
+          { type: "bullet", text: "Lanterns and supply tubs will be returned to the Office before morning service." },
+          { type: "bullet", text: "Students will keep their luggage in their lodging area until after morning service." },
+          { type: "bullet", text: "Once morning service concludes, students will finish packing up any items and head to the grass area outside the auditorium by 11:15 AM." },
+          { type: "important", text: "Exception: those in the Log Building need to have their luggage out and gathered outside the auditorium before morning service." }
+        ]
+      },
+      {
+        title: "Loading Buses",
+        blocks: [
+          { type: "bullet", text: "Once buses arrive, CC Leaders will load their group's luggage on their respective bus." },
+          { type: "bullet", text: "While luggage is being loaded, students will be given a small snack." },
+          { type: "bullet", text: "Once snacks are complete and all luggage is loaded, students and leaders will load the buses." },
+          { type: "bullet", text: "Bus captains will take attendance in their assigned bus through the COF app." }
+        ]
+      },
+      {
+        title: "Bus Ride Home",
+        blocks: [
+          { type: "bullet", text: "Once attendance is taken and everyone is accounted for, Bus Captains will hand out a Student Testimony Form to each student." },
+          { type: "bullet", text: "Bus Captains will lead students to fill out the Student Testimony Form on the way back to Lewisburg." },
+          { type: "bullet", text: "Students' names can be on the form, but it is not required." },
+          { type: "bullet", text: "Bus Captains will collect the handwritten testimonies and give them to Carson Clark." }
+        ]
+      },
+      {
+        title: "Return To Lewisburg",
+        blocks: [
+          { type: "bullet", text: "When we return to Lewisburg, CC Leaders will unload all luggage before students are released." },
+          { type: "bullet", text: "When students are released, they will find their luggage and stand with their CC Leader until their parents arrive to pick them up." },
+          { type: "bullet", text: "CC Leaders will utilize their signs to help parents identify where to pick their student up." }
+        ]
+      }
+    ]
+  },
   day1_lodging_guidelines: {
     title: "Community Camp Lodging Guidelines",
     sections: [
