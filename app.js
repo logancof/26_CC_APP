@@ -2816,13 +2816,17 @@ function getUniqueAttendanceRoster(rows) {
 }
 
 function getAttendanceStudentKey(row) {
-  return String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim() ||
-    normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+  var id = String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim();
+  var name = normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+
+  return [id, name].filter(Boolean).join("|");
 }
 
 function getAttendanceSubmissionStudentKey(row) {
-  return String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim() ||
-    normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+  var id = String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim();
+  var name = normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+
+  return [id, name].filter(Boolean).join("|");
 }
 
 function isAttendanceStudentRow(row) {
