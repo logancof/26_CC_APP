@@ -2823,17 +2823,16 @@ function getTotalCampStudentCount() {
     latestBreakoutAssignments || [],
     latestAttendanceRoster || []
   ];
+  var combinedRows = [];
 
   for (var i = 0; i < sources.length; i += 1) {
-    var count = getUniqueAttendanceRoster(sources[i].filter(function(row) {
+    combinedRows = combinedRows.concat(sources[i].filter(function(row) {
       var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ")).trim();
       return !!studentName && isAttendanceStudentRow(row);
-    })).length;
-
-    if (count) return count;
+    }));
   }
 
-  return 0;
+  return getUniqueAttendanceRoster(combinedRows).length;
 }
 
 function getPromptStartDate(prompt) {
