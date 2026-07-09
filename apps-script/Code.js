@@ -470,6 +470,7 @@ function handleAttendanceSubmit(payload) {
     "leader_name",
     "student_id",
     "student_name",
+    "person_type",
     "present",
     "missing_reason",
     "notes",
@@ -482,6 +483,8 @@ function handleAttendanceSubmit(payload) {
   } else if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
   }
+
+  ensureSheetColumns_(sheet, headers);
 
   const rows = payload.rows || [];
   const now = new Date();
@@ -498,6 +501,7 @@ function handleAttendanceSubmit(payload) {
       leader_name: payload.leader_name || payload.display_name || "",
       student_id: row.student_id || "",
       student_name: row.student_name || "",
+      person_type: row.person_type || "student",
       present: row.present ? "TRUE" : "FALSE",
       missing_reason: payload.missing_reason || "",
       notes: payload.notes || "",
@@ -518,6 +522,19 @@ function normalizeSheetHeader_(value) {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, "_");
+}
+
+function ensureSheetColumns_(sheet, headers) {
+  if (!sheet || !headers || !headers.length) return;
+
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const existingHeaders = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
+    .map(header => normalizeSheetHeader_(header));
+  const missingHeaders = headers.filter(header => existingHeaders.indexOf(normalizeSheetHeader_(header)) === -1);
+
+  if (!missingHeaders.length) return;
+
+  sheet.getRange(1, lastColumn + 1, 1, missingHeaders.length).setValues([missingHeaders]);
 }
 
 function jsonResponse(data) {

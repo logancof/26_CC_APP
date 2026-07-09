@@ -1197,6 +1197,23 @@ textarea:focus {
     line-height: 1.2
 }
 
+.attendance-monitor-student span em,
+.attendance-person-badge {
+    background: rgba(181, 209, 208, .45);
+    border: 1px solid rgba(181, 209, 208, .9);
+    border-radius: 999px;
+    color: #426d69;
+    display: inline-block;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 950;
+    letter-spacing: .04em;
+    margin-left: 8px;
+    padding: 3px 7px;
+    text-transform: uppercase;
+    vertical-align: middle
+}
+
 .attendance-monitor-student strong {
     border-radius: 999px;
     font-size: 10px;

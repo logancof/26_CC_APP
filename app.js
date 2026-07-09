@@ -2364,6 +2364,7 @@ function buildRosterFromTeamAssignments(assignments, teamLeaders) {
       group_name: groupName,
       assignment_name: groupName,
       team_number: teamNumber,
+      person_type: getAttendancePersonType(row),
       source: "team",
       sort_order: Number(row.sort_order || row.order || index + 1),
       active: row.active || "TRUE",
@@ -2405,6 +2406,7 @@ function buildRosterFromGenericAssignments(assignments, source) {
       group_name: assignmentName,
       assignment_name: assignmentName,
       source: source,
+      person_type: getAttendancePersonType(row),
       sort_order: Number(row.sort_order || row.order || index + 1),
       active: row.active || "TRUE",
       birthday: row.birthday || "",
@@ -2415,6 +2417,20 @@ function buildRosterFromGenericAssignments(assignments, source) {
   }).filter(function(row) {
     return !!row.student_name;
   });
+}
+
+function getAttendancePersonType(row) {
+  var value = String(getRowValue(row, [
+    "person_type",
+    "type",
+    "selection",
+    "role",
+    "attendee_type",
+    "participant_type"
+  ]) || "").toLowerCase().trim();
+
+  if (value.indexOf("leader") !== -1 || value.indexOf("adult") !== -1) return "leader";
+  return "student";
 }
 
 function buildAllStudentRoster() {
@@ -3015,8 +3031,9 @@ function renderAttendanceMonitorCard(group) {
       (group.missing_reason ? '<p class="assignment-campus-summary"><strong>Reason:</strong> ' + escapeHtml(group.missing_reason) + '</p>' : "") +
       (group.notes ? '<p class="assignment-campus-summary"><strong>Note:</strong> ' + escapeHtml(group.notes) + '</p>' : "") +
       '<div class="attendance-monitor-students">' + rows.map(function(row) {
+        var personType = getAttendancePersonType(row);
         return '<div class="attendance-monitor-student' + (row.present ? " present" : " missing") + '">' +
-          '<span>' + escapeHtml(row.student_name || "Unnamed student") + '</span>' +
+          '<span>' + escapeHtml(row.student_name || "Unnamed student") + (personType === "leader" ? '<em>Leader</em>' : '') + '</span>' +
           '<strong>' + (row.present ? "Present" : "Missing") + '</strong>' +
         '</div>';
       }).join("") + '</div>' +
@@ -3113,13 +3130,15 @@ function renderAttendancePage() {
   var roster = getRosterForPrompt(activeAttendancePrompt);
   var timeText = getRowValue(activeAttendancePrompt, ["start_time", "send_time", "time"]);
   var title = getPromptTitle(activeAttendancePrompt);
+  var promptSource = getAttendanceRosterSource(activeAttendancePrompt);
+  var noun = promptSource === "bus" ? "person" : "student";
 
   meta.innerHTML = '<strong>' + escapeHtml(title) + '</strong>' +
     (timeText ? '<span>' + escapeHtml(/[ap]m/i.test(timeText) ? timeText : formatTime(timeText)) + '</span>' : '') +
-    '<small>' + escapeHtml(getRowValue(activeAttendancePrompt, ["message", "description", "note"]) || "Check each student you have eyes on, then submit.") + '</small>';
+    '<small>' + escapeHtml(getRowValue(activeAttendancePrompt, ["message", "description", "note"]) || "Check each " + noun + " you have eyes on, then submit.") + '</small>';
 
   if (!roster.length) {
-    checklist.innerHTML = '<div class="attendance-empty">No students matched this account yet. Matching as: ' + escapeHtml(getCurrentUserRecipientTokens().join(", ")) + '.</div>';
+    checklist.innerHTML = '<div class="attendance-empty">No attendance rows matched this account yet. Matching as: ' + escapeHtml(getCurrentUserRecipientTokens().join(", ")) + '.</div>';
     if (status) status.textContent = "";
     return;
   }
@@ -3127,6 +3146,7 @@ function renderAttendancePage() {
   checklist.innerHTML = roster.map(function(student, index) {
     var studentId = escapeHtml(getRowValue(student, ["student_id", "id"]) || "student_" + index);
     var studentName = escapeHtml(getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1));
+    var personType = getAttendancePersonType(student);
     var detailParts = [
       getRowValue(student, ["age_group", "group", "grade_group"]),
       normalizeSex(getRowValue(student, ["sex", "gender"])),
@@ -3135,9 +3155,10 @@ function renderAttendancePage() {
     ].filter(Boolean);
     var detail = escapeHtml(detailParts.join(" • "));
 
-    return '<label class="attendance-row">' +
+    return '<label class="attendance-row' + (personType === "leader" ? " attendance-row-leader" : "") + '">' +
       '<input type="checkbox" data-student-id="' + studentId + '" />' +
       '<span><strong>' + studentName + '</strong>' +
+      (personType === "leader" ? '<em class="attendance-person-badge">Leader</em>' : '') +
       (detail ? '<small>' + detail + '</small>' : '') +
       '</span>' +
     '</label>';
@@ -3169,6 +3190,7 @@ function buildAttendancePayload(missingReason) {
     return {
       student_id: studentId,
       student_name: getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1),
+      person_type: getAttendancePersonType(student),
       present: !!checkedLookup[studentId],
       team_id: getRowValue(student, ["team_id"]),
       team_number: getRowValue(student, ["team_number"])
