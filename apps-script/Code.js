@@ -709,11 +709,13 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
           age_group: parsed.age_group,
           color_name: colorOverride.color_name || parsed.color_name,
           color: colorOverride.color || parsed.color,
-          leaders: []
+          leaders: [],
+          leader_usernames: []
         };
       }
 
       leadersByTeam[outputKey].leaders.push(leaderName);
+      leadersByTeam[outputKey].leader_usernames.push(leaderNamesToUsernames_(leaderName));
     });
 
   const rows = Object.keys(leadersByTeam)
@@ -735,6 +737,7 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
         team.color_name,
         team.color,
         team.leaders.join(", "),
+        team.leader_usernames.filter(Boolean).join(", "),
         syncedAt
       ];
     });
@@ -747,6 +750,7 @@ function syncTeamLeadersFromTeamExport_(sourceRows, teamNumberMap, syncedAt) {
     "color_name",
     "color",
     "leaders",
+    "leader_usernames",
     "synced_at"
   ], rows);
 }
@@ -849,7 +853,8 @@ function syncBusAssignmentExport_() {
 
   syncGenericAssignmentExport_(sourceRows, "BUS_ASSIGNMENTS", {
     assignmentHeader: "bus_name",
-    sourceLabel: "bus"
+    sourceLabel: "bus",
+    includeLeadersAsRows: true
   });
 }
 
@@ -868,9 +873,14 @@ function syncGenericAssignmentExport_(sourceRows, outputSheetName, options) {
   const leaderLookup = buildLeadersByAssignment_(sourceRows);
 
   const rows = sourceRows
-    .filter(row => getRowValue_(row, "Selection").toLowerCase() === "student")
+    .filter(row => {
+      const selection = getRowValue_(row, "Selection").toLowerCase();
+      return selection === "student" || options.includeLeadersAsRows;
+    })
     .map(row => {
       const assignment = getRowValue_(row, "Assignment");
+      const selection = getRowValue_(row, "Selection").toLowerCase();
+      const personType = selection === "student" ? "student" : "leader";
       const firstName = getRowValue_(row, "First Name");
       const lastName = getRowValue_(row, "Last Name");
       const studentName = [firstName, lastName].filter(Boolean).join(" ");
@@ -882,7 +892,7 @@ function syncGenericAssignmentExport_(sourceRows, outputSheetName, options) {
         getRowValue_(row, "Registration ID"),
         assignment,
         leaders,
-        slugForAppsScript_(leaders).replace(/-/g, "."),
+        leaderNamesToUsernames_(leaders),
         firstName,
         lastName,
         studentName,
@@ -893,6 +903,7 @@ function syncGenericAssignmentExport_(sourceRows, outputSheetName, options) {
         getFirstRowValue_(row, ["Medical Info", "Medical Information", "Health Related Data", "health_related_data", "medical_info"]),
         [parentFirstName, parentLastName].filter(Boolean).join(" "),
         getFirstRowValue_(row, ["Parent Phone", "Parent Contact", "Parent Contact Phone", "parent_phone", "parent_contact"]),
+        personType,
         options.sourceLabel,
         syncedAt
       ];
@@ -914,6 +925,7 @@ function syncGenericAssignmentExport_(sourceRows, outputSheetName, options) {
     "medical_info",
     "parent_name",
     "parent_contact",
+    "person_type",
     "source",
     "synced_at"
   ], rows);
@@ -941,6 +953,14 @@ function buildLeadersByAssignment_(sourceRows) {
     lookup[assignment] = leadersByAssignment[assignment].join(", ");
     return lookup;
   }, {});
+}
+
+function leaderNamesToUsernames_(leaders) {
+  return String(leaders || "")
+    .split(",")
+    .map(name => slugForAppsScript_(name).replace(/-/g, "."))
+    .filter(Boolean)
+    .join(", ");
 }
 
 function readSheetObjects_(sheetName) {

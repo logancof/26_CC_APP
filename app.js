@@ -1583,12 +1583,14 @@ function buildTeamLeaderLookup(teams) {
     var teamNumber = String(team.team_number || "").trim();
     var key = ageGroup + "|" + teamNumber;
     var leaders = team.leaders || team.leader || team.leader_name || team.team_leaders || team.leader_names || "";
+    var leaderUsernames = team.leader_usernames || team.leader_username || team.usernames || "";
     var colorName = team.color_name || team.color_label || team.colorName || "";
     var color = team.color || team.color_hex || team.hex || "";
 
     if (key && leaders) {
       lookup[key] = {
         leaders: leaders,
+        leader_usernames: leaderUsernames,
         color_name: colorName,
         color: color
       };
@@ -2355,7 +2357,7 @@ function buildRosterFromTeamAssignments(assignments, teamLeaders) {
     return {
       prompt_id: row.prompt_id || row.checkpoint_id || "",
       leader_name: leaderName,
-      leader_username: String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").trim() || slug(leaderName).replace(/-/g, "."),
+      leader_username: String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || (leaderLookup[key] || {}).leader_usernames || "").trim() || slug(leaderName).replace(/-/g, "."),
       age_group: ageGroup,
       sex: normalizeSex(row.sex || row.gender || ""),
       student_id: row.registration_id || row.student_id || "team_student_" + (index + 1),
@@ -2491,7 +2493,7 @@ function rosterRowMatchesCurrentUser(row) {
   var tokens = getCurrentUserRecipientTokens();
   var rowLeader = String(getRowValue(row, ["leader_username", "username", "assigned_to"]) || "").toLowerCase().trim();
   var rowLeaderName = String(getRowValue(row, ["leader_name", "leader", "group_leader", "leaders"]) || "").toLowerCase().trim();
-  var leaderCandidates = [rowLeader, rowLeaderName].concat(splitList(rowLeaderName));
+  var leaderCandidates = [rowLeader, rowLeaderName].concat(splitList(rowLeader), splitList(rowLeaderName));
 
   return leaderCandidates.some(function(value) {
     var compact = normalizeLeaderMatchText(value);
