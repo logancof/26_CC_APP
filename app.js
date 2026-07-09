@@ -2706,6 +2706,20 @@ window.debugAttendancePrompts = function() {
   return rows;
 };
 
+window.debugAttendanceCounts = function() {
+  var rows = [
+    { source: "TEAM_ASSIGNMENTS", rows: latestTeamAssignments.length, unique_students: getUniqueAttendanceRoster((latestTeamAssignments || []).filter(isAttendanceStudentRow)).length },
+    { source: "DORM_ASSIGNMENTS", rows: latestDormAssignments.length, unique_students: getUniqueAttendanceRoster((latestDormAssignments || []).filter(isAttendanceStudentRow)).length },
+    { source: "BUS_ASSIGNMENTS", rows: latestBusAssignments.length, unique_students: getUniqueAttendanceRoster((latestBusAssignments || []).filter(isAttendanceStudentRow)).length },
+    { source: "BREAKOUT_GROUP_ASSIGNMENTS", rows: latestBreakoutAssignments.length, unique_students: getUniqueAttendanceRoster((latestBreakoutAssignments || []).filter(isAttendanceStudentRow)).length },
+    { source: "ATTENDANCE_ROSTER", rows: latestAttendanceRoster.length, unique_students: getUniqueAttendanceRoster((latestAttendanceRoster || []).filter(isAttendanceStudentRow)).length },
+    { source: "COMBINED", rows: null, unique_students: getTotalCampStudentCount() }
+  ];
+
+  if (window.console && console.table) console.table(rows);
+  return rows;
+};
+
 function getActiveBreakoutPrompts() {
   return latestAttendancePrompts.concat(latestBreakoutPrompts).filter(function(prompt) {
     var type = String(getRowValue(prompt, ["type", "prompt_type", "category"]) || "").toLowerCase();
