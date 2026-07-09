@@ -712,6 +712,182 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  day1_lodging_arrival: {
+    title: "Once You Arrive To Your Lodging Area On Day 1",
+    sections: [
+      {
+        title: "Lodging Arrival Checklist",
+        blocks: [
+          { type: "bullet", text: "Pass out student bundles. Each student should receive a Connected T-shirt, a notebook and pen, and a colored wristband." },
+          { type: "bullet", text: "Instruct students to wear their wristband and keep it on for the entirety of camp." },
+          { type: "bullet", text: "Pass out merch. These will be in separate bags." },
+          { type: "bullet", text: "Go through Lodging Expectations. These are posted on the doors." },
+          { type: "bullet", text: "Walk students through what their day will look like, utilizing the Community Camp Schedule. Let students know where to be and when, encouraging them that Student Orientation and the Camp Tour will prepare them for the week." }
+        ]
+      }
+    ]
+  },
+  day1_lodging_guidelines: {
+    title: "Community Camp Lodging Guidelines",
+    sections: [
+      {
+        title: "Shared Expectations",
+        blocks: [
+          { type: "paragraph", text: "We will honor God, others, ourselves, and this space by treating everyone and everything with kindness and respect." },
+          { type: "bullet", text: "We will stay in our cabins/dorms from 11:00 PM until 7:00 AM unless permission is given by a Community Camp Leader." },
+          { type: "bullet", text: "Once lights out occurs at 11:30 PM, we will stay quiet and in our own beds." },
+          { type: "bullet", text: "We will keep our personal and shared spaces tidy and clean." },
+          { type: "bullet", text: "We will participate in no roughhousing or pranks." },
+          { type: "bullet", text: "Boys will remain in boys lodging areas, and girls will remain in girls lodging areas at all times." },
+          { type: "bullet", text: "We will remain at an appropriate distance from others at all times." },
+          { type: "bullet", text: "We will report any issues, including injuries, conflicts, or anything that makes you uncomfortable, to a Community Camp Leader immediately." },
+          { type: "bullet", text: "We will work together to create an environment that helps us grow closer to Jesus and to one another." }
+        ]
+      }
+    ]
+  },
+  day1_camp_tour_guide: {
+    title: "Community Camp Student Tour Guide",
+    sections: [
+      {
+        title: "Purpose",
+        blocks: [
+          { type: "paragraph", text: "The Student Camp Tour is designed to help students become familiar with the campgrounds, understand where key activities will take place, and feel confident navigating the property throughout the week." },
+          { type: "paragraph", text: "Community Camp Leaders will guide their community groups through the camp immediately following Team Gathering, introducing important facilities, activity areas, lodging locations, and gathering spaces." },
+          { type: "subheading", text: "Tour Time: 2:30 PM-3:00 PM" }
+        ]
+      },
+      {
+        title: "Tour Assembly",
+        blocks: [
+          { type: "bullet", text: "At 2:30 PM, Community Camp Leaders will gather their students immediately following Team Gathering and begin a guided tour of the campgrounds." },
+          { type: "bullet", text: "Leaders should ensure students remain together throughout the tour while helping them become familiar with the locations they will use throughout the week." }
+        ]
+      },
+      {
+        title: "Game Fields",
+        blocks: [
+          { type: "bullet", text: "Game Field 1 (Blue)" },
+          { type: "bullet", text: "Game Field 2 (Red)" },
+          { type: "bullet", text: "Game Field 3 (Green)" },
+          { type: "paragraph", text: "The Blue Field serves as the daily Team Gathering location, and all three fields are used for team competitions throughout the week." }
+        ]
+      },
+      {
+        title: "Dining Hall",
+        blocks: [
+          { type: "bullet", text: "All meals will be served in the Dining Hall." },
+          { type: "bullet", text: "Students will line up outside and enter through the designated side entrance." },
+          { type: "bullet", text: "Medication administration will take place during each meal and at night." },
+          { type: "bullet", text: "Dining Hall restrooms are available for girls only." }
+        ]
+      },
+      {
+        title: "Mini Cabins",
+        blocks: [
+          { type: "bullet", text: "The Mini Cabins house female students." },
+          { type: "bullet", text: "Students staying in the Mini Cabins will use the Dining Hall restroom facilities." },
+          { type: "bullet", text: "On the way to the Slip N Slide, point out the basketball court and the gaga ball pit, which will be open during Free Time in the afternoon and at night." }
+        ]
+      },
+      {
+        title: "Slip N Slide",
+        blocks: [
+          { type: "bullet", text: "The Slip N Slide is available during Wednesday afternoon Free Time only." },
+          { type: "bullet", text: "All Camp Cotubic staff instructions must be followed." }
+        ]
+      },
+      {
+        title: "Log Building",
+        blocks: [
+          { type: "bullet", text: "The Log Building houses female students." },
+          { type: "bullet", text: "Restroom facilities are available within the building." }
+        ]
+      },
+      {
+        title: "Discovery Lodge",
+        blocks: [
+          { type: "paragraph", text: "Various camp volunteers and staff members reside in this facility throughout the week." }
+        ]
+      },
+      {
+        title: "Main Office & Medical Station",
+        blocks: [
+          { type: "bullet", text: "The Medical Station is where students report for medical needs throughout the week." },
+          { type: "bullet", text: "Students should immediately notify a leader if they are feeling unwell or require medical assistance." }
+        ]
+      },
+      {
+        title: "Camp Office",
+        blocks: [
+          { type: "paragraph", text: "The Camp Office serves as the location for:" },
+          { type: "bullet", text: "Baptism registrations" },
+          { type: "bullet", text: "Late arrivals" },
+          { type: "bullet", text: "Early departures" },
+          { type: "bullet", text: "Parent and guardian coordination" },
+          { type: "bullet", text: "Students should always communicate with their leader before reporting to the Camp Office." }
+        ]
+      },
+      {
+        title: "Auditorium",
+        blocks: [
+          { type: "bullet", text: "The Auditorium serves as the primary gathering location for all morning and evening services throughout the week." },
+          { type: "bullet", text: "Students should become familiar with the main entrance and exit, seating areas, and nearest restrooms." },
+          { type: "bullet", text: "Off-limits areas include the green room, behind the stage, and the side doors that go into the Boys Dorms." },
+          { type: "bullet", text: "Students will enter each service through the rear entrance." },
+          { type: "bullet", text: "Breakout groups will gather in the open field behind the building following services. Leaders should identify their designated meeting location with their students at this time." },
+          { type: "bullet", text: "Reiterate that the activity fields visible in the distance are used for team competitions, and the Blue Field is the daily Team Gathering location." }
+        ]
+      },
+      {
+        title: "Boys Dorms",
+        blocks: [
+          { type: "bullet", text: "Lakeview Lodging houses male students." },
+          { type: "bullet", text: "Restroom facilities are available within the lodging area for boys only." },
+          { type: "bullet", text: "Students are expected to maintain a clean and respectful living environment." },
+          { type: "bullet", text: "Female leaders can point this out without going into details. All girls must stay out of this area." },
+          { type: "bullet", text: "After the Auditorium/Office building, point out the volleyball court, which will be available during Free Time in the afternoon and at night." }
+        ]
+      },
+      {
+        title: "Zipline & Swing",
+        blocks: [
+          { type: "bullet", text: "These activities are available during designated afternoon free-time periods on Monday, Tuesday, and Thursday only." },
+          { type: "bullet", text: "All Camp Cotubic staff instructions must be followed at all times." }
+        ]
+      },
+      {
+        title: "A-Frame Cabins",
+        blocks: [
+          { type: "bullet", text: "Cabins 1-4 house female students." },
+          { type: "bullet", text: "Cabins 5-6 house male students." },
+          { type: "bullet", text: "Each cabin area has a designated restroom facility." }
+        ]
+      },
+      {
+        title: "Lake Area",
+        blocks: [
+          { type: "bullet", text: "The lake is available during designated afternoon free-time periods." },
+          { type: "bullet", text: "All lifeguard and waterfront rules must be followed at all times." },
+          { type: "bullet", text: "Students may only enter the lake when it is officially open and supervised." },
+          { type: "bullet", text: "Students who want to swim must complete a swim test first and receive a wristband if they pass. They should not enter the lake without checking in with leaders and without their wristband." },
+          { type: "bullet", text: "To conclude the tour, students can go to Free Time. Be sure they go to the lake for a swim test if they want to swim this week." }
+        ]
+      },
+      {
+        title: "Student Expectations",
+        blocks: [
+          { type: "paragraph", text: "By the conclusion of the tour, students should:" },
+          { type: "bullet", text: "Know the location of all major camp facilities." },
+          { type: "bullet", text: "Understand where services, meals, activities, lodging, breakout groups, and Team Gatherings take place." },
+          { type: "bullet", text: "Know where to report for medical and administrative needs." },
+          { type: "bullet", text: "Feel confident navigating the campgrounds throughout the week." },
+          { type: "bullet", text: "Be prepared to participate in a safe, organized, and Christ-centered camp experience." },
+          { type: "paragraph", text: "Thank you for helping create an environment where every student can grow spiritually, build meaningful relationships, and make lasting memories at Community Camp." }
+        ]
+      }
+    ]
+  },
   tiers_of_communication: {
     title: "Community Camp Tiers of Communication",
     sections: [

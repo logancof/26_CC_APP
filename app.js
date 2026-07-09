@@ -4552,7 +4552,7 @@ function renderGameSchedule(groupKey, dayIndex) {
 }
 
 function shouldOpenAsGuide(key, link) {
-  return isPdfLink(link) && !isCanvaPdfResource(key);
+  return !!getGuideContentOverride(key) || (isPdfLink(link) && !isCanvaPdfResource(key));
 }
 
 function openPdf(link, title) {
