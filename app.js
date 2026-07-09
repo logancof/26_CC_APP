@@ -2811,6 +2811,31 @@ function getAttendanceSubmissionStudentKey(row) {
     normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
 }
 
+function isAttendanceStudentRow(row) {
+  return getAttendancePersonType(row) !== "leader";
+}
+
+function getTotalCampStudentCount() {
+  var sources = [
+    latestTeamAssignments || [],
+    latestDormAssignments || [],
+    latestBusAssignments || [],
+    latestBreakoutAssignments || [],
+    latestAttendanceRoster || []
+  ];
+
+  for (var i = 0; i < sources.length; i += 1) {
+    var count = getUniqueAttendanceRoster(sources[i].filter(function(row) {
+      var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ")).trim();
+      return !!studentName && isAttendanceStudentRow(row);
+    })).length;
+
+    if (count) return count;
+  }
+
+  return 0;
+}
+
 function getPromptStartDate(prompt) {
   var dateValue = getRowValue(prompt, ["date", "prompt_date", "day"]);
   var startValue = getRowValue(prompt, ["start_time", "send_time", "time"]);
@@ -2915,10 +2940,12 @@ function renderAttendanceMonitor() {
   var presentTotal = Object.keys(presentKeys).length;
   var submittedTotal = Object.keys(submittedStudentKeys).length;
   var expectedTotal = roster.length || submittedTotal;
+  var campStudentTotal = getTotalCampStudentCount() || expectedTotal;
   var notAccountedFor = Math.max(0, expectedTotal - presentTotal);
 
   summary.innerHTML = '<div class="monitor-stat"><span>Submissions</span><strong>' + groups.length + '</strong></div>' +
-    '<div class="monitor-stat"><span>Total Students</span><strong>' + expectedTotal + '</strong></div>' +
+    '<div class="monitor-stat"><span>Camp Students</span><strong>' + campStudentTotal + '</strong></div>' +
+    '<div class="monitor-stat"><span>Expected</span><strong>' + expectedTotal + '</strong></div>' +
     '<div class="monitor-stat good"><span>Present</span><strong>' + presentTotal + '</strong></div>' +
     '<div class="monitor-stat alert"><span>Not Accounted</span><strong>' + notAccountedFor + '</strong></div>';
 
