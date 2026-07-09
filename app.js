@@ -2817,16 +2817,21 @@ function getUniqueAttendanceRoster(rows) {
 
 function getAttendanceStudentKey(row) {
   var id = String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim();
-  var name = normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+  var name = normalizeLeaderMatchText(getAttendancePersonName(row));
 
   return [id, name].filter(Boolean).join("|");
 }
 
 function getAttendanceSubmissionStudentKey(row) {
   var id = String(getRowValue(row, ["student_id", "registration_id", "attendee_id", "id"]) || "").trim();
-  var name = normalizeLeaderMatchText(getRowValue(row, ["student_name", "name", "display_name"]));
+  var name = normalizeLeaderMatchText(getAttendancePersonName(row));
 
   return [id, name].filter(Boolean).join("|");
+}
+
+function getAttendancePersonName(row) {
+  return getRowValue(row, ["student_name", "name", "display_name"]) ||
+    [row.first_name, row.last_name].filter(Boolean).join(" ");
 }
 
 function isAttendanceStudentRow(row) {
@@ -2845,7 +2850,7 @@ function getTotalCampStudentCount() {
 
   for (var i = 0; i < sources.length; i += 1) {
     combinedRows = combinedRows.concat(sources[i].filter(function(row) {
-      var studentName = String(getRowValue(row, ["student_name", "name", "display_name"]) || [row.first_name, row.last_name].filter(Boolean).join(" ")).trim();
+      var studentName = String(getAttendancePersonName(row)).trim();
       return !!studentName && isAttendanceStudentRow(row);
     }));
   }
@@ -3190,8 +3195,9 @@ function renderAttendancePage() {
   }
 
   checklist.innerHTML = roster.map(function(student, index) {
-    var studentId = escapeHtml(getRowValue(student, ["student_id", "id"]) || "student_" + index);
-    var studentName = escapeHtml(getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1));
+    var studentKey = getAttendanceStudentKey(student) || "student_" + index;
+    var studentId = escapeHtml(studentKey);
+    var studentName = escapeHtml(getAttendancePersonName(student) || "Student " + (index + 1));
     var personType = getAttendancePersonType(student);
     var detailParts = [
       getRowValue(student, ["age_group", "group", "grade_group"]),
@@ -3232,10 +3238,10 @@ function buildAttendancePayload(missingReason) {
   });
 
   var rows = roster.map(function(student, index) {
-    var studentId = String(getRowValue(student, ["student_id", "id"]) || "student_" + index);
+    var studentId = getAttendanceStudentKey(student) || "student_" + index;
     return {
       student_id: studentId,
-      student_name: getRowValue(student, ["student_name", "name", "display_name"]) || "Student " + (index + 1),
+      student_name: getAttendancePersonName(student) || "Student " + (index + 1),
       person_type: getAttendancePersonType(student),
       present: !!checkedLookup[studentId],
       team_id: getRowValue(student, ["team_id"]),
