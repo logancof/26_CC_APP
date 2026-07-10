@@ -1,6 +1,12 @@
 const SHEET_ID = "18VUtM239VjahZb-zacuLrNFRog6m0SYVyZtiOgcLj0s";
 
-function doGet() {
+function doGet(e) {
+  const action = String((e && e.parameter && e.parameter.action) || "").trim();
+
+  if (action === "scoreboardVideo") {
+    return jsonResponse(buildScoreboardVideoPayload_());
+  }
+
   const ss = SpreadsheetApp.openById(SHEET_ID);
 
   const tabs = [
@@ -56,6 +62,194 @@ function doGet() {
   });
 
   return jsonResponse(data);
+}
+
+function buildScoreboardVideoPayload_() {
+  const settings = readOptionalSheetObjects_("SCOREBOARD_SETTINGS");
+  const setting = settings.find(row => isTruthySheetValue_(getFirstRowValue_(row, ["active", "is_active", "enabled"]))) || settings[0] || {};
+  const eventTitle = sanitizeScoreboardText_(getFirstRowValue_(setting, ["event_title", "title"]) || "COMMUNITY CAMP").toUpperCase();
+  const dayNumber = Number(getFirstRowValue_(setting, ["day_number", "day"]) || 0);
+  const teamsByNumber = buildScoreboardTeamsByNumber_();
+  const groups = [
+    { id: 1, title: "AGE GROUP 1", ageGroup: "6-7th", min: 1, max: 8 },
+    { id: 2, title: "AGE GROUP 2", ageGroup: "8-9th", min: 9, max: 16 },
+    { id: 3, title: "AGE GROUP 3", ageGroup: "10-12th", min: 17, max: 24 }
+  ].map(group => {
+    const teams = [];
+
+    for (let teamNumber = group.min; teamNumber <= group.max; teamNumber += 1) {
+      const team = teamsByNumber[String(teamNumber)];
+      if (team && team.active !== false) teams.push(team);
+    }
+
+    teams.sort((left, right) => {
+      const scoreDiff = Number(right.score || 0) - Number(left.score || 0);
+      if (scoreDiff) return scoreDiff;
+      return Number(left.teamNumber || 0) - Number(right.teamNumber || 0);
+    });
+
+    return {
+      id: group.id,
+      title: group.title,
+      ageGroup: group.ageGroup,
+      teams: teams
+    };
+  });
+
+  const errors = validateScoreboardGroups_(groups);
+
+  if (errors.length) {
+    return {
+      success: false,
+      message: "Scoreboard data is incomplete.",
+      errors: errors,
+      generatedAt: new Date().toISOString(),
+      groups: groups
+    };
+  }
+
+  return {
+    success: true,
+    eventTitle: eventTitle,
+    dayNumber: dayNumber,
+    generatedAt: new Date().toISOString(),
+    groups: groups
+  };
+}
+
+function buildScoreboardTeamsByNumber_() {
+  const assignmentRows = readOptionalSheetObjects_("TEAM_ASSIGNMENTS");
+  const leaderRows = readOptionalSheetObjects_("TEAM_LEADERS");
+  const teamRows = readOptionalSheetObjects_("TEAMS");
+  const scoreRows = readOptionalSheetObjects_("SCORES");
+  const teamNameRows = readOptionalSheetObjects_("TEAM_NAMES");
+  const teams = {};
+  const scoreLookup = {};
+  const customNameLookup = {};
+
+  scoreRows.forEach(row => {
+    const teamNumber = normalizeScoreboardTeamNumber_(getFirstRowValue_(row, ["team_number", "team", "number"]) || getFirstRowValue_(row, ["team_id"]));
+    if (!teamNumber) return;
+    scoreLookup[teamNumber] = safeScoreboardNumber_(getFirstRowValue_(row, ["points", "score", "total"]));
+  });
+
+  teamNameRows.forEach(row => {
+    const teamNumber = normalizeScoreboardTeamNumber_(getFirstRowValue_(row, ["team_number", "team", "number"]) || getFirstRowValue_(row, ["team_id"]));
+    const name = sanitizeScoreboardText_(getFirstRowValue_(row, ["team_name", "name"]));
+    if (teamNumber && name) customNameLookup[teamNumber] = name;
+  });
+
+  []
+    .concat(teamRows)
+    .concat(assignmentRows)
+    .concat(leaderRows)
+    .forEach(row => {
+      const teamNumber = normalizeScoreboardTeamNumber_(getFirstRowValue_(row, ["team_number", "team", "number"]) || getFirstRowValue_(row, ["team_id"]));
+      if (!teamNumber || Number(teamNumber) < 1 || Number(teamNumber) > 24) return;
+
+      const existing = teams[teamNumber] || {};
+      const colorRaw = getFirstRowValue_(row, ["color", "hex", "team_color"]);
+      const colorName = getFirstRowValue_(row, ["color_name", "color_label"]);
+      const colorOverride = getTeamColorOverride_(teamNumber);
+      const color = normalizeScoreboardColor_(colorRaw || colorOverride.color || getTeamColorHex_(colorName) || existing.color || defaultScoreboardColor_(teamNumber));
+      const ageGroup = normalizeAgeGroup_(getFirstRowValue_(row, ["age_group", "ageGroup"]) || existing.ageGroup || getAgeGroupFromGlobalTeamNumber_(teamNumber));
+      const fallbackName = sanitizeScoreboardText_(
+        getFirstRowValue_(row, ["team_name", "name", "assignment"]) ||
+        existing.teamName ||
+        `Team ${teamNumber}`
+      );
+
+      teams[teamNumber] = {
+        teamNumber: Number(teamNumber),
+        teamId: `team_${teamNumber}`,
+        teamName: customNameLookup[teamNumber] || fallbackName,
+        ageGroup: ageGroup,
+        score: scoreLookup[teamNumber] === undefined ? 0 : scoreLookup[teamNumber],
+        color: color,
+        colorName: colorName || colorOverride.color_name || existing.colorName || "",
+        active: !isFalseSheetValue_(getFirstRowValue_(row, ["active", "visible", "is_active"]))
+      };
+    });
+
+  for (let teamNumber = 1; teamNumber <= 24; teamNumber += 1) {
+    const key = String(teamNumber);
+    if (!teams[key]) {
+      teams[key] = {
+        teamNumber: teamNumber,
+        teamId: `team_${teamNumber}`,
+        teamName: customNameLookup[key] || `Team ${teamNumber}`,
+        ageGroup: getAgeGroupFromGlobalTeamNumber_(teamNumber),
+        score: scoreLookup[key] === undefined ? 0 : scoreLookup[key],
+        color: defaultScoreboardColor_(teamNumber),
+        colorName: "",
+        active: true
+      };
+    } else if (customNameLookup[key]) {
+      teams[key].teamName = customNameLookup[key];
+    }
+  }
+
+  return teams;
+}
+
+function validateScoreboardGroups_(groups) {
+  const errors = [];
+  const seen = {};
+
+  groups.forEach(group => {
+    if (group.teams.length !== 8) {
+      errors.push(`${group.title} must have exactly 8 active teams; found ${group.teams.length}.`);
+    }
+
+    group.teams.forEach(team => {
+      if (seen[team.teamNumber]) errors.push(`Duplicate team number ${team.teamNumber}.`);
+      seen[team.teamNumber] = true;
+      if (!team.teamName) errors.push(`Team ${team.teamNumber} is missing a team name.`);
+      if (!isFinite(Number(team.score)) || Number(team.score) < 0) errors.push(`Team ${team.teamNumber} has invalid score.`);
+      if (!/^#[0-9A-F]{6}$/i.test(team.color)) errors.push(`Team ${team.teamNumber} has invalid color ${team.color}.`);
+    });
+  });
+
+  return errors;
+}
+
+function normalizeScoreboardTeamNumber_(value) {
+  const text = String(value || "").trim();
+  const match = text.match(/(\d+)/);
+  return match ? String(Number(match[1])) : "";
+}
+
+function safeScoreboardNumber_(value) {
+  const number = Number(String(value || "0").replace(/,/g, ""));
+  return isFinite(number) && number > 0 ? number : 0;
+}
+
+function sanitizeScoreboardText_(value) {
+  return String(value || "")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeScoreboardColor_(value) {
+  const color = String(value || "").trim();
+  if (/^#[0-9A-F]{6}$/i.test(color)) return color.toUpperCase();
+  return "#D66128";
+}
+
+function defaultScoreboardColor_(teamNumber) {
+  const colors = ["#C62828", "#173F73", "#F1C85B", "#D66128", "#8F6BB8", "#3F7F4F", "#4AA8D8", "#F5F4EB"];
+  return colors[(Number(teamNumber || 1) - 1) % colors.length];
+}
+
+function isFalseSheetValue_(value) {
+  const cleaned = String(value || "").trim().toLowerCase();
+  return cleaned === "false" || cleaned === "no" || cleaned === "0" || cleaned === "inactive";
+}
+
+function isTruthySheetValue_(value) {
+  const cleaned = String(value || "").trim().toLowerCase();
+  return cleaned === "true" || cleaned === "yes" || cleaned === "1" || cleaned === "active";
 }
 
 function doPost(e) {

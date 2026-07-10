@@ -1,0 +1,42 @@
+{
+  "composition": {
+    "width": 3840,
+    "height": 960,
+    "frameRate": 29.97
+  },
+  "timing": {
+    "introSeconds": 1.5,
+    "raceSeconds": 7,
+    "holdSeconds": 8,
+    "outroSeconds": 1,
+    "raceKeyframes": 28
+  },
+  "output": {
+    "format": "mp4",
+    "archiveCopies": true,
+    "includeDayNumber": false,
+    "intermediateFormat": "mov",
+    "keepIntermediates": true
+  },
+  "design": {
+    "rankOneOnLeft": true,
+    "fontFamily": "Arial",
+    "fallbackFontFamily": "Arial",
+    "minimumBarPercent": 0.06,
+    "maximumBarPercent": 0.68,
+    "safeMarginX": 100,
+    "safeMarginY": 60
+  },
+  "event": {
+    "title": "COMMUNITY CAMP",
+    "dayNumber": 3
+  },
+  "paths": {
+    "dataFile": "data/current-scoreboard.json",
+    "demoDataFile": "data/demo-scoreboard.json",
+    "afterEffectsProject": "after-effects/CommunityCampScoreboard.aep",
+    "intermediateDir": "exports/intermediate",
+    "currentExportDir": "exports/current",
+    "archiveExportDir": "exports/archive"
+  }
+}

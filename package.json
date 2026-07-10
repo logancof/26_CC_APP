@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "fetch-scoreboard-data": "node scripts/fetch-scoreboard-data.js",
+    "render-scoreboards": "node scripts/render-scoreboards.js",
+    "render-scoreboards:demo": "node scripts/render-scoreboards.js --demo",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

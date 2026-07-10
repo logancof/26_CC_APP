@@ -1,0 +1,293 @@
+{
+  "success": true,
+  "eventTitle": "COMMUNITY CAMP",
+  "dayNumber": 3,
+  "generatedAt": "2026-07-10T12:00:00.000Z",
+  "groups": [
+    {
+      "id": 1,
+      "title": "AGE GROUP 1",
+      "ageGroup": "6-7th",
+      "teams": [
+        {
+          "teamNumber": 1,
+          "teamId": "team_1",
+          "teamName": "Red Thunder",
+          "ageGroup": "6-7th",
+          "score": 12750,
+          "color": "#C62828",
+          "colorName": "RED",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 2,
+          "teamId": "team_2",
+          "teamName": "Royal Rockets",
+          "ageGroup": "6-7th",
+          "score": 12000,
+          "color": "#173F73",
+          "colorName": "ROYAL BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 3,
+          "teamId": "team_3",
+          "teamName": "Yellow Jackets",
+          "ageGroup": "6-7th",
+          "score": 9500,
+          "color": "#F1C85B",
+          "colorName": "YELLOW",
+          "textColor": "#111111",
+          "active": true
+        },
+        {
+          "teamNumber": 4,
+          "teamId": "team_4",
+          "teamName": "Orange Crush",
+          "ageGroup": "6-7th",
+          "score": 9500,
+          "color": "#D66128",
+          "colorName": "ORANGE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 5,
+          "teamId": "team_5",
+          "teamName": "Purple Reign",
+          "ageGroup": "6-7th",
+          "score": 6000,
+          "color": "#8F6BB8",
+          "colorName": "PURPLE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 6,
+          "teamId": "team_6",
+          "teamName": "Green Machine",
+          "ageGroup": "6-7th",
+          "score": 4500,
+          "color": "#3F7F4F",
+          "colorName": "GREEN",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 7,
+          "teamId": "team_7",
+          "teamName": "Light Blue Lightning",
+          "ageGroup": "6-7th",
+          "score": 2000,
+          "color": "#4AA8D8",
+          "colorName": "LIGHT BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 8,
+          "teamId": "team_8",
+          "teamName": "Long Name Legends United",
+          "ageGroup": "6-7th",
+          "score": 0,
+          "color": "#F5F4EB",
+          "colorName": "CREAM",
+          "textColor": "#111111",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "AGE GROUP 2",
+      "ageGroup": "8-9th",
+      "teams": [
+        {
+          "teamNumber": 9,
+          "teamId": "team_9",
+          "teamName": "Red Riders",
+          "ageGroup": "8-9th",
+          "score": 15250,
+          "color": "#C62828",
+          "colorName": "RED",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 10,
+          "teamId": "team_10",
+          "teamName": "Blue Blazers",
+          "ageGroup": "8-9th",
+          "score": 13000,
+          "color": "#173F73",
+          "colorName": "ROYAL BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 11,
+          "teamId": "team_11",
+          "teamName": "Golden Hour",
+          "ageGroup": "8-9th",
+          "score": 12250,
+          "color": "#F1C85B",
+          "colorName": "YELLOW",
+          "textColor": "#111111",
+          "active": true
+        },
+        {
+          "teamNumber": 12,
+          "teamId": "team_12",
+          "teamName": "Camp Sparks",
+          "ageGroup": "8-9th",
+          "score": 9000,
+          "color": "#D66128",
+          "colorName": "ORANGE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 13,
+          "teamId": "team_13",
+          "teamName": "Purple Pulse",
+          "ageGroup": "8-9th",
+          "score": 9000,
+          "color": "#8F6BB8",
+          "colorName": "PURPLE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 14,
+          "teamId": "team_14",
+          "teamName": "Forest Force",
+          "ageGroup": "8-9th",
+          "score": 5500,
+          "color": "#3F7F4F",
+          "colorName": "GREEN",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 15,
+          "teamId": "team_15",
+          "teamName": "Sky Sprint",
+          "ageGroup": "8-9th",
+          "score": 3000,
+          "color": "#4AA8D8",
+          "colorName": "LIGHT BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 16,
+          "teamId": "team_16",
+          "teamName": "Cream Climbers",
+          "ageGroup": "8-9th",
+          "score": 500,
+          "color": "#F5F4EB",
+          "colorName": "CREAM",
+          "textColor": "#111111",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "AGE GROUP 3",
+      "ageGroup": "10-12th",
+      "teams": [
+        {
+          "teamNumber": 17,
+          "teamId": "team_17",
+          "teamName": "Varsity Voltage",
+          "ageGroup": "10-12th",
+          "score": 18000,
+          "color": "#C62828",
+          "colorName": "RED",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 18,
+          "teamId": "team_18",
+          "teamName": "Eli's Eagles",
+          "ageGroup": "10-12th",
+          "score": 16500,
+          "color": "#173F73",
+          "colorName": "ROYAL BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 19,
+          "teamId": "team_19",
+          "teamName": "Summit Squad",
+          "ageGroup": "10-12th",
+          "score": 14000,
+          "color": "#F1C85B",
+          "colorName": "YELLOW",
+          "textColor": "#111111",
+          "active": true
+        },
+        {
+          "teamNumber": 20,
+          "teamId": "team_20",
+          "teamName": "Orange Orbit",
+          "ageGroup": "10-12th",
+          "score": 12500,
+          "color": "#D66128",
+          "colorName": "ORANGE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 21,
+          "teamId": "team_21",
+          "teamName": "Purple Peaks",
+          "ageGroup": "10-12th",
+          "score": 10250,
+          "color": "#8F6BB8",
+          "colorName": "PURPLE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 22,
+          "teamId": "team_22",
+          "teamName": "Green Giants",
+          "ageGroup": "10-12th",
+          "score": 8000,
+          "color": "#3F7F4F",
+          "colorName": "GREEN",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 23,
+          "teamId": "team_23",
+          "teamName": "Blue Horizon",
+          "ageGroup": "10-12th",
+          "score": 8000,
+          "color": "#4AA8D8",
+          "colorName": "LIGHT BLUE",
+          "textColor": "#FFFFFF",
+          "active": true
+        },
+        {
+          "teamNumber": 24,
+          "teamId": "team_24",
+          "teamName": "Final Flame",
+          "ageGroup": "10-12th",
+          "score": 1500,
+          "color": "#2B2B2B",
+          "colorName": "BLACK",
+          "textColor": "#FFFFFF",
+          "active": true
+        }
+      ]
+    }
+  ]
+}
