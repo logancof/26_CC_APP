@@ -3996,17 +3996,48 @@ function buildTeamNameLookup(teamNames) {
   return lookup;
 }
 
+function parseTeamNameWindowDateTime(setting, prefix) {
+  var direct = String(getRowValue(setting, [prefix + "_datetime", prefix + "_date_time", prefix + "_at"]) || "").trim();
+  var dateValue = getRowValue(setting, [prefix + "_date", "date", "day"]);
+  var timeValue = getRowValue(setting, [prefix + "_time", prefix === "start" ? "start_time" : "end_time"]);
+
+  if (dateValue && timeValue) return parsePromptDate(dateValue, timeValue);
+
+  if (direct) {
+    var isoLike = direct.match(/^(\d{4}-\d{1,2}-\d{1,2})[ T](.+)$/);
+    var slashLike = direct.match(/^(\d{1,2}\/\d{1,2}\/\d{2,4})\s+(.+)$/);
+
+    if (isoLike) return parsePromptDate(isoLike[1], isoLike[2]);
+    if (slashLike) return parsePromptDate(slashLike[1], slashLike[2]);
+
+    var parsed = new Date(direct);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+
+  return null;
+}
+
+function isTeamNameWindowSettingOpen(setting, now) {
+  var openFlag = getRowValue(setting, ["is_open", "open", "active", "visible"]);
+  var hasOpenValue = openFlag !== "";
+  var openValue = hasOpenValue ? isTrue(openFlag) : true;
+  var start = parseTeamNameWindowDateTime(setting, "start");
+  var end = parseTeamNameWindowDateTime(setting, "end");
+
+  if (!openValue) return false;
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+
+  return true;
+}
+
 function applyTeamNameSettings(settings, assignments, teamNames) {
   var now = new Date();
-  var setting = settings && settings.length ? settings[0] : {};
-  var openValue = String(setting.is_open || "FALSE").toLowerCase() === "true";
-  var startsOk = true;
-  var endsOk = true;
+  var settingRows = settings || [];
 
-  if (setting.start_datetime) startsOk = now >= new Date(setting.start_datetime);
-  if (setting.end_datetime) endsOk = now <= new Date(setting.end_datetime);
-
-  teamNameWindowOpen = openValue && startsOk && endsOk;
+  teamNameWindowOpen = settingRows.some(function(setting) {
+    return isTeamNameWindowSettingOpen(setting, now);
+  });
   teamNameAssignment = null;
 
   (assignments || []).forEach(function(row) {
@@ -4050,6 +4081,25 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
 
   updateTeamNameVisibility();
 }
+
+window.debugTeamNameSetup = function() {
+  var rows = {
+    current_user: currentUser.username || "public",
+    display_name: currentUser.display_name || currentUser.previewDisplayName || "",
+    window_open: teamNameWindowOpen,
+    assigned_team: teamNameAssignment,
+    has_locked_name: !!(function() {
+      try {
+        return localStorage.getItem("lockedTeamName") || "";
+      } catch (e) {
+        return "";
+      }
+    })()
+  };
+
+  if (window.console && console.table) console.table([rows]);
+  return rows;
+};
 
 function openMap() {
   var modal = qs("#mapModal");
