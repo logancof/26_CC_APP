@@ -12,6 +12,7 @@ var roleLevel = {
 var currentUser = { username: "public", role: "public", permissions: [] };
 var teamNameWindowOpen = false;
 var teamNameAssignment = null;
+var pendingSubmittedTeamNames = {};
 var resourceLinks = {};
 var mapZoom = 1;
 var currentX = 0;
@@ -945,11 +946,7 @@ function validateTeamName(name) {
 }
 
 function updateTeamNameVisibility() {
-  var savedName = "";
-
-  try {
-    savedName = localStorage.getItem("lockedTeamName") || "";
-  } catch (e) {}
+  var savedName = getSubmittedTeamNameForCurrentAssignment();
 
   var assigned = !!teamNameAssignment;
   var show = canAccess("leader") && teamNameWindowOpen && assigned && !savedName;
@@ -971,6 +968,56 @@ function updateTeamNameVisibility() {
   }
 }
 
+function getTeamNameStorageKey(assignment) {
+  if (!assignment || !assignment.team_id) return "";
+  return "submittedTeamName:" + assignment.team_id;
+}
+
+function getSubmittedTeamNameForCurrentAssignment() {
+  var key = getTeamNameStorageKey(teamNameAssignment);
+  if (!key) return "";
+
+  try {
+    return sessionStorage.getItem(key) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function setSubmittedTeamNameForCurrentAssignment(name) {
+  var key = getTeamNameStorageKey(teamNameAssignment);
+  if (!key) return;
+
+  try {
+    sessionStorage.setItem(key, name || "submitted");
+    pendingSubmittedTeamNames[key] = true;
+  } catch (e) {}
+}
+
+function clearSubmittedTeamNameStorage() {
+  try {
+    localStorage.removeItem("lockedTeamName");
+
+    for (var i = localStorage.length - 1; i >= 0; i--) {
+      var key = localStorage.key(i);
+
+      if (key && key.indexOf("submittedTeamName:") === 0) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    for (var j = sessionStorage.length - 1; j >= 0; j--) {
+      var sessionKey = sessionStorage.key(j);
+
+      if (sessionKey && sessionKey.indexOf("submittedTeamName:") === 0) {
+        sessionStorage.removeItem(sessionKey);
+      }
+    }
+
+    pendingSubmittedTeamNames = {};
+  } catch (e) {}
+}
+
 function lockTeamName() {
   var input = qs("#teamNameInput");
   var feedback = qs("#teamNameFeedback");
@@ -988,14 +1035,12 @@ function lockTeamName() {
 
   var name = input.value.trim();
 
-  try {
-    localStorage.setItem("lockedTeamName", name);
-  } catch (e) {}
+  setSubmittedTeamNameForCurrentAssignment(name);
 
   input.disabled = true;
   button.disabled = true;
-  button.textContent = "Team Name Locked";
-  feedback.textContent = "Locked in: " + name;
+  button.textContent = "Team Name Submitted";
+  feedback.textContent = "Submitted: " + name;
   feedback.style.color = "var(--green)";
 
   updateTeamNameVisibility();
@@ -1008,6 +1053,22 @@ function lockTeamName() {
       team_number: teamNameAssignment.team_number,
       team_name: name
     }).catch(function(error) {
+      var storageKey = getTeamNameStorageKey(teamNameAssignment);
+
+      if (storageKey) {
+        try {
+          sessionStorage.removeItem(storageKey);
+        } catch (e) {}
+
+        delete pendingSubmittedTeamNames[storageKey];
+      }
+
+      input.disabled = false;
+      button.disabled = false;
+      button.textContent = "Submit Team Name";
+      feedback.textContent = "Could not save that team name. Try again.";
+      feedback.style.color = "var(--red)";
+      updateTeamNameVisibility();
       console.log("Team name save failed:", error);
     });
   }
@@ -4068,7 +4129,9 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
       assignmentHasName = true;
 
       try {
-        localStorage.setItem("lockedTeamName", row.team_name);
+        localStorage.removeItem("lockedTeamName");
+        sessionStorage.setItem(getTeamNameStorageKey(teamNameAssignment), row.team_name);
+        delete pendingSubmittedTeamNames[getTeamNameStorageKey(teamNameAssignment)];
       } catch (e) {}
     }
   });
@@ -4076,6 +4139,11 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
   if (teamNameAssignment && !assignmentHasName) {
     try {
       localStorage.removeItem("lockedTeamName");
+      var storageKey = getTeamNameStorageKey(teamNameAssignment);
+
+      if (!pendingSubmittedTeamNames[storageKey]) {
+        sessionStorage.removeItem(storageKey);
+      }
     } catch (e) {}
   }
 
@@ -4083,18 +4151,14 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
 }
 
 window.debugTeamNameSetup = function() {
+  var submittedName = getSubmittedTeamNameForCurrentAssignment();
   var rows = {
     current_user: currentUser.username || "public",
     display_name: currentUser.display_name || currentUser.previewDisplayName || "",
     window_open: teamNameWindowOpen,
     assigned_team: teamNameAssignment,
-    has_locked_name: !!(function() {
-      try {
-        return localStorage.getItem("lockedTeamName") || "";
-      } catch (e) {
-        return "";
-      }
-    })()
+    has_locked_name: !!submittedName,
+    submitted_name: submittedName || ""
   };
 
   if (window.console && console.table) console.table([rows]);
@@ -5348,7 +5412,7 @@ function initApp() {
   if (logoutButton) {
     logoutButton.addEventListener("click", function() {
       localStorage.removeItem("campUser");
-      localStorage.removeItem("lockedTeamName");
+      clearSubmittedTeamNameStorage();
       localStorage.removeItem("campCache");
       location.reload();
     });
@@ -5356,32 +5420,6 @@ function initApp() {
 
   var lockTeamNameButton = qs("#lockTeamNameButton");
   if (lockTeamNameButton) lockTeamNameButton.addEventListener("click", lockTeamName);
-
-  var saved = "";
-
-  try {
-    saved = localStorage.getItem("lockedTeamName") || "";
-  } catch (e) {}
-
-  if (saved) {
-    var input = qs("#teamNameInput");
-    var feedback = qs("#teamNameFeedback");
-
-    if (input) {
-      input.value = saved;
-      input.disabled = true;
-    }
-
-    if (lockTeamNameButton) {
-      lockTeamNameButton.disabled = true;
-      lockTeamNameButton.textContent = "Team Name Locked";
-    }
-
-    if (feedback) {
-      feedback.textContent = "Locked in: " + saved;
-      feedback.style.color = "var(--green)";
-    }
-  }
 
   var helpToggle = qs("#helpToggle");
   if (helpToggle) {
