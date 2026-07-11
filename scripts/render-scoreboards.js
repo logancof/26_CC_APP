@@ -68,10 +68,12 @@ function runAfterEffectsBuild() {
   const appName = process.env.AE_APP_NAME || "Adobe After Effects 2025";
   const scriptPath = path.join(repoRoot, "after-effects", "build-scoreboard-project.jsx");
   const osaScript = [
+    "with timeout of 600 seconds",
     `tell application "${appName}"`,
     "activate",
-    `DoScriptFile "${scriptPath}"`,
-    "end tell"
+    `DoScriptFile (POSIX file "${scriptPath}" as alias)`,
+    "end tell",
+    "end timeout"
   ].join("\n");
 
   run("osascript", ["-e", osaScript]);

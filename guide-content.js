@@ -1052,6 +1052,41 @@ window.GUIDE_CONTENT = {
       }
     ]
   },
+  camp_questions: {
+    title: "Camp Questions",
+    sections: [
+      {
+        title: "Conversation Starters",
+        blocks: [
+          { type: "bullet", text: "If you could have one superpower, what would it be?" },
+          { type: "bullet", text: "Would you rather camp in the desert or Mount Everest for a week?" },
+          { type: "bullet", text: "If you could be the best in the world at anything, what would it be?" },
+          { type: "bullet", text: "If you could switch places with a fictional character, who would it be?" },
+          { type: "bullet", text: "If you were an animal, which animal would you be?" },
+          { type: "bullet", text: "Would you rather never sleep or never eat again?" },
+          { type: "bullet", text: "If you could only eat one food forever, what would it be?" },
+          { type: "bullet", text: "What's your favorite vacation you've ever taken?" },
+          { type: "bullet", text: "What is your number one thing to complete on your bucket list?" },
+          { type: "bullet", text: "What is the best fast food restaurant in your opinion?" },
+          { type: "bullet", text: "What's your favorite dessert?" },
+          { type: "bullet", text: "Would you rather be the smartest, fastest, or strongest person in the world?" },
+          { type: "bullet", text: "What season would it always be if it was up to you?" },
+          { type: "bullet", text: "What is everyone's favorite song?" },
+          { type: "bullet", text: "What is everyone's favorite movie?" },
+          { type: "bullet", text: "If you could have any job in the world, what would it be?" },
+          { type: "bullet", text: "Sunrise or sunset?" },
+          { type: "bullet", text: "Cats or dogs?" },
+          { type: "bullet", text: "City or nature?" },
+          { type: "bullet", text: "Favorite holiday?" },
+          { type: "bullet", text: "What's everyone's favorite number and why?" },
+          { type: "bullet", text: "If you could live anywhere, where would you pick?" },
+          { type: "bullet", text: "What is something you want to get better at?" },
+          { type: "bullet", text: "What are you scared of?" },
+          { type: "bullet", text: "What is one thing you have learned about God this week?" }
+        ]
+      }
+    ]
+  },
   tiers_of_communication: {
     title: "Community Camp Tiers of Communication",
     sections: [

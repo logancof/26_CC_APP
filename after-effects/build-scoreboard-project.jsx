@@ -75,7 +75,7 @@
     return layer;
   }
 
-  function addSolidShape(comp, name, color, width, height, x, y) {
+  function addSolidShape(comp, name, color, width, height, x, y, rectOffsetX, rectOffsetY) {
     var layer = comp.layers.addShape();
     layer.name = name;
     var contents = layer.property("Contents");
@@ -83,11 +83,20 @@
     group.name = "BAR_SHAPE";
     var rect = group.property("Contents").addProperty("ADBE Vector Shape - Rect");
     rect.property("Size").setValue([width, height]);
+    rect.property("Position").setValue([rectOffsetX || 0, rectOffsetY || 0]);
     rect.property("Roundness").setValue(18);
     var fill = group.property("Contents").addProperty("ADBE Vector Graphic - Fill");
     fill.property("Color").setValue(color);
     layer.property("Position").setValue([x, y]);
     return layer;
+  }
+
+  function parentWithLocalTransform(layer, parentLayer) {
+    if (layer.setParentWithJump) {
+      layer.setParentWithJump(parentLayer);
+    } else {
+      layer.parent = parentLayer;
+    }
   }
 
   function removeExistingComps(prefix) {
@@ -139,10 +148,11 @@
     var barWidth = Math.min(250, columnWidth * 0.54);
     var frames = Number(timing.raceKeyframes || 28);
     var teams = group.teams.slice();
-    var finalRanks = stableRankTeams(teams, teams.reduce(function(lookup, team) {
-      lookup[team.teamNumber] = team.score;
-      return lookup;
-    }, {}));
+    var finalScoreLookup = {};
+    for (var finalScoreIndex = 0; finalScoreIndex < teams.length; finalScoreIndex += 1) {
+      finalScoreLookup[teams[finalScoreIndex].teamNumber] = teams[finalScoreIndex].score;
+    }
+    var finalRanks = stableRankTeams(teams, finalScoreLookup);
 
     for (var i = 0; i < teams.length; i += 1) {
       var team = teams[i];
@@ -184,29 +194,29 @@
       control.property("Opacity").setValueAtTime(totalSeconds, 0);
 
       var finalBarHeight = Math.max(minBar, maxBar * (Number(team.score || 0) / maxScore));
-      var bar = addSolidShape(comp, "TEAM_" + team.teamNumber + "_BAR", color, barWidth, 10, 0, -5);
-      bar.parent = control;
-      bar.property("Scale").setValueAtTime(introSeconds, [100, minBar / 10]);
-      bar.property("Scale").setValueAtTime(introSeconds + raceSeconds, [100, finalBarHeight / 10]);
-      bar.property("Scale").setValueAtTime(totalSeconds - outroSeconds, [100, finalBarHeight / 10]);
+      var bar = addSolidShape(comp, "TEAM_" + team.teamNumber + "_BAR", color, barWidth, finalBarHeight, 0, 0, 0, -finalBarHeight / 2);
+      parentWithLocalTransform(bar, control);
+      bar.property("Scale").setValueAtTime(introSeconds, [100, Math.max(1, (minBar / finalBarHeight) * 100)]);
+      bar.property("Scale").setValueAtTime(introSeconds + raceSeconds, [100, 100]);
+      bar.property("Scale").setValueAtTime(totalSeconds - outroSeconds, [100, 100]);
 
       var badge = addSolidShape(comp, "TEAM_" + team.teamNumber + "_NUMBER_BADGE", color, 112, 64, 0, 78);
-      badge.parent = control;
+      parentWithLocalTransform(badge, control);
 
       var numberText = addText(comp, "TEAM_" + team.teamNumber + "_NUMBER", String(team.teamNumber), 38, 0, 90, textColor, fontFamily);
-      numberText.parent = control;
+      parentWithLocalTransform(numberText, control);
 
       var nameText = addText(comp, "TEAM_" + team.teamNumber + "_NAME", team.teamName.toUpperCase(), 34, 0, 143, [1, 1, 1], fontFamily);
-      nameText.parent = control;
+      parentWithLocalTransform(nameText, control);
 
       var scoreText = addText(comp, "TEAM_" + team.teamNumber + "_SCORE", "0", 38, 0, 195, [1, 1, 1], fontFamily);
-      scoreText.parent = control;
+      parentWithLocalTransform(scoreText, control);
       scoreText.property("Source Text").setValueAtTime(introSeconds, "0");
       scoreText.property("Source Text").setValueAtTime(introSeconds + raceSeconds, String(Math.round(team.score)));
       scoreText.property("Source Text").setValueAtTime(totalSeconds - outroSeconds, String(Math.round(team.score)));
 
       var rankText = addText(comp, "TEAM_" + team.teamNumber + "_RANK", "#8", 42, -barWidth / 2 + 6, -finalBarHeight - 34, [1, 1, 1], fontFamily);
-      rankText.parent = control;
+      parentWithLocalTransform(rankText, control);
       for (var q = 0; q <= frames; q += 1) {
         var qt = q / frames;
         var qScores = {};
