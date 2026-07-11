@@ -11,6 +11,8 @@ var roleLevel = {
 
 var currentUser = { username: "public", role: "public", permissions: [] };
 var teamNameWindowOpen = false;
+var activeTeamNamePromptId = "";
+var renderedTeamNamePromptKey = "";
 var teamNameAssignment = null;
 var pendingSubmittedTeamNames = {};
 var resourceLinks = {};
@@ -950,6 +952,7 @@ function updateTeamNameVisibility() {
 
   var assigned = !!teamNameAssignment;
   var show = canAccess("leader") && teamNameWindowOpen && assigned && !savedName;
+  var promptKey = getTeamNameStorageKey(teamNameAssignment);
 
   qsa(".team-name-open-only").forEach(function(item) {
     if (show) item.classList.remove("team-name-closed");
@@ -958,6 +961,9 @@ function updateTeamNameVisibility() {
 
   var assignmentText = qs("#teamNameAssignmentText");
   var title = qs("#teamNameCardTitle");
+  var input = qs("#teamNameInput");
+  var feedback = qs("#teamNameFeedback");
+  var button = qs("#lockTeamNameButton");
 
   if (assignmentText && teamNameAssignment) {
     assignmentText.textContent = "You are naming Team " + teamNameAssignment.team_number + " • " + teamNameAssignment.age_group + ".";
@@ -966,11 +972,34 @@ function updateTeamNameVisibility() {
   if (title && teamNameAssignment) {
     title.textContent = "Choose Team " + teamNameAssignment.team_number + " Name";
   }
+
+  if (show && promptKey && renderedTeamNamePromptKey !== promptKey) {
+    renderedTeamNamePromptKey = promptKey;
+
+    if (input) {
+      input.value = "";
+      input.disabled = false;
+    }
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Submit Team Name";
+    }
+
+    if (feedback) {
+      feedback.textContent = "";
+    }
+  }
 }
 
 function getTeamNameStorageKey(assignment) {
   if (!assignment || !assignment.team_id) return "";
-  return "submittedTeamName:" + assignment.team_id;
+  return [
+    "submittedTeamName",
+    activeTeamNamePromptId || "default",
+    String(currentUser.username || "public").toLowerCase().trim(),
+    assignment.team_id
+  ].join(":");
 }
 
 function getSubmittedTeamNameForCurrentAssignment() {
@@ -978,7 +1007,7 @@ function getSubmittedTeamNameForCurrentAssignment() {
   if (!key) return "";
 
   try {
-    return sessionStorage.getItem(key) || "";
+    return localStorage.getItem(key) || "";
   } catch (e) {
     return "";
   }
@@ -989,7 +1018,7 @@ function setSubmittedTeamNameForCurrentAssignment(name) {
   if (!key) return;
 
   try {
-    sessionStorage.setItem(key, name || "submitted");
+    localStorage.setItem(key, name || "submitted");
     pendingSubmittedTeamNames[key] = true;
   } catch (e) {}
 }
@@ -1049,6 +1078,7 @@ function lockTeamName() {
     apiRequest({
       action: "lock_team_name",
       username: currentUser.username,
+      prompt_id: activeTeamNamePromptId,
       team_id: teamNameAssignment.team_id,
       team_number: teamNameAssignment.team_number,
       team_name: name
@@ -1057,7 +1087,7 @@ function lockTeamName() {
 
       if (storageKey) {
         try {
-          sessionStorage.removeItem(storageKey);
+          localStorage.removeItem(storageKey);
         } catch (e) {}
 
         delete pendingSubmittedTeamNames[storageKey];
@@ -4092,13 +4122,36 @@ function isTeamNameWindowSettingOpen(setting, now) {
   return true;
 }
 
+function getTeamNamePromptId(setting, index) {
+  var explicitId = String(getRowValue(setting, ["prompt_id", "id", "setting_id", "key"]) || "").trim();
+
+  if (explicitId) return explicitId;
+
+  var label = String(getRowValue(setting, ["title", "name", "label"]) || "team-name").trim();
+  var start = String(getRowValue(setting, ["start_datetime", "start_date_time", "start_at", "start_date", "date", "day", "start_time"]) || "").trim();
+  var end = String(getRowValue(setting, ["end_datetime", "end_date_time", "end_at", "end_date", "end_time"]) || "").trim();
+  var derived = [label, start, end, index].join("|").toLowerCase();
+
+  return derived.replace(new RegExp("[^a-z0-9]+", "g"), "-").replace(new RegExp("^-+|-+$", "g"), "") || "team-name-" + index;
+}
+
 function applyTeamNameSettings(settings, assignments, teamNames) {
   var now = new Date();
   var settingRows = settings || [];
+  var activeSetting = null;
 
-  teamNameWindowOpen = settingRows.some(function(setting) {
-    return isTeamNameWindowSettingOpen(setting, now);
+  settingRows.some(function(setting, index) {
+    if (!isTeamNameWindowSettingOpen(setting, now)) return false;
+
+    activeSetting = {
+      id: getTeamNamePromptId(setting, index),
+      row: setting
+    };
+
+    return true;
   });
+  teamNameWindowOpen = !!activeSetting;
+  activeTeamNamePromptId = activeSetting ? activeSetting.id : "";
   teamNameAssignment = null;
 
   (assignments || []).forEach(function(row) {
@@ -4117,35 +4170,9 @@ function applyTeamNameSettings(settings, assignments, teamNames) {
     }
   });
 
-  var assignmentHasName = false;
-
-  (teamNames || []).forEach(function(row) {
-    var rawTeamNumber = String(row.team_number || row.team || "").trim();
-    var ageGroup = getCanonicalAgeGroup(row.age_group || getAgeGroupFromTeamNumber(rawTeamNumber));
-    var teamNumber = normalizeCampTeamNumber(rawTeamNumber, ageGroup);
-    var rowTeamId = teamNumber ? buildScoringTeamId(teamNumber) : String(row.team_id || "").trim();
-
-    if (teamNameAssignment && rowTeamId === teamNameAssignment.team_id && row.team_name) {
-      assignmentHasName = true;
-
-      try {
-        localStorage.removeItem("lockedTeamName");
-        sessionStorage.setItem(getTeamNameStorageKey(teamNameAssignment), row.team_name);
-        delete pendingSubmittedTeamNames[getTeamNameStorageKey(teamNameAssignment)];
-      } catch (e) {}
-    }
-  });
-
-  if (teamNameAssignment && !assignmentHasName) {
-    try {
-      localStorage.removeItem("lockedTeamName");
-      var storageKey = getTeamNameStorageKey(teamNameAssignment);
-
-      if (!pendingSubmittedTeamNames[storageKey]) {
-        sessionStorage.removeItem(storageKey);
-      }
-    } catch (e) {}
-  }
+  try {
+    localStorage.removeItem("lockedTeamName");
+  } catch (e) {}
 
   updateTeamNameVisibility();
 }
@@ -4156,6 +4183,7 @@ window.debugTeamNameSetup = function() {
     current_user: currentUser.username || "public",
     display_name: currentUser.display_name || currentUser.previewDisplayName || "",
     window_open: teamNameWindowOpen,
+    prompt_id: activeTeamNamePromptId,
     assigned_team: teamNameAssignment,
     has_locked_name: !!submittedName,
     submitted_name: submittedName || ""
